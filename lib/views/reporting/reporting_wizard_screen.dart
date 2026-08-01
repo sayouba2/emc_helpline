@@ -5,7 +5,6 @@ import '../../core/constants/app_text_styles.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../components/animated_indexed_stack.dart';
-import '../components/glass_container.dart';
 import '../components/stepper_widget.dart';
 import 'report_success_screen.dart';
 import 'steps/step1_who_screen.dart';
@@ -81,96 +80,127 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
             ),
           ),
 
-          // Bottom Action Bar (Précédent / Suivant / Envoyer)
+          // Bottom Action Bar (Direct buttons without enclosing card)
           Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 85, top: 8),
-            child: GlassContainer(
-              isDarkMode: isDark,
-              padding: const EdgeInsets.all(12),
-              borderRadius: BorderRadius.circular(20),
-              child: SafeArea(
-                top: false,
-                child: Row(
-                  children: [
-                    // Précédent Button
-                    if (subStep > 0)
-                      Expanded(
-                        flex: 1,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          onPressed: () {
-                            reportProvider.previousWizardStep();
-                          },
-                          icon: Icon(
-                            Icons.arrow_back_rounded,
-                            size: 18,
-                            color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                          ),
-                          label: Text(
-                            "Précédent",
-                            style: AppTextStyles.buttonTextOutline.copyWith(
-                              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      const Spacer(),
-
-                    const SizedBox(width: 12),
-
-                    // Suivant / Envoyer Button
-                    Expanded(
-                      flex: 1,
+            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 74, top: 4),
+            child: SafeArea(
+              top: false,
+              child: subStep == 0
+                  ? // Step 1: Single Centered "Continuer" Button
+                  SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryOrange,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 3,
                           shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
                         ),
                         onPressed: () {
-                          if (isLastStep) {
-                            final ref = reportProvider.submitReport();
-                            setState(() {
-                              _submittedRefCode = ref;
-                            });
-                          } else {
-                            reportProvider.nextWizardStep();
-                          }
+                          reportProvider.nextWizardStep();
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLastStep ? "Envoyer" : "Suivant",
-                              style: AppTextStyles.buttonText.copyWith(fontSize: 15),
+                              "Continuer",
+                              style: AppTextStyles.buttonText.copyWith(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              isLastStep ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
                               size: 18,
                               color: Colors.white,
                             ),
                           ],
                         ),
                       ),
+                    )
+                  : // Steps > 0: "Précédent" & "Suivant" / "Envoyer" Buttons in a Row
+                  Row(
+                      children: [
+                        // Précédent Button
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: isDark ? AppColors.cardBgDark : Colors.white,
+                              side: BorderSide(
+                                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: () {
+                              reportProvider.previousWizardStep();
+                            },
+                            icon: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 18,
+                              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                            ),
+                            label: Text(
+                              "Précédent",
+                              style: AppTextStyles.buttonTextOutline.copyWith(
+                                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 14),
+
+                        // Suivant / Envoyer Button
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryOrange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 3,
+                              shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
+                            ),
+                            onPressed: () {
+                              if (isLastStep) {
+                                final ref = reportProvider.submitReport();
+                                setState(() {
+                                  _submittedRefCode = ref;
+                                });
+                              } else {
+                                reportProvider.nextWizardStep();
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  isLastStep ? "Envoyer" : "Suivant",
+                                  style: AppTextStyles.buttonText.copyWith(fontSize: 15),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  isLastStep ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
             ),
           ),
         ],
