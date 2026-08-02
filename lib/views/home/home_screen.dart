@@ -8,7 +8,6 @@ import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../chatbot/emc_chatbot_screen.dart';
 import '../components/animated_entrance.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
@@ -36,18 +35,11 @@ class HomeScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 100),
               child: _buildHeroCard(context, reportProvider, isDark, lang),
             ),
-            const SizedBox(height: 20),
-
-            // Chatbot EMC (+12 ans) Banner Card
-            AnimatedEntrance(
-              delay: const Duration(milliseconds: 160),
-              child: _buildChatbotBanner(context, isDark, lang),
-            ),
             const SizedBox(height: 24),
 
             // Emergency Numbers Section Header
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 220),
+              delay: const Duration(milliseconds: 180),
               child: Row(
                 children: [
                   IconUtils.buildIcon(
@@ -70,7 +62,7 @@ class HomeScreen extends StatelessWidget {
 
             // Police 19 Card
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 280),
+              delay: const Duration(milliseconds: 240),
               child: _buildEmergencyCard(
                 context: context,
                 title: AppTranslations.getText('police', lang),
@@ -97,7 +89,7 @@ class HomeScreen extends StatelessWidget {
 
             // Gendarmerie 177 Card
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 360),
+              delay: const Duration(milliseconds: 300),
               child: _buildEmergencyCard(
                 context: context,
                 title: AppTranslations.getText('gendarmerie', lang),
@@ -124,7 +116,7 @@ class HomeScreen extends StatelessWidget {
 
             // How it works card ("Comment ça marche ?")
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 440),
+              delay: const Duration(milliseconds: 360),
               child: _buildHowItWorksCard(isDark, lang),
             ),
             const SizedBox(height: 24),
@@ -132,7 +124,7 @@ class HomeScreen extends StatelessWidget {
             // User's Submitted Reports
             if (reportProvider.history.isNotEmpty) ...[
               AnimatedEntrance(
-                delay: const Duration(milliseconds: 500),
+                delay: const Duration(milliseconds: 420),
                 child: Row(
                   children: [
                     IconUtils.buildIcon(
@@ -153,7 +145,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ...reportProvider.history.map((report) => AnimatedEntrance(
-                delay: const Duration(milliseconds: 560),
+                delay: const Duration(milliseconds: 480),
                 child: _buildReportHistoryItem(context, report, isDark),
               )),
               const SizedBox(height: 24),
@@ -161,7 +153,7 @@ class HomeScreen extends StatelessWidget {
 
             // CMRPI & EMC Helpline Prominent Institutional Footer
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 600),
+              delay: const Duration(milliseconds: 520),
               child: _buildPartnerFooter(isDark, lang),
             ),
           ],
@@ -274,73 +266,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChatbotBanner(BuildContext context, bool isDark, String lang) {
-    return InteractiveCard(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const EmcChatbotScreen()),
-        );
-      },
-      borderRadius: BorderRadius.circular(20),
-      child: GlassContainer(
-        isDarkMode: isDark,
-        padding: const EdgeInsets.all(18),
-        borderColor: AppColors.primaryOrange.withValues(alpha: 0.35),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: IconUtils.buildIcon(
-                FontAwesomeIcons.robot,
-                color: AppColors.primaryOrange,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppTranslations.getText('chatbot_banner_title', lang),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.5,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    AppTranslations.getText('chatbot_banner_sub', lang),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${AppTranslations.getText('open_chatbot', lang)} ->',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryOrange,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -535,57 +460,33 @@ class HomeScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // EMC Logo Card
+              // EMC Logo
               Flexible(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 100),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/emc.png',
-                    height: 32,
-                    fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
+                child: Image.asset(
+                  'assets/images/emc.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                  errorBuilder: (c, e, s) => const SizedBox(),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   '×',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                   ),
                 ),
               ),
-              // CMRPI Logo Card
+              // CMRPI Logo
               Flexible(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 100),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/cmrpi.png',
-                    height: 32,
-                    fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
+                child: Image.asset(
+                  'assets/images/cmrpi.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                  errorBuilder: (c, e, s) => const SizedBox(),
                 ),
               ),
             ],

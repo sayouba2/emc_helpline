@@ -12,7 +12,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HeaderAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(68);
+  Size get preferredSize => const Size.fromHeight(80);
 
   @override
   Widget build(BuildContext context) {
@@ -26,42 +26,21 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       centerTitle: true,
       scrolledUnderElevation: 1.0,
-      leadingWidth: 78,
+      leadingWidth: 105,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 10.0, top: 6, bottom: 6),
+        padding: const EdgeInsets.only(left: 16.0, top: 8, bottom: 8),
         child: InkWell(
           onTap: () => reportProvider.setTab(0),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.cardBgDark : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.25),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : AppColors.primaryBlue.withValues(alpha: 0.08),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/emc.png',
-                fit: BoxFit.contain,
-                width: 52,
-                errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
-                  FontAwesomeIcons.shieldHalved,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                  size: 22,
-                ),
-              ),
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            'assets/images/emc.png',
+            fit: BoxFit.contain,
+            height: 54,
+            width: 76,
+            errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
+              FontAwesomeIcons.shieldHalved,
+              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+              size: 28,
             ),
           ),
         ),
@@ -75,60 +54,41 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             style: AppTextStyles.headerTitle.copyWith(
               color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
               letterSpacing: -0.3,
-              fontSize: 16.5,
+              fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 1),
+          const SizedBox(height: 2),
           Text(
             AppTranslations.getText('app_subtitle', lang),
             style: AppTextStyles.headerSubtitle.copyWith(
               color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              fontSize: 9.5,
+              fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
       actions: [
-        // CMRPI Partner Logo (Plus d'espace et largeur augmentée sans bouton mode sombre)
+        // CMRPI Partner Logo (Direct sans cadre/box, grand et très visible)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          child: Container(
-            width: 52,
-            height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.cardBgDark : Colors.white,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.25),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.3)
-                      : AppColors.primaryBlue.withValues(alpha: 0.08),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: Image.asset(
-              'assets/images/cmrpi.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
-                FontAwesomeIcons.buildingColumns,
-                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                size: 16,
-              ),
+          child: Image.asset(
+            'assets/images/cmrpi.png',
+            fit: BoxFit.contain,
+            height: 52,
+            width: 68,
+            errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
+              FontAwesomeIcons.buildingColumns,
+              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+              size: 26,
             ),
           ),
         ),
 
         // Language Switcher Button (FR / AR / EN)
         Padding(
-          padding: const EdgeInsets.only(right: 10, left: 4, top: 10, bottom: 10),
+          padding: const EdgeInsets.only(right: 12, left: 4, top: 10, bottom: 10),
           child: IconButton(
             tooltip: AppTranslations.getText('change_language', lang),
             style: IconButton.styleFrom(
@@ -140,7 +100,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: IconUtils.buildIcon(
               FontAwesomeIcons.globe,
               color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-              size: 15,
+              size: 16,
             ),
             onPressed: () {
               _showLanguageDialog(context, reportProvider, isDark);
