@@ -91,13 +91,13 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        // CMRPI Partner Logo (Largeur augmentée)
+        // CMRPI Partner Logo (Plus d'espace et largeur augmentée sans bouton mode sombre)
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: Container(
-            width: 40,
+            width: 52,
             height: 38,
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
             decoration: BoxDecoration(
               color: isDark ? AppColors.cardBgDark : Colors.white,
               borderRadius: BorderRadius.circular(11),
@@ -126,31 +126,9 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
 
-        // Dark / Light Mode Toggle Button
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-          child: IconButton(
-            tooltip: isDark ? 'Mode clair' : 'Mode sombre',
-            style: IconButton.styleFrom(
-              backgroundColor: isDark ? AppColors.cardBgDark : AppColors.bgLight,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: IconUtils.buildIcon(
-              isDark ? FontAwesomeIcons.sun : FontAwesomeIcons.moon,
-              color: isDark ? const Color(0xFFFBBF24) : AppColors.primaryBlue,
-              size: 15,
-            ),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-          ),
-        ),
-
         // Language Switcher Button (FR / AR / EN)
         Padding(
-          padding: const EdgeInsets.only(right: 10, left: 2, top: 10, bottom: 10),
+          padding: const EdgeInsets.only(right: 10, left: 4, top: 10, bottom: 10),
           child: IconButton(
             tooltip: AppTranslations.getText('change_language', lang),
             style: IconButton.styleFrom(
