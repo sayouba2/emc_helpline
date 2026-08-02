@@ -129,7 +129,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // User's Submitted Reports (Amélioration Suivi)
+            // User's Submitted Reports
             if (reportProvider.history.isNotEmpty) ...[
               AnimatedEntrance(
                 delay: const Duration(milliseconds: 500),
@@ -159,7 +159,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 24),
             ],
 
-            // CMRPI & EMC Helpline Official Partnership Footer
+            // CMRPI & EMC Helpline Prominent Institutional Footer
             AnimatedEntrance(
               delay: const Duration(milliseconds: 600),
               child: _buildPartnerFooter(isDark, lang),
@@ -177,6 +177,46 @@ class HomeScreen extends StatelessWidget {
       gradient: isDark ? AppColors.heroGradientDark : AppColors.heroGradientLight,
       child: Column(
         children: [
+          // Partner Logos Bar at top of Hero Card (Weight & Authority)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardBgDark : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                  ),
+                ),
+                child: Image.asset('assets/images/emc.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '×',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardBgDark : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                  ),
+                ),
+                child: Image.asset('assets/images/cmrpi.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
           // Badge "CONFIDENTIEL & SÉCURISÉ"
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -528,35 +568,74 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPartnerFooter(bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(20),
+      borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.35),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/images/emc.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
-              const SizedBox(width: 14),
+              // EMC Logo Card
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardBgDark : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Image.asset('assets/images/emc.png', height: 48, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
+              const SizedBox(width: 16),
               Text(
                 '×',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                 ),
               ),
-              const SizedBox(width: 14),
-              Image.asset('assets/images/cmrpi.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+              const SizedBox(width: 16),
+              // CMRPI Logo Card
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardBgDark : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Image.asset('assets/images/cmrpi.png', height: 48, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           Text(
             AppTranslations.getText('cmrpi_partner', lang),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              height: 1.3,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              height: 1.35,
             ),
           ),
         ],
