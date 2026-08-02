@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/localization/app_translations.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -11,69 +12,109 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HeaderAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(66);
+  Size get preferredSize => const Size.fromHeight(68);
 
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final lang = reportProvider.currentLanguage;
 
     return AppBar(
       backgroundColor: isDark ? AppColors.bgDark : Colors.white,
       elevation: 0,
       centerTitle: true,
       scrolledUnderElevation: 0.5,
-      leadingWidth: 64,
+      leadingWidth: 70,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 14.0, top: 10, bottom: 10),
+        padding: const EdgeInsets.only(left: 12.0, top: 8, bottom: 8),
         child: InkWell(
           onTap: () => reportProvider.setTab(0),
           borderRadius: BorderRadius.circular(12),
           child: Container(
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
+              color: isDark ? AppColors.cardBgDark : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.15),
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
               ),
             ),
-            child: Center(
-              child: IconUtils.buildIcon(
-                FontAwesomeIcons.shieldHalved,
-                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                size: 18,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/emc.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
+                  FontAwesomeIcons.shieldHalved,
+                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                  size: 20,
+                ),
               ),
             ),
           ),
         ),
       ),
-      title: Column(
+      title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'EMC Helpline',
-            style: AppTextStyles.headerTitle.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Children, Youth, and Women',
-            style: AppTextStyles.headerSubtitle.copyWith(
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-              fontSize: 10.5,
-            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                AppTranslations.getText('app_title', lang),
+                style: AppTextStyles.headerTitle.copyWith(
+                  color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
+                  letterSpacing: -0.3,
+                  fontSize: 17,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                AppTranslations.getText('app_subtitle', lang),
+                style: AppTextStyles.headerSubtitle.copyWith(
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  fontSize: 10,
+                ),
+              ),
+            ],
           ),
         ],
       ),
       actions: [
+        // CMRPI Partner Logo in Header
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardBgDark : AppColors.bgLight,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              ),
+            ),
+            child: Image.asset(
+              'assets/images/cmrpi.png',
+              height: 28,
+              width: 28,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
+                FontAwesomeIcons.buildingColumns,
+                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                size: 14,
+              ),
+            ),
+          ),
+        ),
+
         // Dark / Light Mode Toggle Button
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
           child: IconButton(
-            tooltip: isDark ? 'Passer au mode clair' : 'Passer au mode sombre',
+            tooltip: isDark ? 'Mode clair' : 'Mode sombre',
             style: IconButton.styleFrom(
               backgroundColor: isDark ? AppColors.cardBgDark : AppColors.bgLight,
               shape: RoundedRectangleBorder(
@@ -83,18 +124,19 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: IconUtils.buildIcon(
               isDark ? FontAwesomeIcons.sun : FontAwesomeIcons.moon,
               color: isDark ? const Color(0xFFFBBF24) : AppColors.primaryBlue,
-              size: 16,
+              size: 15,
             ),
             onPressed: () {
               themeProvider.toggleTheme();
             },
           ),
         ),
-        // Language Switcher Button
+
+        // Language Switcher Button (FR / AR / EN)
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.only(right: 12, left: 2, top: 10, bottom: 10),
           child: IconButton(
-            tooltip: 'Changer la langue',
+            tooltip: AppTranslations.getText('change_language', lang),
             style: IconButton.styleFrom(
               backgroundColor: isDark ? AppColors.cardBgDark : AppColors.bgLight,
               shape: RoundedRectangleBorder(
@@ -104,31 +146,10 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: IconUtils.buildIcon(
               FontAwesomeIcons.globe,
               color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-              size: 16,
-            ),
-            onPressed: () {
-              _showLanguageDialog(context, reportProvider, isDark);
-            },
-          ),
-        ),
-        // Quick Exit Discretion Button
-        Padding(
-          padding: const EdgeInsets.only(right: 14, left: 4, top: 10, bottom: 10),
-          child: IconButton(
-            tooltip: 'Mode Discrétion / Quitter rapidement',
-            style: IconButton.styleFrom(
-              backgroundColor: isDark ? AppColors.dangerRedBgDark : AppColors.dangerRedBgLight,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: IconUtils.buildIcon(
-              FontAwesomeIcons.eyeSlash,
-              color: AppColors.dangerRed,
               size: 15,
             ),
             onPressed: () {
-              reportProvider.togglePanicMode();
+              _showLanguageDialog(context, reportProvider, isDark);
             },
           ),
         ),
@@ -151,7 +172,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Choisir la langue / Language',
+                'Choisir la langue / اختر اللغة',
                 style: AppTextStyles.cardTitle.copyWith(
                   fontSize: 18,
                   color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,

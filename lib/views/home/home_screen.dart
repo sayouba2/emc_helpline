@@ -3,10 +3,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/localization/app_translations.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../chatbot/emc_chatbot_screen.dart';
 import '../components/animated_entrance.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
@@ -20,6 +22,7 @@ class HomeScreen extends StatelessWidget {
     final reportProvider = Provider.of<ReportProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final lang = reportProvider.currentLanguage;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
@@ -31,13 +34,20 @@ class HomeScreen extends StatelessWidget {
             // Banner Confidential & Secure + Hero CTA Card
             AnimatedEntrance(
               delay: const Duration(milliseconds: 100),
-              child: _buildHeroCard(context, reportProvider, isDark),
+              child: _buildHeroCard(context, reportProvider, isDark, lang),
+            ),
+            const SizedBox(height: 20),
+
+            // Chatbot EMC (+12 ans) Banner Card
+            AnimatedEntrance(
+              delay: const Duration(milliseconds: 160),
+              child: _buildChatbotBanner(context, isDark, lang),
             ),
             const SizedBox(height: 24),
 
             // Emergency Numbers Section Header
             AnimatedEntrance(
-              delay: const Duration(milliseconds: 200),
+              delay: const Duration(milliseconds: 220),
               child: Row(
                 children: [
                   IconUtils.buildIcon(
@@ -47,7 +57,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "Numéros d'Urgence",
+                    AppTranslations.getText('emergency_numbers', lang),
                     style: AppTextStyles.cardTitle.copyWith(
                       fontSize: 17,
                       color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -63,8 +73,8 @@ class HomeScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 280),
               child: _buildEmergencyCard(
                 context: context,
-                title: 'Police',
-                subtitle: 'Intervention immédiate',
+                title: AppTranslations.getText('police', lang),
+                subtitle: AppTranslations.getText('police_sub', lang),
                 number: '19',
                 icon: FontAwesomeIcons.shieldHeart,
                 iconColor: AppColors.dangerRed,
@@ -90,8 +100,8 @@ class HomeScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 360),
               child: _buildEmergencyCard(
                 context: context,
-                title: 'Gendarmerie',
-                subtitle: 'Secours et protection',
+                title: AppTranslations.getText('gendarmerie', lang),
+                subtitle: AppTranslations.getText('gendarmerie_sub', lang),
                 number: '177',
                 icon: FontAwesomeIcons.userShield,
                 iconColor: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
@@ -115,14 +125,14 @@ class HomeScreen extends StatelessWidget {
             // How it works card ("Comment ça marche ?")
             AnimatedEntrance(
               delay: const Duration(milliseconds: 440),
-              child: _buildHowItWorksCard(isDark),
+              child: _buildHowItWorksCard(isDark, lang),
             ),
             const SizedBox(height: 24),
 
             // User's Submitted Reports (Amélioration Suivi)
             if (reportProvider.history.isNotEmpty) ...[
               AnimatedEntrance(
-                delay: const Duration(milliseconds: 520),
+                delay: const Duration(milliseconds: 500),
                 child: Row(
                   children: [
                     IconUtils.buildIcon(
@@ -132,7 +142,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "Mes Signalements Récents",
+                      AppTranslations.getText('recent_reports', lang),
                       style: AppTextStyles.cardTitle.copyWith(
                         fontSize: 17,
                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
@@ -143,18 +153,24 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ...reportProvider.history.map((report) => AnimatedEntrance(
-                delay: const Duration(milliseconds: 580),
+                delay: const Duration(milliseconds: 560),
                 child: _buildReportHistoryItem(context, report, isDark),
               )),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
             ],
+
+            // CMRPI & EMC Helpline Official Partnership Footer
+            AnimatedEntrance(
+              delay: const Duration(milliseconds: 600),
+              child: _buildPartnerFooter(isDark, lang),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeroCard(BuildContext context, ReportProvider provider, bool isDark) {
+  Widget _buildHeroCard(BuildContext context, ReportProvider provider, bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
       padding: const EdgeInsets.all(22),
@@ -187,7 +203,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'CONFIDENTIEL & SÉCURISÉ',
+                  AppTranslations.getText('confidential_badge', lang),
                   style: AppTextStyles.badgeText.copyWith(
                     fontSize: 10.5,
                     color: AppColors.primaryOrange,
@@ -197,9 +213,8 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          // Heading Title
           Text(
-            "Tu n'es pas seul(e)",
+            AppTranslations.getText('hero_title', lang),
             textAlign: TextAlign.center,
             style: AppTextStyles.screenTitle.copyWith(
               color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
@@ -208,9 +223,8 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          // Subtext
           Text(
-            "Nous sommes là pour t'écouter, t'orienter et te protéger. Parle à un professionnel en toute sécurité.",
+            AppTranslations.getText('hero_sub', lang),
             textAlign: TextAlign.center,
             style: AppTextStyles.screenSubtitle.copyWith(
               color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
@@ -219,7 +233,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 22),
-          // Main CTA Button "SIGNALER MAINTENANT" with Pulsing animation
           PulsingWidget(
             minScale: 0.98,
             maxScale: 1.025,
@@ -245,10 +258,10 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconUtils.buildIcon(FontAwesomeIcons.bullhorn, size: 18, color: Colors.white),
+                    IconUtils.buildIcon(FontAwesomeIcons.fileShield, size: 18, color: Colors.white),
                     const SizedBox(width: 12),
                     Text(
-                      'SIGNALER MAINTENANT',
+                      AppTranslations.getText('report_now', lang),
                       style: AppTextStyles.buttonText.copyWith(
                         fontSize: 15,
                         letterSpacing: 0.5,
@@ -261,6 +274,73 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatbotBanner(BuildContext context, bool isDark, String lang) {
+    return InteractiveCard(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const EmcChatbotScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: GlassContainer(
+        isDarkMode: isDark,
+        padding: const EdgeInsets.all(18),
+        borderColor: AppColors.primaryOrange.withValues(alpha: 0.35),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.primaryOrange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: IconUtils.buildIcon(
+                FontAwesomeIcons.robot,
+                color: AppColors.primaryOrange,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppTranslations.getText('chatbot_banner_title', lang),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.5,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    AppTranslations.getText('chatbot_banner_sub', lang),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${AppTranslations.getText('open_chatbot', lang)} ->',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -339,7 +419,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHowItWorksCard(bool isDark) {
+  Widget _buildHowItWorksCard(bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
       padding: const EdgeInsets.all(18),
@@ -365,7 +445,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Comment ça marche ?',
+                  AppTranslations.getText('how_it_works', lang),
                   style: AppTextStyles.cardTitle.copyWith(
                     color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                     fontSize: 15.5,
@@ -373,7 +453,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tous les signalements sont traités de manière anonyme et confidentielle par des experts formés.',
+                  AppTranslations.getText('how_it_works_sub', lang),
                   style: AppTextStyles.cardSubtitle.copyWith(
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     fontSize: 12.5,
@@ -441,6 +521,45 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPartnerFooter(bool isDark, String lang) {
+    return GlassContainer(
+      isDarkMode: isDark,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/emc.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+              const SizedBox(width: 14),
+              Text(
+                '×',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Image.asset('assets/images/cmrpi.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            AppTranslations.getText('cmrpi_partner', lang),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              height: 1.3,
+            ),
+          ),
+        ],
       ),
     );
   }

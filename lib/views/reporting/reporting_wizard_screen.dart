@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/localization/app_translations.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../components/animated_indexed_stack.dart';
@@ -41,6 +42,7 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
     final reportProvider = Provider.of<ReportProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
+    final lang = reportProvider.currentLanguage;
 
     if (_submittedRefCode != null) {
       return ReportSuccessScreen(referenceCode: _submittedRefCode!);
@@ -107,7 +109,7 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              "Continuer",
+                              AppTranslations.getText('continue', lang),
                               style: AppTextStyles.buttonText.copyWith(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -149,7 +151,7 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
                               color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                             ),
                             label: Text(
-                              "Précédent",
+                              AppTranslations.getText('previous', lang),
                               style: AppTextStyles.buttonTextOutline.copyWith(
                                 color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                               ),
@@ -186,7 +188,9 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  isLastStep ? "Envoyer" : "Suivant",
+                                  isLastStep
+                                      ? AppTranslations.getText('send', lang)
+                                      : AppTranslations.getText('next', lang),
                                   style: AppTextStyles.buttonText.copyWith(fontSize: 15),
                                 ),
                                 const SizedBox(width: 6),

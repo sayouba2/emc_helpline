@@ -4,7 +4,7 @@ import '../models/report_model.dart';
 
 class ReportProvider with ChangeNotifier {
   int _currentTab = 0;
-  int _wizardStep = 0; // 0..7
+  int _wizardStep = 0;
   bool _isPanicMode = false;
   String _currentLanguage = 'fr';
 
@@ -39,19 +39,7 @@ class ReportProvider with ChangeNotifier {
   }
 
   void nextWizardStep() {
-    // Logic for conditional skipping:
-    // Step 0: WhoFor
-    // Step 1: AgeRange
-    // Step 2: Gender
-    // Step 3: IncidentType & Platform
-    // Step 4: Evidence
-    // Step 5: Assistance (If "Pas d'accompagnement", jump over Step 6 AssistanceType)
-    // Step 6: AssistanceType
-    // Step 7: Contact Info
-    // Step 8: Urgency
-    // Step 9: Summary
-
-    if (_wizardStep == 5 && _currentReport.wantsAssistance == "Pas d'accompagnement") {
+    if (_wizardStep == 5 && _currentReport.assistanceNeeded == "Pas d'accompagnement") {
       _wizardStep = 7; // Skip assistance type step
     } else {
       _wizardStep++;
@@ -60,7 +48,7 @@ class ReportProvider with ChangeNotifier {
   }
 
   void previousWizardStep() {
-    if (_wizardStep == 7 && _currentReport.wantsAssistance == "Pas d'accompagnement") {
+    if (_wizardStep == 7 && _currentReport.assistanceNeeded == "Pas d'accompagnement") {
       _wizardStep = 5;
     } else if (_wizardStep > 0) {
       _wizardStep--;
@@ -77,34 +65,46 @@ class ReportProvider with ChangeNotifier {
 
   void updateReport({
     String? whoFor,
+    String? pseudo,
+    String? ageGroup,
     String? ageRange,
     String? gender,
     String? incidentType,
     String? platform,
+    String? evidenceFilePath,
     String? evidenceImagePath,
     String? evidenceUrl,
     bool? hasNoEvidence,
+    String? assistanceNeeded,
     String? wantsAssistance,
     String? assistanceType,
+    String? urgencyLevel,
     String? urgency,
     bool? isAnonymous,
+    String? contactName,
     String? contactPhone,
     String? contactEmail,
     String? contactWhatsapp,
   }) {
     _currentReport = _currentReport.copyWith(
       whoFor: whoFor,
+      pseudo: pseudo,
+      ageGroup: ageGroup,
       ageRange: ageRange,
       gender: gender,
       incidentType: incidentType,
       platform: platform,
+      evidenceFilePath: evidenceFilePath,
       evidenceImagePath: evidenceImagePath,
       evidenceUrl: evidenceUrl,
       hasNoEvidence: hasNoEvidence,
+      assistanceNeeded: assistanceNeeded,
       wantsAssistance: wantsAssistance,
       assistanceType: assistanceType,
+      urgencyLevel: urgencyLevel,
       urgency: urgency,
       isAnonymous: isAnonymous,
+      contactName: contactName,
       contactPhone: contactPhone,
       contactEmail: contactEmail,
       contactWhatsapp: contactWhatsapp,
