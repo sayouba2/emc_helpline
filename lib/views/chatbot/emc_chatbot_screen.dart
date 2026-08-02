@@ -21,7 +21,7 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
   final List<Map<String, String>> _messages = [
     {
       'sender': 'bot',
-      'text': 'Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nJe suis là pour t\'aider et répondre à tes questions sur la sécurité sur Internet (+12 ans).\nComment puis-je t\'aider aujourd\'hui ?',
+      'text': 'Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nTu as été redirigé ici car tu as plus de 12 ans.\nJe suis là pour t\'écouter, t\'aider et te guider en toute confidentialité.\nComment puis-je t\'aider aujourd\'hui ?',
     },
   ];
 
@@ -29,11 +29,18 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
     'Comment bloquer un harceleur ?',
     'On a partagé une photo de moi sans mon accord',
     'Un inconnu me demande des informations privées',
-    'Comment contacter un conseiller humain ?',
+    'Poursuivre mon formulaire de signalement',
   ];
 
   void _sendMessage(String text) {
     if (text.trim().isEmpty) return;
+
+    if (text == 'Poursuivre mon formulaire de signalement') {
+      Navigator.pop(context);
+      final reportProvider = Provider.of<ReportProvider>(context, listen: false);
+      reportProvider.nextWizardStep();
+      return;
+    }
 
     setState(() {
       _messages.add({'sender': 'user', 'text': text});
@@ -58,13 +65,13 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
   String _generateBotAnswer(String userText) {
     final lower = userText.toLowerCase();
     if (lower.contains('bloquer') || lower.contains('harcel')) {
-      return '🛡️ Pour bloquer un utilisateur :\n1. Ne lui réponds plus.\n2. Fais des captures d\'écran des messages comme preuve.\n3. Clique sur les 3 petits points de son profil et choisis "Bloquer et Signaler".\n\nSouhaites-tu effectuer un signalement officiel sur EMC Helpline ?';
+      return '🛡️ Pour bloquer un utilisateur :\n1. Ne lui réponds plus.\n2. Fais des captures d\'écran des messages comme preuve.\n3. Clique sur les 3 petits points de son profil et choisis "Bloquer et Signaler".\n\nSouhaites-tu poursuivre ton dossier de signalement officiel sur EMC Helpline ?';
     } else if (lower.contains('photo') || lower.contains('image')) {
-      return '⚠️ Si une photo privée circule :\n1. Ne t\'inquiète pas, tu n\'es pas coupable.\n2. Ne supprime pas les preuves.\n3. Remplis notre formulaire de signalement EMC Helpline pour qu\'un spécialiste intervienne rapidement.';
+      return '⚠️ Si une photo privée circule :\n1. Ne t\'inquiète pas, tu n\'es pas responsable.\n2. Ne supprime pas les preuves.\n3. Remplis notre formulaire de signalement EMC Helpline pour qu\'un spécialiste intervienne rapidement.';
     } else if (lower.contains('conseiller') || lower.contains('humain') || lower.contains('contact')) {
       return '📞 Tu peux contacter nos conseillers humains gratuitement par :\n• WhatsApp : +212 624 405 889\n• Police : 19 | Gendarmerie : 177\n\nTu peux aussi cliquer sur l\'onglet Contact en bas !';
     } else {
-      return 'Merci pour ton message. Pour ta sécurité, ne partage jamais ton nom de famille ou ton adresse en ligne.\nSi tu vis une situation difficile, clique sur "Signaler" en bas pour envoyer un dossier anonyme à nos experts.';
+      return 'Merci pour ton message. Pour ta sécurité, ne partage jamais ton nom de famille ou ton adresse en ligne.\nSi tu vis une situation difficile, clique sur "Poursuivre le formulaire" pour envoyer un dossier anonyme à nos experts.';
     }
   }
 
@@ -111,29 +118,48 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Chatbot EMC (+12 ans)',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Chatbot EMC (+12 ans)',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                    ),
                   ),
-                ),
-                Text(
-                  'Assistant Virtuel • En ligne',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? AppColors.accentCyan : AppColors.whatsappGreen,
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    'Assistant Virtuel • En ligne',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: isDark ? AppColors.accentCyan : AppColors.whatsappGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
+        actions: [
+          // Option pour revenir au formulaire de signalement
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              reportProvider.nextWizardStep();
+            },
+            child: const Text(
+              'Formulaire ->',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: AppColors.primaryOrange,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -219,18 +245,27 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
               itemCount: _quickQuestions.length,
               itemBuilder: (context, index) {
                 final q = _quickQuestions[index];
+                final isFormAction = q == 'Poursuivre mon formulaire de signalement';
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ActionChip(
-                    backgroundColor: isDark ? AppColors.cardBgDark : Colors.white,
+                    backgroundColor: isFormAction
+                        ? AppColors.primaryOrange.withValues(alpha: 0.15)
+                        : (isDark ? AppColors.cardBgDark : Colors.white),
                     side: BorderSide(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                      color: isFormAction
+                          ? AppColors.primaryOrange
+                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
                     ),
                     label: Text(
                       q,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                        fontWeight: isFormAction ? FontWeight.bold : FontWeight.normal,
+                        color: isFormAction
+                            ? AppColors.primaryOrange
+                            : (isDark ? AppColors.accentCyan : AppColors.primaryBlue),
                       ),
                     ),
                     onPressed: () => _sendMessage(q),

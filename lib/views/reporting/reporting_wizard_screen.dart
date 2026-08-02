@@ -5,6 +5,7 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/localization/app_translations.dart';
 import '../../providers/report_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../chatbot/emc_chatbot_screen.dart';
 import '../components/animated_indexed_stack.dart';
 import '../components/stepper_widget.dart';
 import 'report_success_screen.dart';
@@ -175,6 +176,18 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
                               shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
                             ),
                             onPressed: () {
+                              // Redirection automatique vers le Chatbot si âge >12 ans sélectionné
+                              if (subStep == 1) {
+                                final selectedAge = reportProvider.currentReport.ageRange;
+                                if (selectedAge == '13 à 17 ans' || selectedAge == '18 ans et plus') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const EmcChatbotScreen()),
+                                  );
+                                  return;
+                                }
+                              }
+
                               if (isLastStep) {
                                 final ref = reportProvider.submitReport();
                                 setState(() {

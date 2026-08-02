@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,16 @@ class Step1WhoScreen extends StatefulWidget {
 class _Step1WhoScreenState extends State<Step1WhoScreen> {
   late TextEditingController _pseudoController;
 
+  final List<String> _suggestedPseudos = [
+    'HérosDiscret42',
+    'ÉtoileSecrète99',
+    'PhoenixCalme12',
+    'AigleProtecteur',
+    'CyberAmiConfidentiel',
+    'GardiendesMers77',
+    'SuperAnonyme2026',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +42,15 @@ class _Step1WhoScreenState extends State<Step1WhoScreen> {
   void dispose() {
     _pseudoController.dispose();
     super.dispose();
+  }
+
+  void _generateRandomPseudo() {
+    final random = Random();
+    final chosen = _suggestedPseudos[random.nextInt(_suggestedPseudos.length)];
+    setState(() {
+      _pseudoController.text = chosen;
+    });
+    Provider.of<ReportProvider>(context, listen: false).updateReport(pseudo: chosen);
   }
 
   @override
@@ -91,40 +111,61 @@ class _Step1WhoScreenState extends State<Step1WhoScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Pseudonym Option (Option de Surnom pour l'anonymat garanti dès le 1er contact)
+          // Anonymity & Pseudonym Card (Garantie Anonymat dès le premier contact)
           GlassContainer(
             isDarkMode: isDark,
             padding: const EdgeInsets.all(18),
-            borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.3),
+            borderColor: AppColors.primaryOrange.withValues(alpha: 0.4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    IconUtils.buildIcon(
-                      FontAwesomeIcons.userSecret,
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                      size: 16,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryOrange.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconUtils.buildIcon(
+                        FontAwesomeIcons.userSecret,
+                        color: AppColors.primaryOrange,
+                        size: 16,
+                      ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Text(
-                        AppTranslations.getText('pseudo_label', lang),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Anonymat Garanti & Pseudo",
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                            ),
+                          ),
+                          Text(
+                            "Aucun nom réel ni donnée personnelle n'est requis.",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 TextField(
                   controller: _pseudoController,
                   style: TextStyle(
                     color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                   decoration: InputDecoration(
                     hintText: AppTranslations.getText('pseudo_hint', lang),
@@ -141,18 +182,51 @@ class _Step1WhoScreenState extends State<Step1WhoScreen> {
                         color: isDark ? AppColors.borderDark : AppColors.borderLight,
                       ),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryOrange,
+                        width: 1.5,
+                      ),
+                    ),
                   ),
                   onChanged: (val) {
                     reportProvider.updateReport(pseudo: val);
                   },
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  AppTranslations.getText('pseudo_info', lang),
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                  ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText('pseudo_info', lang),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        backgroundColor: AppColors.primaryOrange.withValues(alpha: 0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: _generateRandomPseudo,
+                      icon: const Text('🎲', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Pseudo auto',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryOrange,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
