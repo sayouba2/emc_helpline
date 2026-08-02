@@ -173,67 +173,10 @@ class HomeScreen extends StatelessWidget {
   Widget _buildHeroCard(BuildContext context, ReportProvider provider, bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       gradient: isDark ? AppColors.heroGradientDark : AppColors.heroGradientLight,
       child: Column(
         children: [
-          // Partner Logos Bar at top of Hero Card (Safe Flexible Constraints)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 110),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/emc.png',
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '×',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 110),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/cmrpi.png',
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
           // Badge "CONFIDENTIEL & SÉCURISÉ"
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -592,68 +535,54 @@ class HomeScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // EMC Logo Card (Flexible & Constrained to prevent RenderFlex overflow)
+              // EMC Logo Card
               Flexible(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 120),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  constraints: const BoxConstraints(maxWidth: 100),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                      width: 1.5,
+                      width: 1.2,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Image.asset(
                     'assets/images/emc.png',
-                    height: 38,
+                    height: 32,
                     fit: BoxFit.contain,
                     errorBuilder: (c, e, s) => const SizedBox(),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   '×',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                   ),
                 ),
               ),
-              // CMRPI Logo Card (Flexible & Constrained)
+              // CMRPI Logo Card
               Flexible(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 120),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  constraints: const BoxConstraints(maxWidth: 100),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.cardBgDark : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                      width: 1.5,
+                      width: 1.2,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Image.asset(
                     'assets/images/cmrpi.png',
-                    height: 38,
+                    height: 32,
                     fit: BoxFit.contain,
                     errorBuilder: (c, e, s) => const SizedBox(),
                   ),
@@ -661,14 +590,14 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             AppTranslations.getText('cmrpi_partner', lang),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               height: 1.3,
             ),
           ),

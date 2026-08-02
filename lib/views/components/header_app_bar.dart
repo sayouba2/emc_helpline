@@ -26,19 +26,20 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       centerTitle: true,
       scrolledUnderElevation: 1.0,
-      leadingWidth: 68,
+      leadingWidth: 78,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 10.0, top: 8, bottom: 8),
+        padding: const EdgeInsets.only(left: 10.0, top: 6, bottom: 6),
         child: InkWell(
           onTap: () => reportProvider.setTab(0),
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               color: isDark ? AppColors.cardBgDark : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.2),
+                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.25),
+                width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
@@ -54,10 +55,11 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               child: Image.asset(
                 'assets/images/emc.png',
                 fit: BoxFit.contain,
+                width: 52,
                 errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
                   FontAwesomeIcons.shieldHalved,
                   color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                  size: 20,
+                  size: 22,
                 ),
               ),
             ),
@@ -89,19 +91,28 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        // CMRPI Partner Logo
+        // CMRPI Partner Logo (Largeur augmentée)
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
           child: Container(
-            width: 34,
-            height: 34,
+            width: 40,
+            height: 38,
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               color: isDark ? AppColors.cardBgDark : Colors.white,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(11),
               border: Border.all(
-                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.2),
+                color: isDark ? AppColors.borderDark : AppColors.primaryBlue.withValues(alpha: 0.25),
+                width: 1.2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.3)
+                      : AppColors.primaryBlue.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                ),
+              ],
             ),
             child: Image.asset(
               'assets/images/cmrpi.png',
@@ -109,7 +120,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
                 FontAwesomeIcons.buildingColumns,
                 color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                size: 14,
+                size: 16,
               ),
             ),
           ),
