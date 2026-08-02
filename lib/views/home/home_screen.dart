@@ -173,49 +173,66 @@ class HomeScreen extends StatelessWidget {
   Widget _buildHeroCard(BuildContext context, ReportProvider provider, bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       gradient: isDark ? AppColors.heroGradientDark : AppColors.heroGradientLight,
       child: Column(
         children: [
-          // Partner Logos Bar at top of Hero Card (Weight & Authority)
+          // Partner Logos Bar at top of Hero Card (Safe Flexible Constraints)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardBgDark : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardBgDark : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    ),
+                  ),
+                  child: Image.asset(
+                    'assets/images/emc.png',
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const SizedBox(),
                   ),
                 ),
-                child: Image.asset('assets/images/emc.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
               ),
-              const SizedBox(width: 12),
-              Text(
-                '×',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardBgDark : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  '×',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
                   ),
                 ),
-                child: Image.asset('assets/images/cmrpi.png', height: 32, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardBgDark : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    ),
+                  ),
+                  child: Image.asset(
+                    'assets/images/cmrpi.png',
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const SizedBox(),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // Badge "CONFIDENTIEL & SÉCURISÉ"
           Container(
@@ -568,74 +585,91 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPartnerFooter(bool isDark, String lang) {
     return GlassContainer(
       isDarkMode: isDark,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.35),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // EMC Logo Card
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardBgDark : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+              // EMC Logo Card (Flexible & Constrained to prevent RenderFlex overflow)
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardBgDark : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: Image.asset('assets/images/emc.png', height: 48, errorBuilder: (c, e, s) => const SizedBox()),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                '×',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // CMRPI Logo Card
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardBgDark : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                    width: 1.5,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  child: Image.asset(
+                    'assets/images/emc.png',
+                    height: 38,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const SizedBox(),
+                  ),
                 ),
-                child: Image.asset('assets/images/cmrpi.png', height: 48, errorBuilder: (c, e, s) => const SizedBox()),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  '×',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                  ),
+                ),
+              ),
+              // CMRPI Logo Card (Flexible & Constrained)
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardBgDark : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/images/cmrpi.png',
+                    height: 38,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => const SizedBox(),
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             AppTranslations.getText('cmrpi_partner', lang),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-              height: 1.35,
+              height: 1.3,
             ),
           ),
         ],
