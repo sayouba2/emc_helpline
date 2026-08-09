@@ -1,100 +1,68 @@
 import 'package:flutter/material.dart';
 
+/// The app ships a single light theme. Every colour here is final — there is no
+/// dark counterpart and no `isDark` branching left in the widget tree.
 class AppColors {
   // Brand Colors
   static const Color primaryBlue = Color(0xFF1E3A8A); // Deep Royal Blue
-  static const Color primaryOrange = Color(0xFFEA580C); // Vibrant Warm Amber / Orange
-  static const Color accentCyan = Color(0xFF06B6D4); // Cyan Accent
-  static const Color accentPurple = Color(0xFF8B5CF6); // Purple Glow Accent
 
-  // Legacy Aliases for Step Compatibility
-  static const Color cardBg = cardBgLight;
-  static const Color textPrimary = textPrimaryLight;
-  static const Color textSecondary = textSecondaryLight;
-  static const Color dangerRedBg = dangerRedBgLight;
-  static const Color emergencyBannerBg = emergencyBannerBgLight;
+  /// Brand orange, darkened from #EA580C to reach WCAG AA. The original tone
+  /// only scored 3.56:1 against white — fine for icons and large headings, but
+  /// short of the 4.5:1 that body-size labels and white-on-orange buttons need.
+  /// This one scores 5.18:1.
+  static const Color primaryOrange = Color(0xFFC2410C);
 
-  // Light Theme Surfaces
-  static const Color bgLight = Color(0xFFF8FAFC);
-  static const Color cardBgLight = Colors.white;
-  static const Color borderLight = Color(0xFFE2E8F0);
-  static const Color textPrimaryLight = Color(0xFF0F172A);
-  static const Color textSecondaryLight = Color(0xFF64748B);
+  /// The original, brighter orange. Decorative use only — tinted fills, glows
+  /// and borders, which are graphical objects and only need 3:1.
+  static const Color primaryOrangeBright = Color(0xFFEA580C);
 
-  // Dark Theme Surfaces
-  static const Color bgDark = Color(0xFF0B0F19);
-  static const Color cardBgDark = Color(0xFF161E2E);
-  static const Color borderDark = Color(0xFF26334D);
-  static const Color textPrimaryDark = Color(0xFFF8FAFC);
-  static const Color textSecondaryDark = Color(0xFF94A3B8);
+  // Surfaces
+  static const Color bg = Color(0xFFF8FAFC);
+  static const Color cardBg = Colors.white;
+  static const Color border = Color(0xFFE2E8F0);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF64748B);
 
   // Emergency & Status Colors
+  /// Reserved for icons and fills. For red *text*, use [dangerRedStrong].
   static const Color dangerRed = Color(0xFFEF4444);
-  static const Color dangerRedBgLight = Color(0xFFFEE2E2);
-  static const Color dangerRedBgDark = Color(0xFF451A1A);
-  static const Color emergencyBannerBgLight = Color(0xFFFFF7ED);
-  static const Color emergencyBannerBgDark = Color(0xFF2A1B0E);
+
+  /// 6.47:1 against white, so red labels stay readable.
+  static const Color dangerRedStrong = Color(0xFFB91C1C);
+  static const Color dangerRedBg = Color(0xFFFEE2E2);
+  static const Color emergencyBannerBg = Color(0xFFFFF7ED);
 
   // Social Media Brand Palettes
   static const Color whatsappGreen = Color(0xFF25D366);
-  static const Color whatsappBgLight = Color(0xFFDCFCE7);
-  static const Color whatsappBgDark = Color(0xFF064E3B);
+  static const Color whatsappBg = Color(0xFFDCFCE7);
 
   static const Color instagramPink = Color(0xFFE1306C);
-  static const Color instagramBgLight = Color(0xFFFCE7F3);
-  static const Color instagramBgDark = Color(0xFF831843);
+  static const Color instagramBg = Color(0xFFFCE7F3);
 
   static const Color tiktokDark = Color(0xFF000000);
-  static const Color tiktokBgLight = Color(0xFFF1F5F9);
-  static const Color tiktokBgDark = Color(0xFF1E293B);
+  static const Color tiktokBg = Color(0xFFF1F5F9);
 
   static const Color facebookBlue = Color(0xFF1877F2);
-  static const Color facebookBgLight = Color(0xFFDBEAFE);
-  static const Color facebookBgDark = Color(0xFF1E3A8A);
+  static const Color facebookBg = Color(0xFFDBEAFE);
 
   static const Color gamingPurple = Color(0xFF7C3AED);
-  static const Color gamingBgLight = Color(0xFFF3E8FF);
-  static const Color gamingBgDark = Color(0xFF4C1D95);
+  static const Color gamingBg = Color(0xFFF3E8FF);
 
   static const Color messengerBlue = Color(0xFF0084FF);
-  static const Color messengerBgLight = Color(0xFFE0F2FE);
-  static const Color messengerBgDark = Color(0xFF0C4A6E);
-
-  // Glassmorphism Overlays
-  static const Color glassWhite = Color(0x3DFFFFFF);
-  static const Color glassBorderWhite = Color(0x66FFFFFF);
-  static const Color glassDark = Color(0x4D161E2E);
-  static const Color glassBorderDark = Color(0x4D38BDF8);
+  static const Color messengerBg = Color(0xFFE0F2FE);
 
   // Gradients
-  static const LinearGradient heroGradientLight = LinearGradient(
+  static const LinearGradient heroGradient = LinearGradient(
     colors: [Color(0xFFEFF6FF), Color(0xFFF0FDF4), Colors.white],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient heroGradientDark = LinearGradient(
-    colors: [Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF0B0F19)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
+  /// Both stops clear 4.5:1 against white, so the label on the main call to
+  /// action stays readable across the whole sweep.
   static const LinearGradient orangeCtaGradient = LinearGradient(
-    colors: [Color(0xFFF97316), Color(0xFFEA580C)],
+    colors: [Color(0xFFC2410C), Color(0xFF9A3412)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-
-  static const LinearGradient neonBlueGradient = LinearGradient(
-    colors: [Color(0xFF38BDF8), Color(0xFF1E3A8A)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // Dynamic Theme Helpers
-  static Color getBg(bool isDark) => isDark ? bgDark : bgLight;
-  static Color getCardBg(bool isDark) => isDark ? cardBgDark : cardBgLight;
-  static Color getBorder(bool isDark) => isDark ? borderDark : borderLight;
-  static Color getTextPrimary(bool isDark) => isDark ? textPrimaryDark : textPrimaryLight;
-  static Color getTextSecondary(bool isDark) => isDark ? textSecondaryDark : textSecondaryLight;
 }

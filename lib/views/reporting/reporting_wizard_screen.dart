@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/localization/app_translations.dart';
+import '../../core/localization/report_enum_labels.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
-import '../../providers/theme_provider.dart';
-import '../chatbot/emc_chatbot_screen.dart';
-import '../components/animated_indexed_stack.dart';
+import '../components/animated_screen_switcher.dart';
 import '../components/stepper_widget.dart';
 import 'report_success_screen.dart';
 import 'steps/step1_who_screen.dart';
@@ -21,37 +20,31 @@ import 'steps/step3_contact_screen.dart';
 import 'steps/step3_urgency_screen.dart';
 import 'steps/step4_summary_screen.dart';
 
-class ReportingWizardScreen extends StatefulWidget {
+class ReportingWizardScreen extends StatelessWidget {
   const ReportingWizardScreen({super.key});
 
-  @override
-  State<ReportingWizardScreen> createState() => _ReportingWizardScreenState();
-}
-
-class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
-  String? _submittedRefCode;
-
   int _getStepperNumber(int subStep) {
-    if (subStep == 0) return 1;
-    if (subStep == 1 || subStep == 2) return 2;
-    if (subStep >= 3 && subStep <= 9) return 3;
+    if (subStep == ReportProvider.stepWho) return 1;
+    if (subStep <= ReportProvider.stepGender) return 2;
+    if (subStep <= ReportProvider.stepUrgency) return 3;
     return 4;
   }
 
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final lang = reportProvider.currentLanguage;
+    final l10n = AppLocalizations.of(context);
 
-    if (_submittedRefCode != null) {
-      return ReportSuccessScreen(referenceCode: _submittedRefCode!);
+    final submittedRefCode = reportProvider.submittedRefCode;
+    if (submittedRefCode != null) {
+      return ReportSuccessScreen(referenceCode: submittedRefCode);
     }
 
     final subStep = reportProvider.wizardStep;
     final stepperNumber = _getStepperNumber(subStep);
-    final isLastStep = subStep == 10;
+    final isLastStep = subStep == ReportProvider.stepSummary;
+    final blockingMessage = reportProvider.currentStepError?.text(l10n);
+    final canAdvance = blockingMessage == null;
 
     final List<Widget> stepWidgets = [
       const Step1WhoScreen(),
@@ -68,16 +61,16 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       body: Column(
         children: [
           // Stepper bar
           StepperWidget(currentStep: stepperNumber),
-          Divider(height: 1, color: isDark ? AppColors.borderDark : AppColors.borderLight),
+          const Divider(height: 1, color: AppColors.border),
 
           // Current Step Content with AnimatedIndexedStack
           Expanded(
-            child: AnimatedIndexedStack(
+            child: AnimatedScreenSwitcher(
               index: subStep.clamp(0, stepWidgets.length - 1),
               children: stepWidgets,
             ),
@@ -85,76 +78,61 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
 
           // Bottom Action Bar (Direct buttons without enclosing card)
           Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 74, top: 4),
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 74,
+              top: 4,
+            ),
             child: SafeArea(
               top: false,
-              child: subStep == 0
-                  ? // Step 1: Single Centered "Continuer" Button
-                  SizedBox(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (blockingMessage != null) ...[
+                    _buildStepHint(blockingMessage),
+                    const SizedBox(height: 10),
+                  ],
+                  if (subStep == ReportProvider.stepWho)
+                    // Step 1: Single Centered "Continuer" Button
+                    SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryOrange,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 3,
-                          shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
-                        ),
-                        onPressed: () {
-                          reportProvider.nextWizardStep();
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              AppTranslations.getText('continue', lang),
-                              style: AppTextStyles.buttonText.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
+                      child: _buildForwardButton(
+                        label: l10n.actionContinue,
+                        icon: Icons.arrow_forward_rounded,
+                        verticalPadding: 15,
+                        isEnabled: canAdvance,
+                        onPressed: reportProvider.nextWizardStep,
                       ),
                     )
-                  : // Steps > 0: "Précédent" & "Suivant" / "Envoyer" Buttons in a Row
-                  Row(
+                  else
+                    // Steps > 0: "Précédent" & "Suivant" / "Envoyer" Buttons in a Row
+                    Row(
                       children: [
                         // Précédent Button
                         Expanded(
                           child: OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: isDark ? AppColors.cardBgDark : Colors.white,
-                              side: BorderSide(
-                                color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(
+                                color: AppColors.border,
                                 width: 1.5,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            onPressed: () {
-                              reportProvider.previousWizardStep();
-                            },
-                            icon: Icon(
+                            onPressed: reportProvider.previousWizardStep,
+                            icon: const Icon(
                               Icons.arrow_back_rounded,
                               size: 18,
-                              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                              color: AppColors.primaryBlue,
                             ),
                             label: Text(
-                              AppTranslations.getText('previous', lang),
+                              l10n.actionPrevious,
                               style: AppTextStyles.buttonTextOutline.copyWith(
-                                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                                color: AppColors.primaryBlue,
                               ),
                             ),
                           ),
@@ -164,62 +142,97 @@ class _ReportingWizardScreenState extends State<ReportingWizardScreen> {
 
                         // Suivant / Envoyer Button
                         Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryOrange,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 3,
-                              shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
-                            ),
-                            onPressed: () {
-                              // Redirection automatique vers le Chatbot si âge >12 ans sélectionné
-                              if (subStep == 1) {
-                                final selectedAge = reportProvider.currentReport.ageRange;
-                                if (selectedAge == '13 à 17 ans' || selectedAge == '18 ans et plus') {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const EmcChatbotScreen()),
-                                  );
-                                  return;
-                                }
-                              }
-
-                              if (isLastStep) {
-                                final ref = reportProvider.submitReport();
-                                setState(() {
-                                  _submittedRefCode = ref;
-                                });
-                              } else {
-                                reportProvider.nextWizardStep();
-                              }
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  isLastStep
-                                      ? AppTranslations.getText('send', lang)
-                                      : AppTranslations.getText('next', lang),
-                                  style: AppTextStyles.buttonText.copyWith(fontSize: 15),
-                                ),
-                                const SizedBox(width: 6),
-                                Icon(
-                                  isLastStep ? Icons.send_rounded : Icons.arrow_forward_rounded,
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                              ],
-                            ),
+                          child: _buildForwardButton(
+                            label: isLastStep
+                                ? l10n.actionSend
+                                : l10n.actionNext,
+                            icon: isLastStep
+                                ? Icons.send_rounded
+                                : Icons.arrow_forward_rounded,
+                            verticalPadding: 14,
+                            isEnabled: canAdvance,
+                            // Le Chatbot (+12 ans) reste accessible depuis la
+                            // bannière de l'étape "âge" : "Suivant" ne doit
+                            // jamais détourner le parcours vers celui-ci.
+                            onPressed: isLastStep
+                                ? reportProvider.submitReport
+                                : reportProvider.nextWizardStep,
                           ),
                         ),
                       ],
                     ),
+                ],
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Tells the user what the current step still expects, right above the
+  /// disabled "Suivant" button so the block never looks like a broken app.
+  Widget _buildStepHint(String message) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(
+          Icons.info_outline_rounded,
+          size: 15,
+          color: AppColors.primaryOrange,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.3,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForwardButton({
+    required String label,
+    required IconData icon,
+    required double verticalPadding,
+    required bool isEnabled,
+    required VoidCallback onPressed,
+  }) {
+    final contentColor = isEnabled ? Colors.white : Colors.white70;
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primaryOrange,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: AppColors.primaryOrange.withValues(
+          alpha: 0.35,
+        ),
+        disabledForegroundColor: Colors.white70,
+        padding: EdgeInsets.symmetric(vertical: verticalPadding),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: isEnabled ? 3 : 0,
+        shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
+      ),
+      onPressed: isEnabled ? onPressed : null,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.buttonText.copyWith(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: contentColor,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(icon, size: 18, color: contentColor),
         ],
       ),
     );

@@ -4,28 +4,31 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
-import '../../providers/theme_provider.dart';
+import '../../core/constants/app_contacts.dart';
+import '../components/demo_notice.dart';
 import '../components/glass_container.dart';
 
 class ReportSuccessScreen extends StatelessWidget {
   final String referenceCode;
 
-  const ReportSuccessScreen({
-    super.key,
-    required this.referenceCode,
-  });
+  const ReportSuccessScreen({super.key, required this.referenceCode});
 
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 24, right: 24, top: 40, bottom: 90),
+        padding: const EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 40,
+          bottom: 90,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -35,15 +38,12 @@ class ReportSuccessScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
+                  color: AppColors.whatsappBg,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                    width: 2,
-                  ),
+                  border: Border.all(color: AppColors.primaryBlue, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.25),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.25),
                       blurRadius: 28,
                       offset: const Offset(0, 8),
                     ),
@@ -51,14 +51,14 @@ class ReportSuccessScreen extends StatelessWidget {
                 ),
                 child: IconUtils.buildIcon(
                   FontAwesomeIcons.circleCheck,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                  color: AppColors.primaryBlue,
                   size: 64,
                 ),
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              "Signalement envoyé",
+              l10n.successTitle,
               textAlign: TextAlign.center,
               style: AppTextStyles.screenTitle.copyWith(
                 color: AppColors.primaryOrange,
@@ -67,38 +67,37 @@ class ReportSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              "Ton signalement a été envoyé avec succès. Une personne spécialisée va l'étudier pour t'aider.",
+              l10n.successBody,
               textAlign: TextAlign.center,
               style: AppTextStyles.screenSubtitle.copyWith(
                 fontSize: 13.5,
-                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
 
             // Reference Code Box
             GlassContainer(
-              isDarkMode: isDark,
               padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
-              borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.4),
+              borderColor: AppColors.primaryBlue.withValues(alpha: 0.4),
               child: Column(
                 children: [
                   Text(
-                    "NUMÉRO DE RÉFÉRENCE",
-                    style: TextStyle(
-                      fontSize: 11,
+                    l10n.referenceNumber,
+                    style: const TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      color: AppColors.textSecondary,
                       letterSpacing: 1.0,
                     ),
                   ),
                   const SizedBox(height: 8),
                   SelectableText(
                     referenceCode,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 23,
                       fontWeight: FontWeight.w900,
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                      color: AppColors.primaryBlue,
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -107,24 +106,26 @@ class ReportSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
+            const DemoNotice(dense: true),
+            if (!kBackendEnabled) const SizedBox(height: 16),
+
             // Info Card
             GlassContainer(
-              isDarkMode: isDark,
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   IconUtils.buildIcon(
                     FontAwesomeIcons.circleInfo,
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                    color: AppColors.primaryBlue,
                     size: 18,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      "Conserve ce numéro précieusement. Il te permettra de suivre l'avancement de ton dossier lors de tes prochains échanges avec l'équipe.",
-                      style: TextStyle(
+                      l10n.keepReference,
+                      style: const TextStyle(
                         fontSize: 12.5,
-                        color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                        color: AppColors.primaryBlue,
                         height: 1.35,
                       ),
                     ),
@@ -149,19 +150,22 @@ class ReportSuccessScreen extends StatelessWidget {
                 reportProvider.setTab(2); // Switch to Ressources tab
               },
               icon: IconUtils.buildIcon(FontAwesomeIcons.lightbulb, size: 16),
-              label: const Text(
-                "Voir les conseils",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              label: Text(
+                l10n.seeAdvice,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // CTA Button 2: "Contacter EMC Helpline"
+            // CTA Button 2: l10n.contactEmcHelpline
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                side: const BorderSide(
+                  color: AppColors.primaryBlue,
                   width: 1.5,
                 ),
                 shape: RoundedRectangleBorder(
@@ -173,15 +177,15 @@ class ReportSuccessScreen extends StatelessWidget {
               },
               icon: IconUtils.buildIcon(
                 FontAwesomeIcons.headset,
-                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                color: AppColors.primaryBlue,
                 size: 16,
               ),
               label: Text(
-                "Contacter EMC Helpline",
-                style: TextStyle(
+                l10n.contactEmcHelpline,
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                  color: AppColors.primaryBlue,
                 ),
               ),
             ),

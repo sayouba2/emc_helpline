@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_contacts.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/localization/app_translations.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
+import '../../l10n/app_localizations.dart';
+import '../../models/report_model.dart';
+import '../../core/localization/report_enum_labels.dart';
 import '../../providers/report_provider.dart';
-import '../../providers/theme_provider.dart';
 import '../components/animated_entrance.dart';
+import '../components/demo_notice.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
 import '../components/pulsing_widget.dart';
@@ -19,21 +22,29 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final lang = reportProvider.currentLanguage;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 18.0, right: 18.0, top: 18.0, bottom: 90.0),
+        padding: const EdgeInsets.only(
+          left: 18.0,
+          right: 18.0,
+          top: 18.0,
+          bottom: 90.0,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Stated before anything else: the app must not read as a working
+            // reporting channel while nothing is actually transmitted.
+            const DemoNotice(),
+            if (!kBackendEnabled) const SizedBox(height: 16),
+
             // Banner Confidential & Secure + Hero CTA Card
             AnimatedEntrance(
               delay: const Duration(milliseconds: 100),
-              child: _buildHeroCard(context, reportProvider, isDark, lang),
+              child: _buildHeroCard(context, reportProvider, l10n),
             ),
             const SizedBox(height: 24),
 
@@ -48,11 +59,13 @@ class HomeScreen extends StatelessWidget {
                     size: 16,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    AppTranslations.getText('emergency_numbers', lang),
-                    style: AppTextStyles.cardTitle.copyWith(
-                      fontSize: 17,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  Expanded(
+                    child: Text(
+                      l10n.emergencyNumbers,
+                      style: AppTextStyles.cardTitle.copyWith(
+                        fontSize: 17,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -65,19 +78,21 @@ class HomeScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 240),
               child: _buildEmergencyCard(
                 context: context,
-                title: AppTranslations.getText('police', lang),
-                subtitle: AppTranslations.getText('police_sub', lang),
-                number: '19',
+                semanticLabel: l10n.a11yCall(l10n.police, AppContacts.police),
+                title: l10n.police,
+                subtitle: l10n.policeSubtitle,
+                number: AppContacts.police,
                 icon: FontAwesomeIcons.shieldHeart,
                 iconColor: AppColors.dangerRed,
-                bgColor: isDark ? AppColors.dangerRedBgDark : AppColors.dangerRedBgLight,
-                isDark: isDark,
+                bgColor: AppColors.dangerRedBg,
                 onTap: () async {
-                  final launched = await LauncherUtils.makePhoneCall('19');
+                  final launched = await LauncherUtils.makePhoneCall(
+                    AppContacts.police,
+                  );
                   if (!launched && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("L'émulateur ne supporte pas les appels téléphoniques directs (Police: 19)."),
+                      SnackBar(
+                        content: Text(l10n.callFailed(AppContacts.police)),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -92,19 +107,24 @@ class HomeScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 300),
               child: _buildEmergencyCard(
                 context: context,
-                title: AppTranslations.getText('gendarmerie', lang),
-                subtitle: AppTranslations.getText('gendarmerie_sub', lang),
-                number: '177',
+                semanticLabel: l10n.a11yCall(
+                  l10n.gendarmerie,
+                  AppContacts.gendarmerie,
+                ),
+                title: l10n.gendarmerie,
+                subtitle: l10n.gendarmerieSubtitle,
+                number: AppContacts.gendarmerie,
                 icon: FontAwesomeIcons.userShield,
-                iconColor: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                bgColor: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
-                isDark: isDark,
+                iconColor: AppColors.primaryBlue,
+                bgColor: AppColors.whatsappBg,
                 onTap: () async {
-                  final launched = await LauncherUtils.makePhoneCall('177');
+                  final launched = await LauncherUtils.makePhoneCall(
+                    AppContacts.gendarmerie,
+                  );
                   if (!launched && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("L'émulateur ne supporte pas les appels téléphoniques directs (Gendarmerie: 177)."),
+                      SnackBar(
+                        content: Text(l10n.callFailed(AppContacts.gendarmerie)),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
@@ -117,7 +137,7 @@ class HomeScreen extends StatelessWidget {
             // How it works card ("Comment ça marche ?")
             AnimatedEntrance(
               delay: const Duration(milliseconds: 360),
-              child: _buildHowItWorksCard(isDark, lang),
+              child: _buildHowItWorksCard(l10n),
             ),
             const SizedBox(height: 24),
 
@@ -129,32 +149,34 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     IconUtils.buildIcon(
                       FontAwesomeIcons.clockRotateLeft,
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                      color: AppColors.primaryBlue,
                       size: 16,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      AppTranslations.getText('recent_reports', lang),
+                      l10n.recentReports,
                       style: AppTextStyles.cardTitle.copyWith(
                         fontSize: 17,
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-              ...reportProvider.history.map((report) => AnimatedEntrance(
-                delay: const Duration(milliseconds: 480),
-                child: _buildReportHistoryItem(context, report, isDark),
-              )),
+              ...reportProvider.history.map(
+                (report) => AnimatedEntrance(
+                  delay: const Duration(milliseconds: 480),
+                  child: _buildReportHistoryItem(context, report, l10n),
+                ),
+              ),
               const SizedBox(height: 24),
             ],
 
             // CMRPI & EMC Helpline Prominent Institutional Footer
             AnimatedEntrance(
               delay: const Duration(milliseconds: 520),
-              child: _buildPartnerFooter(isDark, lang),
+              child: _buildPartnerFooter(l10n),
             ),
           ],
         ),
@@ -162,18 +184,21 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroCard(BuildContext context, ReportProvider provider, bool isDark, String lang) {
+  Widget _buildHeroCard(
+    BuildContext context,
+    ReportProvider provider,
+    AppLocalizations l10n,
+  ) {
     return GlassContainer(
-      isDarkMode: isDark,
       padding: const EdgeInsets.all(22),
-      gradient: isDark ? AppColors.heroGradientDark : AppColors.heroGradientLight,
+      gradient: AppColors.heroGradient,
       child: Column(
         children: [
           // Badge "CONFIDENTIEL & SÉCURISÉ"
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.cardBgDark : Colors.white,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: AppColors.primaryOrange.withValues(alpha: 0.4),
@@ -194,11 +219,13 @@ class HomeScreen extends StatelessWidget {
                   color: AppColors.primaryOrange,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  AppTranslations.getText('confidential_badge', lang),
-                  style: AppTextStyles.badgeText.copyWith(
-                    fontSize: 10.5,
-                    color: AppColors.primaryOrange,
+                Flexible(
+                  child: Text(
+                    l10n.confidentialBadge,
+                    style: AppTextStyles.badgeText.copyWith(
+                      fontSize: 12,
+                      color: AppColors.primaryOrange,
+                    ),
                   ),
                 ),
               ],
@@ -206,27 +233,26 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            AppTranslations.getText('hero_title', lang),
+            l10n.heroTitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.screenTitle.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
+              color: AppColors.primaryBlue,
               fontSize: 26,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            AppTranslations.getText('hero_sub', lang),
+            l10n.heroSubtitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.screenSubtitle.copyWith(
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              color: AppColors.textSecondary,
               fontSize: 13.5,
               height: 1.45,
             ),
           ),
           const SizedBox(height: 22),
           PulsingWidget(
-            minScale: 0.98,
             maxScale: 1.025,
             duration: const Duration(milliseconds: 1600),
             child: InteractiveCard(
@@ -235,7 +261,10 @@ class HomeScreen extends StatelessWidget {
               },
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
                 decoration: BoxDecoration(
                   gradient: AppColors.orangeCtaGradient,
                   borderRadius: BorderRadius.circular(16),
@@ -250,14 +279,21 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconUtils.buildIcon(FontAwesomeIcons.fileShield, size: 18, color: Colors.white),
+                    IconUtils.buildIcon(
+                      FontAwesomeIcons.fileShield,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 12),
-                    Text(
-                      AppTranslations.getText('report_now', lang),
-                      style: AppTextStyles.buttonText.copyWith(
-                        fontSize: 15,
-                        letterSpacing: 0.5,
-                        fontWeight: FontWeight.w800,
+                    Flexible(
+                      child: Text(
+                        l10n.reportNow,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.buttonText.copyWith(
+                          fontSize: 15,
+                          letterSpacing: 0.5,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ],
@@ -272,95 +308,100 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildEmergencyCard({
     required BuildContext context,
+    required String semanticLabel,
     required String title,
     required String subtitle,
     required String number,
     required dynamic icon,
     required Color iconColor,
     required Color bgColor,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
-    return InteractiveCard(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: GlassContainer(
-        isDarkMode: isDark,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: IconUtils.buildIcon(
-                icon,
-                color: iconColor,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.cardTitle.copyWith(
-                      fontSize: 16,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                    ),
+    // One node for the whole card: a screen reader announces "Appeler la
+    // Police, numéro 19" instead of spelling out each fragment of the layout.
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: ExcludeSemantics(
+        child: InteractiveCard(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: GlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.cardSubtitle.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                number,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: iconColor,
+                  child: IconUtils.buildIcon(icon, color: iconColor, size: 22),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.cardTitle.copyWith(
+                          fontSize: 16,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AppTextStyles.cardSubtitle.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    number,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: iconColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHowItWorksCard(bool isDark, String lang) {
+  Widget _buildHowItWorksCard(AppLocalizations l10n) {
     return GlassContainer(
-      isDarkMode: isDark,
       padding: const EdgeInsets.all(18),
-      borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.3),
+      borderColor: AppColors.primaryBlue.withValues(alpha: 0.3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+              color: AppColors.primaryBlue,
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconUtils.buildIcon(
               FontAwesomeIcons.circleQuestion,
-              color: isDark ? AppColors.bgDark : Colors.white,
+              color: Colors.white,
               size: 18,
             ),
           ),
@@ -370,17 +411,17 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppTranslations.getText('how_it_works', lang),
+                  l10n.howItWorks,
                   style: AppTextStyles.cardTitle.copyWith(
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                    color: AppColors.primaryBlue,
                     fontSize: 15.5,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  AppTranslations.getText('how_it_works_sub', lang),
+                  l10n.howItWorksSubtitle,
                   style: AppTextStyles.cardSubtitle.copyWith(
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                    color: AppColors.textSecondary,
                     fontSize: 12.5,
                     height: 1.4,
                   ),
@@ -393,11 +434,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReportHistoryItem(BuildContext context, dynamic report, bool isDark) {
+  Widget _buildReportHistoryItem(
+    BuildContext context,
+    ReportModel report,
+    AppLocalizations l10n,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       child: GlassContainer(
-        isDarkMode: isDark,
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
@@ -413,17 +457,22 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   Text(
                     report.referenceCode ?? 'REF-EMC-2026',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14.5,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${report.incidentType ?? "Signalement"} • ${report.platform ?? "Plateforme non précisée"}',
+                    l10n.reportHistorySubtitle(
+                      report.incidentType?.label(l10n) ??
+                          l10n.reportFallbackIncident,
+                      report.platform?.label(l10n) ??
+                          l10n.reportFallbackPlatform,
+                    ),
                     style: AppTextStyles.cardSubtitle.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -432,15 +481,15 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.primaryBlue.withValues(alpha: 0.3) : AppColors.whatsappBgLight,
+                color: AppColors.whatsappBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'En cours',
-                style: TextStyle(
-                  fontSize: 11,
+                l10n.reportStatusInProgress,
+                style: const TextStyle(
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                  color: AppColors.primaryBlue,
                 ),
               ),
             ),
@@ -450,11 +499,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPartnerFooter(bool isDark, String lang) {
+  Widget _buildPartnerFooter(AppLocalizations l10n) {
     return GlassContainer(
-      isDarkMode: isDark,
       padding: const EdgeInsets.all(16),
-      borderColor: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.35),
+      borderColor: AppColors.primaryBlue.withValues(alpha: 0.35),
       child: Column(
         children: [
           Row(
@@ -469,14 +517,14 @@ class HomeScreen extends StatelessWidget {
                   errorBuilder: (c, e, s) => const SizedBox(),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   '×',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                    color: AppColors.primaryBlue,
                   ),
                 ),
               ),
@@ -493,12 +541,12 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            AppTranslations.getText('cmrpi_partner', lang),
+            l10n.cmrpiPartner,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
+            style: const TextStyle(
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+              color: AppColors.textSecondary,
               height: 1.3,
             ),
           ),

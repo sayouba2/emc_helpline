@@ -3,10 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../core/localization/app_translations.dart';
 import '../../core/utils/icon_utils.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
-import '../../providers/theme_provider.dart';
 
 class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HeaderAppBar({super.key});
@@ -17,41 +16,45 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final lang = reportProvider.currentLanguage;
+    final l10n = AppLocalizations.of(context);
+    // The effective locale, which may come from the device rather than from an
+    // explicit choice in the picker below.
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return AppBar(
-      backgroundColor: isDark ? AppColors.bgDark : Colors.white,
+      backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
       scrolledUnderElevation: 1.0,
       leadingWidth: 95,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 14.0, top: 6, bottom: 6),
-        child: InkWell(
-          onTap: () => reportProvider.setTab(0),
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            'assets/images/emc.png',
-            fit: BoxFit.contain,
-            height: 56,
-            errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
-              FontAwesomeIcons.shieldHalved,
-              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-              size: 28,
+        padding: const EdgeInsets.only(left: 14.0, top: 4, bottom: 4),
+        child: Semantics(
+          button: true,
+          label: l10n.a11yAppLogo,
+          child: InkWell(
+            onTap: () => reportProvider.setTab(0),
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/images/emc.png',
+              fit: BoxFit.contain,
+              height: 56,
+              errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
+                FontAwesomeIcons.shieldHalved,
+                color: AppColors.primaryBlue,
+                size: 28,
+              ),
             ),
           ),
         ),
       ),
       title: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            AppTranslations.getText('app_title', lang),
+            l10n.appTitle,
             style: AppTextStyles.headerTitle.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.primaryBlue,
+              color: AppColors.primaryBlue,
               letterSpacing: -0.3,
               fontSize: 16.5,
               fontWeight: FontWeight.bold,
@@ -59,37 +62,50 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           const SizedBox(height: 3),
           // Sélecteur de langue sous forme de pill élégant au centre
-          InkWell(
-            onTap: () => _showLanguageDialog(context, reportProvider, isDark),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.cardBgDark : AppColors.bgLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: (isDark ? AppColors.accentCyan : AppColors.primaryBlue).withValues(alpha: 0.35),
-                  width: 1,
+          Semantics(
+            button: true,
+            label: l10n.changeLanguage,
+            child: InkWell(
+              onTap: () => _showLanguageDialog(context, reportProvider, l10n),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    lang == 'ar' ? '🇲🇦 العربية' : (lang == 'en' ? '🇬🇧 English' : '🇫🇷 Français'),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                decoration: BoxDecoration(
+                  color: AppColors.bg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        switch (languageCode) {
+                          'ar' => '🇲🇦 ${l10n.languageArabic}',
+                          'en' => '🇬🇧 ${l10n.languageEnglish}',
+                          _ => '🇫🇷 ${l10n.languageFrench}',
+                        },
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 3),
-                  Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 14,
-                    color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                  ),
-                ],
+                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.arrow_drop_down_rounded,
+                      size: 16,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -98,15 +114,21 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         // CMRPI Partner Logo (Occupe TOUT l'espace de droite sans aucune obstruction)
         Padding(
-          padding: const EdgeInsets.only(right: 14.0, left: 4.0, top: 6, bottom: 6),
+          padding: const EdgeInsets.only(
+            right: 14.0,
+            left: 4.0,
+            top: 4,
+            bottom: 4,
+          ),
           child: Image.asset(
             'assets/images/cmrpi.png',
+            semanticLabel: l10n.a11yPartnerLogo,
             fit: BoxFit.contain,
             height: 56,
             width: 85,
             errorBuilder: (context, error, stackTrace) => IconUtils.buildIcon(
               FontAwesomeIcons.buildingColumns,
-              color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+              color: AppColors.primaryBlue,
               size: 28,
             ),
           ),
@@ -115,10 +137,15 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, ReportProvider provider, bool isDark) {
+  void _showLanguageDialog(
+    BuildContext context,
+    ReportProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final languageCode = Localizations.localeOf(context).languageCode;
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? AppColors.cardBgDark : Colors.white,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -130,10 +157,10 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Choisir la langue / اختر اللغة',
+                l10n.chooseLanguage,
                 style: AppTextStyles.cardTitle.copyWith(
                   fontSize: 18,
-                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -142,24 +169,24 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
                 provider: provider,
                 code: 'fr',
                 flag: '🇫🇷',
-                label: 'Français',
-                isDark: isDark,
+                label: l10n.languageFrench,
+                selectedCode: languageCode,
               ),
               _buildLangTile(
                 context,
                 provider: provider,
                 code: 'ar',
                 flag: '🇲🇦',
-                label: 'العربية (Arabe)',
-                isDark: isDark,
+                label: l10n.languageArabic,
+                selectedCode: languageCode,
               ),
               _buildLangTile(
                 context,
                 provider: provider,
                 code: 'en',
                 flag: '🇬🇧',
-                label: 'English',
-                isDark: isDark,
+                label: l10n.languageEnglish,
+                selectedCode: languageCode,
               ),
             ],
           ),
@@ -174,15 +201,13 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     required String code,
     required String flag,
     required String label,
-    required bool isDark,
+    required String selectedCode,
   }) {
-    final isSelected = provider.currentLanguage == code;
+    final isSelected = selectedCode == code;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected
-            ? (isDark ? AppColors.primaryBlue.withValues(alpha: 0.3) : AppColors.whatsappBgLight)
-            : Colors.transparent,
+        color: isSelected ? AppColors.whatsappBg : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
@@ -191,20 +216,18 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           label,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? (isDark ? AppColors.accentCyan : AppColors.primaryBlue)
-                : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+            color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
           ),
         ),
         trailing: isSelected
             ? IconUtils.buildIcon(
                 FontAwesomeIcons.circleCheck,
-                color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                color: AppColors.primaryBlue,
                 size: 18,
               )
             : null,
         onTap: () {
-          provider.setLanguage(code);
+          provider.setLocale(Locale(code));
           Navigator.pop(context);
         },
       ),

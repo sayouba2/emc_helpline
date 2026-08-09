@@ -1,0 +1,314 @@
+{
+  "@@locale": "fr",
+  "appTitle": "EMC Helpline",
+  "@appTitle": {
+    "description": "Application name shown in the header"
+  },
+  "navHome": "Accueil",
+  "navReport": "Signaler",
+  "navResources": "Ressources",
+  "navContact": "Contact",
+  "cmrpiPartner": "En partenariat avec le CMRPI (Centre Marocain de Recherches Polyvalentes et d'Innovation)",
+  "chooseLanguage": "Choisir la langue",
+  "languageFrench": "Français",
+  "languageArabic": "العربية",
+  "languageEnglish": "English",
+  "actionContinue": "Continuer",
+  "actionNext": "Suivant",
+  "actionPrevious": "Précédent",
+  "actionSend": "Envoyer",
+  "actionEdit": "Modifier",
+  "heroTitle": "Tu n'es pas seul(e)",
+  "heroSubtitle": "Nous sommes là pour t'écouter, t'orienter et te protéger en toute sécurité.",
+  "reportNow": "SIGNALER MAINTENANT",
+  "confidentialBadge": "CONFIDENTIEL & SÉCURISÉ",
+  "emergencyNumbers": "Numéros d'Urgence",
+  "police": "Police",
+  "policeSubtitle": "Intervention immédiate",
+  "gendarmerie": "Gendarmerie",
+  "gendarmerieSubtitle": "Secours et protection",
+  "howItWorks": "Comment ça marche ?",
+  "howItWorksSubtitle": "Tous les signalements sont traités anonymement et confidentiellement par des experts.",
+  "recentReports": "Mes Signalements Récents",
+  "reportStatusInProgress": "En cours",
+  "reportFallbackIncident": "Signalement",
+  "@reportFallbackIncident": {
+    "description": "Used when a history entry has no incident type"
+  },
+  "reportFallbackPlatform": "Plateforme non précisée",
+  "stepperContext": "Contexte",
+  "stepperProfile": "Profil",
+  "stepperIncident": "Incident",
+  "stepperSummary": "Résumé",
+  "whoNeedsHelp": "Qui a besoin d'aide ?",
+  "whoNeedsHelpSubtitle": "Sélectionnez la personne concernée par le signalement.",
+  "whoForSelf": "Pour moi",
+  "whoForSelfSubtitle": "Je souhaite signaler une situation qui me concerne directement.",
+  "whoForSomeoneElse": "Pour quelqu'un d'autre",
+  "whoForSomeoneElseSubtitle": "Je signale pour un ami, un proche ou une connaissance.",
+  "anonymityTitle": "Anonymat garanti & pseudo",
+  "anonymitySubtitle": "Aucun nom réel ni donnée personnelle n'est requis.",
+  "pseudoHint": "Ex: HeroSecurite, Anonyme123...",
+  "pseudoInfo": "Ce pseudo sera utilisé pour garantir votre anonymat total.",
+  "pseudoAuto": "Pseudo auto",
+  "pseudoSuggestion1": "HérosDiscret42",
+  "@pseudoSuggestion1": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion2": "ÉtoileSecrète99",
+  "@pseudoSuggestion2": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion3": "PhoenixCalme12",
+  "@pseudoSuggestion3": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion4": "AigleProtecteur",
+  "@pseudoSuggestion4": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion5": "CyberAmiConfidentiel",
+  "@pseudoSuggestion5": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion6": "GardiendesMers77",
+  "@pseudoSuggestion6": {
+    "description": "Suggested anonymous nickname"
+  },
+  "pseudoSuggestion7": "SuperAnonyme2026",
+  "@pseudoSuggestion7": {
+    "description": "Suggested anonymous nickname"
+  },
+  "ageQuestion": "Quel âge as-tu ?",
+  "ageSubtitle": "Ces informations nous aident à mieux t'accompagner.",
+  "ageChild": "5 à 12 ans",
+  "ageTeen": "13 à 17 ans",
+  "ageAdult": "18 ans et plus",
+  "ageUndisclosed": "Je préfère ne pas le dire",
+  "chatbotBannerTitle": "Besoin d'aide interactive immédiate ? (+12 ans)",
+  "chatbotBannerBody": "Comme tu as plus de 12 ans, tu peux poser tes questions en direct au Chatbot EMC ou continuer ton signalement.",
+  "chatbotOpenButton": "Ouvrir le Chatbot EMC (+12 ans)",
+  "genderQuestion": "Comment veux-tu répondre ?",
+  "genderSubtitle": "Cette information nous aide à mieux comprendre ta situation.",
+  "genderFemale": "Féminin",
+  "genderMale": "Masculin",
+  "genderUndisclosed": "Je préfère ne pas dire",
+  "incidentQuestion": "Que s'est-il passé ?",
+  "incidentSubtitle": "Reste calme. Choisis ce qui ressemble le plus à ta situation.",
+  "incidentHateSpeech": "Propos de haine",
+  "incidentDiscrimination": "Propos raciste ou discriminatoire",
+  "incidentDefamation": "Diffamation",
+  "incidentIdentityTheft": "Usurpation d'identité",
+  "incidentIntimateImages": "Photos intimes ou personnelles",
+  "incidentThreat": "Menace",
+  "incidentOther": "Autres",
+  "platformQuestion": "Où est-ce arrivé ?",
+  "platformSubtitle": "Choisis la plateforme concernée.",
+  "platformOnlineGame": "Jeu en ligne",
+  "evidenceQuestion": "As-tu une preuve ?",
+  "evidenceSubtitle": "Tu peux ajouter une capture d'écran ou un lien.",
+  "evidenceAdded": "Capture d'écran ajoutée",
+  "evidenceAdd": "Ajouter une capture",
+  "evidenceAddHint": "Image depuis la galerie ou capture d'écran.",
+  "evidenceRemove": "Supprimer la capture",
+  "evidenceLinkLabel": "Lien vers le contenu",
+  "evidenceNone": "Je n'ai pas de preuve",
+  "evidencePickFailed": "Impossible d'ouvrir tes images. Vérifie l'autorisation d'accès à la galerie, ou ajoute plutôt un lien ci-dessous.",
+  "separatorOr": "OU",
+  "assistanceQuestion": "Veux-tu de l'aide ?",
+  "assistanceSubtitle": "Des personnes spécialisées peuvent t'accompagner.",
+  "assistanceWanted": "Accompagnement",
+  "assistanceWantedSubtitle": "Aide juridique ou psychologique.",
+  "assistanceNone": "Pas d'accompagnement",
+  "assistanceNoneSubtitle": "Je veux seulement signaler le contenu.",
+  "assistanceUnsure": "Je ne sais pas",
+  "assistanceUnsureSubtitle": "Je veux qu'on m'aide à choisir.",
+  "badgeYes": "OUI",
+  "badgeNo": "NON",
+  "badgeUnsure": "?",
+  "assistanceRequestedBadge": "AIDE DEMANDÉE",
+  "assistanceTypeQuestion": "De quel type d'aide as-tu besoin ?",
+  "assistanceTypeSubtitle": "Choisis l'aide qui correspond le mieux à ta situation.",
+  "assistanceTypeLegal": "Aide juridique",
+  "assistanceTypeLegalSubtitle": "Pour comprendre tes droits, signaler ou déposer plainte.",
+  "assistanceTypePsychological": "Aide psychologique",
+  "assistanceTypePsychologicalSubtitle": "Pour parler, être écouté(e) et rassuré(e).",
+  "assistanceTypeBoth": "Les deux",
+  "assistanceTypeBothSubtitle": "J'ai besoin d'une aide juridique et psychologique.",
+  "assistanceTypeUnsure": "Je ne sais pas",
+  "assistanceTypeUnsureSubtitle": "Je veux qu'une personne m'aide à choisir.",
+  "assistanceTypeInfo": "Tu peux choisir « Je ne sais pas ». L'important est de demander de l'aide.",
+  "contactQuestion": "Comment peut-on te recontacter ?",
+  "contactSubtitle": "Indique au moins un moyen si tu souhaites qu'on t'aide.",
+  "stayAnonymous": "Rester 100% anonyme",
+  "orGiveDetails": "OU DONNER TES COORDONNÉES",
+  "fieldPhone": "Téléphone",
+  "fieldPhoneHint": "ex: 06 12 34 56 78",
+  "fieldWhatsapp": "WhatsApp",
+  "fieldWhatsappHint": "ex: +212 6 12 34 56 78",
+  "fieldEmail": "E-mail",
+  "fieldEmailHint": "ex: monadresse@exemple.com",
+  "contactConfidentialNote": "Vos coordonnées restent strictement confidentielles et ne seront jamais divulguées.",
+  "urgencyQuestion": "Est-ce urgent ?",
+  "urgencySubtitle": "Dis-nous si tu es en danger maintenant.",
+  "urgencyUrgent": "Oui, c'est urgent",
+  "urgencyUrgentSubtitle": "Je suis en danger ou très inquiet.",
+  "urgencyNotUrgent": "Non",
+  "urgencyNotUrgentSubtitle": "Je veux signaler, mais ce n'est pas immédiat.",
+  "urgencyUnsure": "Je ne sais pas",
+  "urgencyUnsureSubtitle": "Je veux être aidé pour comprendre.",
+  "immediateDangerPrefix": "Danger immédiat : ",
+  "emergencyNumbersInline": "Police 19 · Gendarmerie 177",
+  "summaryTitle": "Vérifie ton signalement",
+  "summarySubtitle": "Tu peux corriger avant l'envoi.",
+  "summarySectionContext": "Contexte",
+  "summarySectionProblem": "Problème",
+  "summarySectionDetails": "Détails & preuves",
+  "summaryFor": "Pour",
+  "summaryAge": "Âge",
+  "summaryGender": "Genre",
+  "summaryType": "Type",
+  "summaryPlatform": "Plateforme",
+  "summaryEvidence": "Preuve",
+  "summaryEvidenceScreenshot": "1 capture d'écran",
+  "summaryEvidenceLink": "Lien web fourni",
+  "summaryEvidenceNone": "Aucune",
+  "summaryAssistance": "Aide",
+  "summaryAssistanceType": "Type d'aide",
+  "summaryUrgency": "Urgence",
+  "notSpecifiedMasculine": "Non précisé",
+  "@notSpecifiedMasculine": {
+    "description": "French needs a masculine and a feminine form"
+  },
+  "notSpecifiedFeminine": "Non précisée",
+  "@notSpecifiedFeminine": {
+    "description": "French needs a masculine and a feminine form"
+  },
+  "successTitle": "Signalement envoyé",
+  "successBody": "Ton signalement a été envoyé avec succès. Une personne spécialisée va l'étudier pour t'aider.",
+  "referenceNumber": "NUMÉRO DE RÉFÉRENCE",
+  "keepReference": "Conserve ce numéro précieusement. Il te permettra de suivre l'avancement de ton dossier lors de tes prochains échanges avec l'équipe.",
+  "seeAdvice": "Voir les conseils",
+  "contactEmcHelpline": "Contacter EMC Helpline",
+  "chatbotTitle": "Chatbot EMC (+12 ans)",
+  "chatbotStatus": "Assistant virtuel • En ligne",
+  "chatbotGreeting": "Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nJe suis là pour t'écouter, t'aider et te guider en toute confidentialité.\nComment puis-je t'aider aujourd'hui ?",
+  "chatbotQuestionBlock": "Comment bloquer un harceleur ?",
+  "chatbotQuestionPhoto": "On a partagé une photo de moi sans mon accord",
+  "chatbotQuestionPrivacy": "Un inconnu me demande des informations privées",
+  "chatbotBackToForm": "Poursuivre mon formulaire de signalement",
+  "chatbotBackToFormShort": "Formulaire →",
+  "chatbotAnswerBlock": "🛡️ Pour bloquer un utilisateur :\n1. Ne lui réponds plus.\n2. Fais des captures d'écran des messages comme preuve.\n3. Clique sur les 3 petits points de son profil et choisis « Bloquer et Signaler ».\n\nSouhaites-tu poursuivre ton dossier de signalement officiel sur EMC Helpline ?",
+  "chatbotAnswerPhoto": "⚠️ Si une photo privée circule :\n1. Ne t'inquiète pas, tu n'es pas responsable.\n2. Ne supprime pas les preuves.\n3. Remplis notre formulaire de signalement EMC Helpline pour qu'un spécialiste intervienne rapidement.",
+  "chatbotAnswerContact": "📞 Tu peux contacter nos conseillers humains gratuitement par :\n• WhatsApp : +212 624 405 889\n• Police : 19 | Gendarmerie : 177\n\nTu peux aussi ouvrir l'onglet Contact en bas !",
+  "chatbotAnswerDefault": "Merci pour ton message. Pour ta sécurité, ne partage jamais ton nom de famille ou ton adresse en ligne.\nSi tu vis une situation difficile, choisis « Poursuivre mon formulaire de signalement » pour envoyer un dossier anonyme à nos experts.",
+  "chatbotInputHint": "Écris ta question ici...",
+  "resourcesBadge": "RESSOURCES",
+  "resourcesTitle": "Que faire maintenant ?",
+  "resourcesSubtitle": "Des gestes simples peuvent te protéger.",
+  "tipDoNotReplyTitle": "Ne réponds pas",
+  "tipDoNotReplyBody": "Évite de continuer la discussion avec la personne.",
+  "tipKeepEvidenceTitle": "Garde les preuves",
+  "tipKeepEvidenceBody": "Conserve les captures, liens, messages ou comptes.",
+  "tipTalkToAdultTitle": "Parle à un adulte",
+  "tipTalkToAdultBody": "Un parent, un enseignant ou une personne de confiance.",
+  "tipBlockReportTitle": "Bloque et signale",
+  "tipBlockReportBody": "Utilise les options de l'application ou du réseau social.",
+  "immediateDangerTitle": "En cas de danger immédiat",
+  "contactBadge": "BESOIN D'AIDE ?",
+  "contactScreenTitle": "Contacte EMC Helpline",
+  "contactScreenSubtitle": "Notre équipe est disponible pour vous écouter, vous conseiller et vous accompagner en toute confidentialité.",
+  "contactWhatsappSubtitle": "Ouvrir la discussion EMC Helpline.",
+  "contactWhatsappAction": "Discuter →",
+  "contactCallTitle": "Appeler",
+  "contactCallAction": "Appeler →",
+  "contactEmailAction": "Écrire →",
+  "contactWebTitle": "Formulaire web",
+  "contactWebAction": "Visiter →",
+  "contactEmailSubject": "Demande de contact - EMC Helpline",
+  "contactWarning": "Attention : l'EMC Helpline ne remplace pas les autorités en cas de danger immédiat.",
+  "validationWho": "Choisis pour qui tu fais ce signalement.",
+  "validationAge": "Choisis ta tranche d'âge.",
+  "validationGender": "Choisis une réponse pour continuer.",
+  "validationIncident": "Choisis ce qui ressemble le plus à ta situation.",
+  "validationPlatform": "Choisis la plateforme concernée.",
+  "validationEvidence": "Ajoute une capture, un lien, ou choisis « Je n'ai pas de preuve ».",
+  "validationAssistance": "Dis-nous si tu souhaites être accompagné(e).",
+  "validationAssistanceType": "Choisis le type d'aide dont tu as besoin.",
+  "validationContact": "Laisse au moins un moyen de contact, ou choisis de rester anonyme.",
+  "validationUrgency": "Dis-nous si la situation est urgente.",
+  "validationInvalidEmail": "Cette adresse e-mail ne semble pas valide.",
+  "validationInvalidPhone": "Ce numéro ne semble pas valide.",
+  "validationInvalidUrl": "Ce lien ne semble pas valide.",
+  "callFailed": "Impossible de lancer l'appel. Compose le {number} toi-même.",
+  "@callFailed": {
+    "description": "Shown when the device cannot open the phone dialer",
+    "placeholders": {
+      "number": {
+        "type": "String",
+        "example": "19"
+      }
+    }
+  },
+  "reportHistorySubtitle": "{incident} • {platform}",
+  "@reportHistorySubtitle": {
+    "description": "Subtitle of a submitted report in the home history list",
+    "placeholders": {
+      "incident": {
+        "type": "String"
+      },
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "changeLanguage": "Changer la langue",
+  "@changeLanguage": {
+    "description": "Screen-reader label for the language pill in the header"
+  },
+  "a11yAppLogo": "Logo EMC Helpline. Revenir à l'accueil.",
+  "@a11yAppLogo": {
+    "description": "Screen-reader label for the header logo button"
+  },
+  "a11yPartnerLogo": "Logo du CMRPI, partenaire.",
+  "@a11yPartnerLogo": {
+    "description": "Screen-reader label for the partner logo"
+  },
+  "a11ySendMessage": "Envoyer le message",
+  "@a11ySendMessage": {
+    "description": "Screen-reader label for the chatbot send button"
+  },
+  "a11yStep": "Étape {current} sur {total} : {label}",
+  "@a11yStep": {
+    "description": "Screen-reader label for one dot of the wizard stepper",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yCall": "Appeler {service}, numéro {number}",
+  "@a11yCall": {
+    "description": "Screen-reader label for an emergency call card",
+    "placeholders": {
+      "service": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "demoNoticeTitle": "Version de démonstration",
+  "@demoNoticeTitle": {
+    "description": "Shown while no backend receives the reports"
+  },
+  "demoNoticeBody": "Les signalements ne sont pas encore transmis à une équipe. Si tu es en danger, appelle la Police (19) ou la Gendarmerie (177).",
+  "demoSuccessNotice": "Ce signalement n'a pas été transmis : l'application est en version de démonstration. Garde le numéro ci-dessus, mais contacte l'équipe directement si tu as besoin d'aide."
+}

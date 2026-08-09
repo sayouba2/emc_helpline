@@ -15,10 +15,15 @@ class LauncherUtils {
     }
   }
 
-  static Future<bool> openWhatsApp(String phoneNumber, {String? message}) async {
+  static Future<bool> openWhatsApp(
+    String phoneNumber, {
+    String? message,
+  }) async {
     try {
       final String cleanNumber = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
-      final String encodedMsg = Uri.encodeComponent(message ?? "Bonjour, j'ai besoin d'assistance via EMC Helpline.");
+      final String encodedMsg = Uri.encodeComponent(
+        message ?? "Bonjour, j'ai besoin d'assistance via EMC Helpline.",
+      );
       final Uri url = Uri.parse('https://wa.me/$cleanNumber?text=$encodedMsg');
       if (await canLaunchUrl(url)) {
         return await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -30,7 +35,11 @@ class LauncherUtils {
     }
   }
 
-  static Future<bool> sendEmail(String email, {String? subject, String? body}) async {
+  static Future<bool> sendEmail(
+    String email, {
+    String? subject,
+    String? body,
+  }) async {
     try {
       final Map<String, String> queryParams = {};
       if (subject != null) queryParams['subject'] = subject;
@@ -54,7 +63,8 @@ class LauncherUtils {
   static Future<bool> openWebPage(String urlString) async {
     try {
       String formattedUrl = urlString;
-      if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      if (!formattedUrl.startsWith('http://') &&
+          !formattedUrl.startsWith('https://')) {
         formattedUrl = 'https://$formattedUrl';
       }
       final Uri url = Uri.parse(formattedUrl);

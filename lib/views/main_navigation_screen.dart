@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
-import '../core/localization/app_translations.dart';
 import '../core/utils/icon_utils.dart';
+import '../l10n/app_localizations.dart';
 import '../providers/report_provider.dart';
-import '../providers/theme_provider.dart';
-import 'components/animated_indexed_stack.dart';
+import 'components/animated_screen_switcher.dart';
 import 'components/glass_container.dart';
 import 'components/header_app_bar.dart';
 import 'home/home_screen.dart';
@@ -20,10 +19,7 @@ class MainNavigationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final lang = reportProvider.currentLanguage;
-    final isRtl = lang == 'ar';
+    final l10n = AppLocalizations.of(context);
 
     final List<Widget> pages = [
       const HomeScreen(),
@@ -32,70 +28,77 @@ class MainNavigationScreen extends StatelessWidget {
       const ContactScreen(),
     ];
 
-    return Directionality(
-      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
-        extendBody: true,
-        appBar: const HeaderAppBar(),
-        body: AnimatedIndexedStack(
-          index: reportProvider.currentTab,
-          children: pages,
-        ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: GlassContainer(
-              isDarkMode: isDark,
-              blur: 16,
-              opacity: isDark ? 0.8 : 0.9,
-              borderRadius: BorderRadius.circular(30),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(
+    // Text direction comes from the app locale (see `main.dart`), so pushed
+    // routes such as the chatbot follow it too.
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      extendBody: true,
+      appBar: const HeaderAppBar(),
+      body: AnimatedScreenSwitcher(
+        index: reportProvider.currentTab,
+        children: pages,
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: GlassContainer(
+            frosted: true,
+            blur: 16,
+            borderRadius: BorderRadius.circular(30),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Flexible(
+                  child: _buildNavItem(
                     context: context,
                     index: 0,
                     currentIndex: reportProvider.currentTab,
-                    label: AppTranslations.getText('home', lang),
+                    label: l10n.navHome,
                     icon: FontAwesomeIcons.house,
-                    isDark: isDark,
                     onTap: () => reportProvider.setTab(0),
                   ),
-                  _buildNavItem(
+                ),
+                Flexible(
+                  child: _buildNavItem(
                     context: context,
                     index: 1,
                     currentIndex: reportProvider.currentTab,
-                    label: AppTranslations.getText('report', lang),
+                    label: l10n.navReport,
                     icon: FontAwesomeIcons.fileShield,
-                    isDark: isDark,
                     onTap: () {
-                      if (reportProvider.currentTab != 1) {
+                      // Repartir de zéro en arrivant sur l'onglet, mais aussi
+                      // quand on y est déjà et qu'un signalement vient d'être
+                      // envoyé : sinon l'écran de succès reste affiché et plus
+                      // aucun nouveau signalement n'est possible.
+                      if (reportProvider.currentTab != 1 ||
+                          reportProvider.submittedRefCode != null) {
                         reportProvider.startNewReport();
                       }
                     },
                   ),
-                  _buildNavItem(
+                ),
+                Flexible(
+                  child: _buildNavItem(
                     context: context,
                     index: 2,
                     currentIndex: reportProvider.currentTab,
-                    label: AppTranslations.getText('resources', lang),
+                    label: l10n.navResources,
                     icon: FontAwesomeIcons.lightbulb,
-                    isDark: isDark,
                     onTap: () => reportProvider.setTab(2),
                   ),
-                  _buildNavItem(
+                ),
+                Flexible(
+                  child: _buildNavItem(
                     context: context,
                     index: 3,
                     currentIndex: reportProvider.currentTab,
-                    label: AppTranslations.getText('contact', lang),
+                    label: l10n.navContact,
                     icon: FontAwesomeIcons.headset,
-                    isDark: isDark,
                     onTap: () => reportProvider.setTab(3),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -109,66 +112,74 @@ class MainNavigationScreen extends StatelessWidget {
     required int currentIndex,
     required String label,
     required dynamic icon,
-    required bool isDark,
     required VoidCallback onTap,
   }) {
     final isSelected = index == currentIndex;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(22),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16 : 12,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark
-                  ? AppColors.primaryOrange.withValues(alpha: 0.25)
-                  : AppColors.primaryOrange.withValues(alpha: 0.12))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(22),
-          border: isSelected
-              ? Border.all(
-                  color: AppColors.primaryOrange.withValues(alpha: 0.4),
-                  width: 1.5,
-                )
-              : null,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryOrange.withValues(alpha: 0.2),
-                    blurRadius: 10,
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconUtils.buildIcon(
-              icon,
-              size: isSelected ? 18 : 16,
-              color: isSelected
-                  ? AppColors.primaryOrange
-                  : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.primaryOrange,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                  letterSpacing: 0.2,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          // 48dp minimum touch target. Deliberately no `alignment`: a Container
+          // that has one expands to fill its constraints instead of hugging its
+          // child, and the bottomNavigationBar slot is loosely constrained — the
+          // bar grew to the full screen height. The min constraints alone are
+          // passed down to the Row, which centres its children anyway.
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSelected ? 16 : 12,
+            vertical: 10,
+          ),
+          // The selected tab is a solid orange fill with white text. A
+          // translucent tint looked lighter but only reached 2.78:1 against the
+          // label, well under the 4.5:1 WCAG AA needs at this size.
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryOrange : Colors.transparent,
+            borderRadius: BorderRadius.circular(22),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryOrange.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: ExcludeSemantics(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconUtils.buildIcon(
+                  icon,
+                  size: isSelected ? 18 : 16,
+                  color: isSelected ? Colors.white : AppColors.textSecondary,
                 ),
-              ),
-            ],
-          ],
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.fade,
+                      softWrap: false,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );

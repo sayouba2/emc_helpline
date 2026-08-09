@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/localization/app_translations.dart';
 import '../../core/utils/icon_utils.dart';
-import '../../providers/report_provider.dart';
-import '../../providers/theme_provider.dart';
+import '../../l10n/app_localizations.dart';
 
 class EmcChatbotScreen extends StatefulWidget {
   const EmcChatbotScreen({super.key});
@@ -18,32 +15,51 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  final List<Map<String, String>> _messages = [
-    {
-      'sender': 'bot',
-      'text': 'Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nTu as été redirigé ici car tu as plus de 12 ans.\nJe suis là pour t\'écouter, t\'aider et te guider en toute confidentialité.\nComment puis-je t\'aider aujourd\'hui ?',
-    },
+  /// `null` text means "the localised greeting", resolved at build time so the
+  /// opening message follows a language change.
+  final List<({bool isBot, String? text})> _messages = [
+    (isBot: true, text: null),
   ];
 
-  final List<String> _quickQuestions = [
-    'Comment bloquer un harceleur ?',
-    'On a partagé une photo de moi sans mon accord',
-    'Un inconnu me demande des informations privées',
-    'Poursuivre mon formulaire de signalement',
-  ];
+  /// Which canned reply a free-text message maps to. The matching is keyword
+  /// based and French-only for now — see the note in `_answerFor`.
+  _BotTopic _topicFor(String userText) {
+    final lower = userText.toLowerCase();
+    if (lower.contains('bloquer') || lower.contains('harcel')) {
+      return _BotTopic.blocking;
+    }
+    if (lower.contains('photo') || lower.contains('image')) {
+      return _BotTopic.photo;
+    }
+    if (lower.contains('conseiller') ||
+        lower.contains('humain') ||
+        lower.contains('contact')) {
+      return _BotTopic.humanContact;
+    }
+    return _BotTopic.fallback;
+  }
 
-  void _sendMessage(String text) {
+  String _answerFor(_BotTopic topic, AppLocalizations l10n) => switch (topic) {
+    _BotTopic.blocking => l10n.chatbotAnswerBlock,
+    _BotTopic.photo => l10n.chatbotAnswerPhoto,
+    _BotTopic.humanContact => l10n.chatbotAnswerContact,
+    _BotTopic.fallback => l10n.chatbotAnswerDefault,
+  };
+
+  void _sendMessage(String text, AppLocalizations l10n) {
     if (text.trim().isEmpty) return;
 
-    if (text == 'Poursuivre mon formulaire de signalement') {
+    // Le chatbot ne pilote pas le wizard : il rend la main à l'étape d'où il a
+    // été ouvert, l'utilisateur poursuit ensuite avec "Suivant".
+    if (text == l10n.chatbotBackToForm) {
       Navigator.pop(context);
-      final reportProvider = Provider.of<ReportProvider>(context, listen: false);
-      reportProvider.nextWizardStep();
       return;
     }
 
+    final answer = _answerFor(_topicFor(text), l10n);
+
     setState(() {
-      _messages.add({'sender': 'user', 'text': text});
+      _messages.add((isBot: false, text: text));
       _inputController.clear();
     });
 
@@ -52,27 +68,9 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
     // Simulated Bot Response
     Future.delayed(const Duration(milliseconds: 900), () {
       if (!mounted) return;
-      setState(() {
-        _messages.add({
-          'sender': 'bot',
-          'text': _generateBotAnswer(text),
-        });
-      });
+      setState(() => _messages.add((isBot: true, text: answer)));
       _scrollToBottom();
     });
-  }
-
-  String _generateBotAnswer(String userText) {
-    final lower = userText.toLowerCase();
-    if (lower.contains('bloquer') || lower.contains('harcel')) {
-      return '🛡️ Pour bloquer un utilisateur :\n1. Ne lui réponds plus.\n2. Fais des captures d\'écran des messages comme preuve.\n3. Clique sur les 3 petits points de son profil et choisis "Bloquer et Signaler".\n\nSouhaites-tu poursuivre ton dossier de signalement officiel sur EMC Helpline ?';
-    } else if (lower.contains('photo') || lower.contains('image')) {
-      return '⚠️ Si une photo privée circule :\n1. Ne t\'inquiète pas, tu n\'es pas responsable.\n2. Ne supprime pas les preuves.\n3. Remplis notre formulaire de signalement EMC Helpline pour qu\'un spécialiste intervienne rapidement.';
-    } else if (lower.contains('conseiller') || lower.contains('humain') || lower.contains('contact')) {
-      return '📞 Tu peux contacter nos conseillers humains gratuitement par :\n• WhatsApp : +212 624 405 889\n• Police : 19 | Gendarmerie : 177\n\nTu peux aussi cliquer sur l\'onglet Contact en bas !';
-    } else {
-      return 'Merci pour ton message. Pour ta sécurité, ne partage jamais ton nom de famille ou ton adresse en ligne.\nSi tu vis une situation difficile, clique sur "Poursuivre le formulaire" pour envoyer un dossier anonyme à nos experts.';
-    }
   }
 
   void _scrollToBottom() {
@@ -89,15 +87,18 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final reportProvider = Provider.of<ReportProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final lang = reportProvider.currentLanguage;
+    final l10n = AppLocalizations.of(context);
+    final quickQuestions = [
+      l10n.chatbotQuestionBlock,
+      l10n.chatbotQuestionPhoto,
+      l10n.chatbotQuestionPrivacy,
+      l10n.chatbotBackToForm,
+    ];
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        backgroundColor: isDark ? AppColors.cardBgDark : Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -123,18 +124,18 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Chatbot EMC (+12 ans)',
-                    style: TextStyle(
+                    l10n.chatbotTitle,
+                    style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Text(
-                    'Assistant Virtuel • En ligne',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: isDark ? AppColors.accentCyan : AppColors.whatsappGreen,
+                    l10n.chatbotStatus,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.whatsappGreen,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -146,13 +147,10 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
         actions: [
           // Option pour revenir au formulaire de signalement
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              reportProvider.nextWizardStep();
-            },
-            child: const Text(
-              'Formulaire ->',
-              style: TextStyle(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.chatbotBackToFormShort,
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
                 color: AppColors.primaryOrange,
@@ -166,18 +164,23 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
           // Partner Header Banner
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
+            color: AppColors.whatsappBg,
             child: Row(
               children: [
-                Image.asset('assets/images/cmrpi.png', height: 20, width: 20, errorBuilder: (c, e, s) => const SizedBox()),
+                Image.asset(
+                  'assets/images/cmrpi.png',
+                  height: 20,
+                  width: 20,
+                  errorBuilder: (c, e, s) => const SizedBox(),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppTranslations.getText('cmrpi_partner', lang),
-                    style: TextStyle(
-                      fontSize: 10.5,
+                    l10n.cmrpiPartner,
+                    style: const TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.primaryBlue,
+                      color: AppColors.primaryBlue,
                     ),
                   ),
                 ),
@@ -193,10 +196,13 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
-                final isBot = msg['sender'] == 'bot';
+                final isBot = msg.isBot;
+                final text = msg.text ?? l10n.chatbotGreeting;
 
                 return Align(
-                  alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+                  alignment: isBot
+                      ? Alignment.centerLeft
+                      : Alignment.centerRight,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     constraints: BoxConstraints(
@@ -204,9 +210,7 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                     ),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isBot
-                          ? (isDark ? AppColors.cardBgDark : Colors.white)
-                          : AppColors.primaryOrange,
+                      color: isBot ? Colors.white : AppColors.primaryOrange,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(18),
                         topRight: const Radius.circular(18),
@@ -221,13 +225,11 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                       ],
                     ),
                     child: Text(
-                      msg['text']!,
+                      text,
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.4,
-                        color: isBot
-                            ? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight)
-                            : Colors.white,
+                        color: isBot ? AppColors.textPrimary : Colors.white,
                       ),
                     ),
                   ),
@@ -238,37 +240,39 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
 
           // Quick Suggestion Chips
           SizedBox(
-            height: 42,
+            height: 52,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: _quickQuestions.length,
+              itemCount: quickQuestions.length,
               itemBuilder: (context, index) {
-                final q = _quickQuestions[index];
-                final isFormAction = q == 'Poursuivre mon formulaire de signalement';
+                final q = quickQuestions[index];
+                final isFormAction = q == l10n.chatbotBackToForm;
 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ActionChip(
                     backgroundColor: isFormAction
                         ? AppColors.primaryOrange.withValues(alpha: 0.15)
-                        : (isDark ? AppColors.cardBgDark : Colors.white),
+                        : Colors.white,
                     side: BorderSide(
                       color: isFormAction
                           ? AppColors.primaryOrange
-                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                          : AppColors.border,
                     ),
                     label: Text(
                       q,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: isFormAction ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isFormAction
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: isFormAction
                             ? AppColors.primaryOrange
-                            : (isDark ? AppColors.accentCyan : AppColors.primaryBlue),
+                            : AppColors.primaryBlue,
                       ),
                     ),
-                    onPressed: () => _sendMessage(q),
+                    onPressed: () => _sendMessage(q, l10n),
                   ),
                 );
               },
@@ -279,13 +283,9 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
           // Input Bar
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.cardBgDark : Colors.white,
-              border: Border(
-                top: BorderSide(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                ),
-              ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: AppColors.border)),
             ),
             child: SafeArea(
               child: Row(
@@ -293,34 +293,43 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                   Expanded(
                     child: TextField(
                       controller: _inputController,
-                      style: TextStyle(
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
                         fontSize: 14,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Écris ta question ici...',
-                        hintStyle: TextStyle(
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        hintText: l10n.chatbotInputHint,
+                        hintStyle: const TextStyle(
+                          color: AppColors.textSecondary,
                           fontSize: 13.5,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         filled: true,
-                        fillColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+                        fillColor: AppColors.bg,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      onSubmitted: _sendMessage,
+                      onSubmitted: (value) => _sendMessage(value, l10n),
                     ),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
+                    tooltip: l10n.a11ySendMessage,
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.primaryOrange,
+                      minimumSize: const Size(48, 48),
                     ),
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
-                    onPressed: () => _sendMessage(_inputController.text),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    onPressed: () => _sendMessage(_inputController.text, l10n),
                   ),
                 ],
               ),
@@ -331,3 +340,6 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
     );
   }
 }
+
+/// The canned topics the simulated assistant can answer.
+enum _BotTopic { blocking, photo, humanContact, fallback }

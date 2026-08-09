@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/icon_utils.dart';
+import '../../../core/localization/report_enum_labels.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
 
 class Step4SummaryScreen extends StatelessWidget {
@@ -12,6 +14,7 @@ class Step4SummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ReportProvider>(context);
+    final l10n = AppLocalizations.of(context);
     final report = provider.currentReport;
 
     return SingleChildScrollView(
@@ -20,13 +23,13 @@ class Step4SummaryScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "Vérifie ton signalement",
+            l10n.summaryTitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.screenTitle,
           ),
           const SizedBox(height: 8),
           Text(
-            "Tu peux corriger avant l'envoi.",
+            l10n.summarySubtitle,
             textAlign: TextAlign.center,
             style: AppTextStyles.screenSubtitle,
           ),
@@ -36,12 +39,20 @@ class Step4SummaryScreen extends StatelessWidget {
           _buildSummaryCard(
             context,
             icon: FontAwesomeIcons.user,
-            title: "Contexte",
-            onEdit: () => provider.setWizardStep(0),
+            title: l10n.summarySectionContext,
+            editLabel: l10n.actionEdit,
+            onEdit: () => provider.setWizardStep(ReportProvider.stepWho),
             items: [
-              _buildRow("Pour", report.whoFor ?? "Non précisé"),
-              _buildRow("Âge", report.ageRange ?? "Non précisé"),
-              if (report.gender != null) _buildRow("Genre", report.gender!),
+              _buildRow(
+                l10n.summaryFor,
+                report.whoFor?.label(l10n) ?? l10n.notSpecifiedMasculine,
+              ),
+              _buildRow(
+                l10n.summaryAge,
+                report.ageGroup?.label(l10n) ?? l10n.notSpecifiedMasculine,
+              ),
+              if (report.gender != null)
+                _buildRow(l10n.summaryGender, report.gender!.label(l10n)),
             ],
           ),
           const SizedBox(height: 14),
@@ -50,11 +61,19 @@ class Step4SummaryScreen extends StatelessWidget {
           _buildSummaryCard(
             context,
             icon: FontAwesomeIcons.triangleExclamation,
-            title: "Problème",
-            onEdit: () => provider.setWizardStep(3),
+            title: l10n.summarySectionProblem,
+            editLabel: l10n.actionEdit,
+            onEdit: () =>
+                provider.setWizardStep(ReportProvider.stepIncidentType),
             items: [
-              _buildRow("Type", report.incidentType ?? "Non précisé"),
-              _buildRow("Plateforme", report.platform ?? "Non précisée"),
+              _buildRow(
+                l10n.summaryType,
+                report.incidentType?.label(l10n) ?? l10n.notSpecifiedMasculine,
+              ),
+              _buildRow(
+                l10n.summaryPlatform,
+                report.platform?.label(l10n) ?? l10n.notSpecifiedFeminine,
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -63,24 +82,33 @@ class Step4SummaryScreen extends StatelessWidget {
           _buildSummaryCard(
             context,
             icon: FontAwesomeIcons.paperclip,
-            title: "Détails & Preuves",
-            onEdit: () => provider.setWizardStep(5),
+            title: l10n.summarySectionDetails,
+            editLabel: l10n.actionEdit,
+            onEdit: () => provider.setWizardStep(ReportProvider.stepEvidence),
             items: [
               _buildRow(
-                "Preuve",
-                report.evidenceImagePath != null
-                    ? "1 capture d'écran"
-                    : (report.evidenceUrl != null && report.evidenceUrl!.isNotEmpty
-                        ? "Lien web fourni"
-                        : "Aucune"),
+                l10n.summaryEvidence,
+                report.evidenceFilePath != null
+                    ? l10n.summaryEvidenceScreenshot
+                    : (report.evidenceUrl != null &&
+                              report.evidenceUrl!.isNotEmpty
+                          ? l10n.summaryEvidenceLink
+                          : l10n.summaryEvidenceNone),
               ),
               _buildRow(
-                "Aide",
-                report.wantsAssistance ?? "Non précisée",
+                l10n.summaryAssistance,
+                report.assistanceNeeded?.label(l10n) ??
+                    l10n.notSpecifiedFeminine,
               ),
               if (report.assistanceType != null)
-                _buildRow("Type d'aide", report.assistanceType!),
-              _buildRow("Urgence", report.urgency ?? "Non précisée"),
+                _buildRow(
+                  l10n.summaryAssistanceType,
+                  report.assistanceType!.label(l10n),
+                ),
+              _buildRow(
+                l10n.summaryUrgency,
+                report.urgencyLevel?.label(l10n) ?? l10n.notSpecifiedFeminine,
+              ),
             ],
           ),
         ],
@@ -92,6 +120,7 @@ class Step4SummaryScreen extends StatelessWidget {
     BuildContext context, {
     required dynamic icon,
     required String title,
+    required String editLabel,
     required VoidCallback onEdit,
     required List<Widget> items,
   }) {
@@ -100,7 +129,7 @@ class Step4SummaryScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -130,8 +159,8 @@ class Step4SummaryScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Text(
-                    "Modifier",
-                    style: TextStyle(
+                    editLabel,
+                    style: const TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primaryOrange,
@@ -156,7 +185,10 @@ class Step4SummaryScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.cardSubtitle.copyWith(fontSize: 13.5)),
+          Text(
+            label,
+            style: AppTextStyles.cardSubtitle.copyWith(fontSize: 13.5),
+          ),
           Text(
             value,
             style: const TextStyle(

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_contacts.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
-import '../../providers/theme_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../components/animated_entrance.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
@@ -15,44 +15,48 @@ class ResourcesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final l10n = AppLocalizations.of(context);
 
     final List<Map<String, dynamic>> adviceList = [
       {
-        'title': 'Ne réponds pas',
-        'subtitle': 'Évite de continuer la discussion avec la personne.',
+        'title': l10n.tipDoNotReplyTitle,
+        'subtitle': l10n.tipDoNotReplyBody,
         'icon': FontAwesomeIcons.hand,
-        'bgColor': isDark ? AppColors.dangerRedBgDark : const Color(0xFFFDE8E8),
+        'bgColor': const Color(0xFFFDE8E8),
         'iconColor': AppColors.dangerRed,
       },
       {
-        'title': 'Garde les preuves',
-        'subtitle': 'Conserve les captures, liens, messages ou comptes.',
+        'title': l10n.tipKeepEvidenceTitle,
+        'subtitle': l10n.tipKeepEvidenceBody,
         'icon': FontAwesomeIcons.boxArchive,
-        'bgColor': isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
-        'iconColor': isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+        'bgColor': AppColors.whatsappBg,
+        'iconColor': AppColors.primaryBlue,
       },
       {
-        'title': 'Parle à un adulte',
-        'subtitle': 'Un parent, un enseignant ou une personne de confiance.',
+        'title': l10n.tipTalkToAdultTitle,
+        'subtitle': l10n.tipTalkToAdultBody,
         'icon': FontAwesomeIcons.userGroup,
-        'bgColor': isDark ? const Color(0xFF431407) : const Color(0xFFFFEDD5),
+        'bgColor': const Color(0xFFFFEDD5),
         'iconColor': AppColors.primaryOrange,
       },
       {
-        'title': 'Bloque et signale',
-        'subtitle': "Utilise les options de l'application ou du réseau social.",
+        'title': l10n.tipBlockReportTitle,
+        'subtitle': l10n.tipBlockReportBody,
         'icon': FontAwesomeIcons.userSlash,
-        'bgColor': isDark ? const Color(0xFF0C4A6E) : const Color(0xFFE0F2FE),
+        'bgColor': const Color(0xFFE0F2FE),
         'iconColor': const Color(0xFF0284C7),
       },
     ];
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 90),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 90,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -62,19 +66,19 @@ class ResourcesScreen extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
+                    color: AppColors.whatsappBg,
                     borderRadius: BorderRadius.circular(8),
-                    border: isDark
-                        ? Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3))
-                        : null,
                   ),
                   child: Text(
-                    'RESSOURCES',
-                    style: TextStyle(
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                      fontSize: 11,
+                    l10n.resourcesBadge,
+                    style: const TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.8,
                     ),
@@ -86,17 +90,19 @@ class ResourcesScreen extends StatelessWidget {
             AnimatedEntrance(
               delay: const Duration(milliseconds: 100),
               child: Text(
-                "Que faire maintenant ?",
-                style: AppTextStyles.screenTitle.copyWith(color: AppColors.primaryOrange),
+                l10n.resourcesTitle,
+                style: AppTextStyles.screenTitle.copyWith(
+                  color: AppColors.primaryOrange,
+                ),
               ),
             ),
             const SizedBox(height: 4),
             AnimatedEntrance(
               delay: const Duration(milliseconds: 140),
               child: Text(
-                "Des gestes simples peuvent te protéger.",
+                l10n.resourcesSubtitle,
                 style: AppTextStyles.screenSubtitle.copyWith(
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -112,7 +118,6 @@ class ResourcesScreen extends StatelessWidget {
                   child: InteractiveCard(
                     borderRadius: BorderRadius.circular(20),
                     child: GlassContainer(
-                      isDarkMode: isDark,
                       padding: const EdgeInsets.all(18),
                       child: Row(
                         children: [
@@ -137,14 +142,14 @@ class ResourcesScreen extends StatelessWidget {
                                   item['title'] as String,
                                   style: AppTextStyles.cardTitle.copyWith(
                                     fontSize: 15.5,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   item['subtitle'] as String,
                                   style: AppTextStyles.cardSubtitle.copyWith(
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -165,21 +170,12 @@ class ResourcesScreen extends StatelessWidget {
               delay: const Duration(milliseconds: 520),
               child: InteractiveCard(
                 onTap: () {
-                  LauncherUtils.makePhoneCall('19');
+                  LauncherUtils.makePhoneCall(AppContacts.police);
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: GlassContainer(
-                  isDarkMode: isDark,
                   padding: const EdgeInsets.all(18),
                   borderColor: AppColors.primaryOrange.withValues(alpha: 0.4),
-                  gradient: isDark
-                      ? LinearGradient(
-                          colors: [
-                            AppColors.emergencyBannerBgDark,
-                            AppColors.cardBgDark,
-                          ],
-                        )
-                      : null,
                   child: Row(
                     children: [
                       IconUtils.buildIcon(
@@ -193,17 +189,17 @@ class ResourcesScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "En cas de danger immédiat",
-                              style: TextStyle(
+                              l10n.immediateDangerTitle,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5,
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
-                              "Police 19 · Gendarmerie 177",
-                              style: TextStyle(
+                            Text(
+                              l10n.emergencyNumbersInline,
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5,
                                 color: AppColors.primaryOrange,

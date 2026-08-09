@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/app_colors.dart';
+import 'core/storage/settings_store.dart';
+import 'l10n/app_localizations.dart';
 import 'providers/report_provider.dart';
-import 'providers/theme_provider.dart';
 import 'views/main_navigation_screen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -14,25 +15,33 @@ void main() {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const EMCHelplineApp());
-} 
+  runApp(EMCHelplineApp(settings: await SettingsStore.open()));
+}
 
 class EMCHelplineApp extends StatelessWidget {
-  const EMCHelplineApp({super.key});
+  const EMCHelplineApp({super.key, required this.settings});
+
+  final SettingsStore settings;
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ReportProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+    return ChangeNotifierProvider(
+      create: (_) => ReportProvider(settings),
+      child: Consumer<ReportProvider>(
+        builder: (context, reportProvider, _) {
           return MaterialApp(
-            title: 'EMC Helpline',
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             debugShowCheckedModeBanner: false,
-            themeMode: themeProvider.themeMode,
+            // `null` follows the device language; the first supported locale
+            // (French) is the fallback. Setting the locale here also gives the
+            // whole app — pushed routes included — the right text direction,
+            // which a manual `Directionality` around the home screen did not.
+            locale: reportProvider.locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            // The app is light-only on purpose: a dark variant existed but was
+            // unreachable and left two thirds of the screens unreadable.
+            themeMode: ThemeMode.light,
             theme: ThemeData(
               useMaterial3: true,
               brightness: Brightness.light,
@@ -40,31 +49,13 @@ class EMCHelplineApp extends StatelessWidget {
                 seedColor: AppColors.primaryBlue,
                 primary: AppColors.primaryBlue,
                 secondary: AppColors.primaryOrange,
-                surface: AppColors.bgLight,
-                brightness: Brightness.light,
+                surface: AppColors.bg,
               ),
-              scaffoldBackgroundColor: AppColors.bgLight,
+              scaffoldBackgroundColor: AppColors.bg,
               appBarTheme: const AppBarTheme(
                 backgroundColor: Colors.white,
                 elevation: 0,
                 iconTheme: IconThemeData(color: AppColors.primaryBlue),
-              ),
-            ),
-            darkTheme: ThemeData(
-              useMaterial3: true,
-              brightness: Brightness.dark,
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: AppColors.primaryBlue,
-                primary: AppColors.accentCyan,
-                secondary: AppColors.primaryOrange,
-                surface: AppColors.bgDark,
-                brightness: Brightness.dark,
-              ),
-              scaffoldBackgroundColor: AppColors.bgDark,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: AppColors.bgDark,
-                elevation: 0,
-                iconTheme: IconThemeData(color: AppColors.accentCyan),
               ),
             ),
             home: const MainNavigationScreen(),

@@ -26,21 +26,17 @@ class _PulsingWidgetState extends State<PulsingWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     _scaleAnimation = Tween<double>(
       begin: widget.minScale,
       end: widget.maxScale,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Only repeat infinitely if not in test environment
-    if (!WidgetsBinding.instance.toString().contains('AutomatedTestWidgetsFlutterBinding')) {
+    if (!WidgetsBinding.instance.toString().contains(
+      'AutomatedTestWidgetsFlutterBinding',
+    )) {
       _controller.repeat(reverse: true);
     } else {
       _controller.value = 1.0;
@@ -55,9 +51,6 @@ class _PulsingWidgetState extends State<PulsingWidget>
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: widget.child,
-    );
+    return ScaleTransition(scale: _scaleAnimation, child: widget.child);
   }
 }

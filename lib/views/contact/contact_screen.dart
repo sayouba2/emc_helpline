@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_contacts.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
-import '../../providers/theme_provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../components/animated_entrance.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
@@ -15,53 +15,60 @@ class ContactScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
+    final l10n = AppLocalizations.of(context);
 
     final List<Map<String, dynamic>> contactMethods = [
       {
         'title': 'WhatsApp',
-        'subtitle': 'Ouvrir la discussion EMC Helpline.',
-        'actionText': 'Discuter ->',
+        'subtitle': l10n.contactWhatsappSubtitle,
+        'actionText': l10n.contactWhatsappAction,
         'icon': FontAwesomeIcons.whatsapp,
-        'iconBg': isDark ? AppColors.whatsappBgDark : AppColors.whatsappBgLight,
+        'iconBg': AppColors.whatsappBg,
         'iconColor': AppColors.whatsappGreen,
-        'onTap': () => LauncherUtils.openWhatsApp('212624405889'),
+        'onTap': () => LauncherUtils.openWhatsApp(AppContacts.helplineWhatsApp),
       },
       {
-        'title': 'Appeler',
+        'title': l10n.contactCallTitle,
         'subtitle': '+212 624 405 889',
-        'actionText': 'Appeler ->',
+        'actionText': l10n.contactCallAction,
         'icon': FontAwesomeIcons.phoneVolume,
-        'iconBg': isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
-        'iconColor': isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-        'onTap': () => LauncherUtils.makePhoneCall('+212624405889'),
+        'iconBg': AppColors.whatsappBg,
+        'iconColor': AppColors.primaryBlue,
+        'onTap': () => LauncherUtils.makePhoneCall(AppContacts.helplinePhone),
       },
       {
-        'title': 'E-mail',
-        'subtitle': 'emchelpline@cyberconfiance.ma',
-        'actionText': 'Écrire ->',
+        'title': l10n.fieldEmail,
+        'subtitle': AppContacts.helplineEmail,
+        'actionText': l10n.contactEmailAction,
         'icon': FontAwesomeIcons.envelope,
-        'iconBg': isDark ? AppColors.gamingBgDark : const Color(0xFFF3E8FF),
+        'iconBg': const Color(0xFFF3E8FF),
         'iconColor': const Color(0xFFA855F7),
-        'onTap': () => LauncherUtils.sendEmail('emchelpline@cyberconfiance.ma', subject: 'Demande de contact - EMC Helpline'),
+        'onTap': () => LauncherUtils.sendEmail(
+          AppContacts.helplineEmail,
+          subject: l10n.contactEmailSubject,
+        ),
       },
       {
-        'title': 'Formulaire web',
-        'subtitle': 'evigilance.ma/fr/signaler',
-        'actionText': 'Visiter',
+        'title': l10n.contactWebTitle,
+        'subtitle': AppContacts.reportingPortalDisplay,
+        'actionText': l10n.contactWebAction,
         'isExternal': true,
         'icon': FontAwesomeIcons.globe,
-        'iconBg': isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
+        'iconBg': const Color(0xFFFEF3C7),
         'iconColor': const Color(0xFFF59E0B),
-        'onTap': () => LauncherUtils.openWebPage('https://evigilance.ma/fr/signaler'),
+        'onTap': () => LauncherUtils.openWebPage(AppContacts.reportingPortal),
       },
     ];
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDark : AppColors.bgLight,
+      backgroundColor: AppColors.bg,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 90),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 90,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -71,19 +78,19 @@ class ContactScreen extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.cardBgDark : AppColors.whatsappBgLight,
+                    color: AppColors.whatsappBg,
                     borderRadius: BorderRadius.circular(8),
-                    border: isDark
-                        ? Border.all(color: AppColors.accentCyan.withValues(alpha: 0.3))
-                        : null,
                   ),
                   child: Text(
-                    "BESOIN D'AIDE ?",
-                    style: TextStyle(
-                      color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
-                      fontSize: 11,
+                    l10n.contactBadge,
+                    style: const TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.8,
                     ),
@@ -95,17 +102,19 @@ class ContactScreen extends StatelessWidget {
             AnimatedEntrance(
               delay: const Duration(milliseconds: 100),
               child: Text(
-                "Contacte EMC Helpline",
-                style: AppTextStyles.screenTitle.copyWith(color: AppColors.primaryOrange),
+                l10n.contactScreenTitle,
+                style: AppTextStyles.screenTitle.copyWith(
+                  color: AppColors.primaryOrange,
+                ),
               ),
             ),
             const SizedBox(height: 4),
             AnimatedEntrance(
               delay: const Duration(milliseconds: 140),
               child: Text(
-                "Notre équipe est disponible pour vous écouter, vous conseiller et vous accompagner en toute confidentialité.",
+                l10n.contactScreenSubtitle,
                 style: AppTextStyles.screenSubtitle.copyWith(
-                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -122,7 +131,6 @@ class ContactScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     onTap: method['onTap'] as VoidCallback,
                     child: GlassContainer(
-                      isDarkMode: isDark,
                       padding: const EdgeInsets.all(18),
                       child: Row(
                         children: [
@@ -147,14 +155,14 @@ class ContactScreen extends StatelessWidget {
                                   method['title'] as String,
                                   style: AppTextStyles.cardTitle.copyWith(
                                     fontSize: 15.5,
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   method['subtitle'] as String,
                                   style: AppTextStyles.cardSubtitle.copyWith(
-                                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -163,10 +171,10 @@ class ContactScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       method['actionText'] as String,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                                        color: AppColors.primaryBlue,
                                       ),
                                     ),
                                     if (method['isExternal'] == true) ...[
@@ -174,7 +182,7 @@ class ContactScreen extends StatelessWidget {
                                       IconUtils.buildIcon(
                                         FontAwesomeIcons.upRightFromSquare,
                                         size: 11,
-                                        color: isDark ? AppColors.accentCyan : AppColors.primaryBlue,
+                                        color: AppColors.primaryBlue,
                                       ),
                                     ],
                                   ],
@@ -196,7 +204,6 @@ class ContactScreen extends StatelessWidget {
             AnimatedEntrance(
               delay: const Duration(milliseconds: 520),
               child: GlassContainer(
-                isDarkMode: isDark,
                 padding: const EdgeInsets.all(16),
                 borderColor: AppColors.primaryOrange.withValues(alpha: 0.4),
                 child: Row(
@@ -209,11 +216,11 @@ class ContactScreen extends StatelessWidget {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text(
-                        "Attention : L'EMC Helpline ne remplace pas les autorités en cas de danger immédiat.",
-                        style: TextStyle(
+                        l10n.contactWarning,
+                        style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          color: AppColors.textPrimary,
                           height: 1.35,
                         ),
                       ),

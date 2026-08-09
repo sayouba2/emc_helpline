@@ -1,25 +1,40 @@
-class ReportModel {
-  String? referenceCode;
-  String? whoFor;
-  String? pseudo; // Surnom / Pseudonym for step 1 anonymity
-  String? ageGroup;
-  String? gender;
-  String? incidentType;
-  String? platform;
-  String? evidenceUrl;
-  String? evidenceFilePath;
-  bool hasNoEvidence;
-  String? assistanceNeeded;
-  String? assistanceType; // Juridique, Psychologique, Les deux
-  bool isAnonymous;
-  String? contactName;
-  String? contactPhone;
-  String? contactEmail;
-  String? contactWhatsapp;
-  String? urgencyLevel;
-  DateTime? createdAt;
+import 'report_enums.dart';
 
-  ReportModel({
+/// Sentinel marking an argument that was not passed at all.
+///
+/// [ReportModel.copyWith] (and `ReportProvider.updateReport`) need to tell
+/// "leave this field untouched" apart from "clear this field". Without it,
+/// `copyWith(contactPhone: null)` silently kept the previous phone number,
+/// so "Rester 100% Anonyme" and "Supprimer la capture" never actually erased
+/// anything.
+const Object unsetField = Object();
+
+/// Returns [current] when [value] was omitted, otherwise [value] itself
+/// (including `null`, which clears the field).
+T? _resolve<T>(Object? value, T? current) =>
+    identical(value, unsetField) ? current : value as T?;
+
+class ReportModel {
+  final String? referenceCode;
+  final WhoFor? whoFor;
+  final String? pseudo; // Surnom / Pseudonym for step 1 anonymity
+  final AgeGroup? ageGroup;
+  final Gender? gender;
+  final IncidentType? incidentType;
+  final ReportPlatform? platform;
+  final String? evidenceUrl;
+  final String? evidenceFilePath;
+  final bool hasNoEvidence;
+  final AssistanceNeed? assistanceNeeded;
+  final AssistanceType? assistanceType;
+  final bool isAnonymous;
+  final String? contactPhone;
+  final String? contactEmail;
+  final String? contactWhatsapp;
+  final UrgencyLevel? urgencyLevel;
+  final DateTime? createdAt;
+
+  const ReportModel({
     this.referenceCode,
     this.whoFor,
     this.pseudo,
@@ -33,7 +48,6 @@ class ReportModel {
     this.assistanceNeeded,
     this.assistanceType,
     this.isAnonymous = true,
-    this.contactName,
     this.contactPhone,
     this.contactEmail,
     this.contactWhatsapp,
@@ -41,57 +55,63 @@ class ReportModel {
     this.createdAt,
   });
 
-  // Backward-compatible Aliases
-  String? get ageRange => ageGroup;
-  String? get wantsAssistance => assistanceNeeded;
-  String? get urgency => urgencyLevel;
-  String? get evidenceImagePath => evidenceFilePath;
+  /// True once the user has answered the evidence step one way or another —
+  /// including by explicitly declaring they have none.
+  bool get hasEvidenceAnswer =>
+      hasNoEvidence ||
+      evidenceFilePath != null ||
+      (evidenceUrl != null && evidenceUrl!.trim().isNotEmpty);
 
+  /// True when at least one way of calling the user back was provided.
+  bool get hasAnyContactDetail => [
+    contactPhone,
+    contactEmail,
+    contactWhatsapp,
+  ].any((value) => value != null && value.trim().isNotEmpty);
+
+  /// The enum-typed fields can be changed but never un-answered, so they take
+  /// plain nullable arguments. The free-text fields can be erased by the user,
+  /// so they default to [unsetField]: omit the argument to keep the current
+  /// value, pass `null` to clear it.
   ReportModel copyWith({
-    String? referenceCode,
-    String? whoFor,
-    String? pseudo,
-    String? ageGroup,
-    String? ageRange,
-    String? gender,
-    String? incidentType,
-    String? platform,
-    String? evidenceUrl,
-    String? evidenceFilePath,
-    String? evidenceImagePath,
+    Object? referenceCode = unsetField,
+    WhoFor? whoFor,
+    Object? pseudo = unsetField,
+    AgeGroup? ageGroup,
+    Gender? gender,
+    IncidentType? incidentType,
+    ReportPlatform? platform,
+    Object? evidenceUrl = unsetField,
+    Object? evidenceFilePath = unsetField,
     bool? hasNoEvidence,
-    String? assistanceNeeded,
-    String? wantsAssistance,
-    String? assistanceType,
+    AssistanceNeed? assistanceNeeded,
+    AssistanceType? assistanceType,
     bool? isAnonymous,
-    String? contactName,
-    String? contactPhone,
-    String? contactEmail,
-    String? contactWhatsapp,
-    String? urgencyLevel,
-    String? urgency,
-    DateTime? createdAt,
+    Object? contactPhone = unsetField,
+    Object? contactEmail = unsetField,
+    Object? contactWhatsapp = unsetField,
+    UrgencyLevel? urgencyLevel,
+    Object? createdAt = unsetField,
   }) {
     return ReportModel(
-      referenceCode: referenceCode ?? this.referenceCode,
+      referenceCode: _resolve(referenceCode, this.referenceCode),
       whoFor: whoFor ?? this.whoFor,
-      pseudo: pseudo ?? this.pseudo,
-      ageGroup: ageRange ?? ageGroup ?? this.ageGroup,
+      pseudo: _resolve(pseudo, this.pseudo),
+      ageGroup: ageGroup ?? this.ageGroup,
       gender: gender ?? this.gender,
       incidentType: incidentType ?? this.incidentType,
       platform: platform ?? this.platform,
-      evidenceUrl: evidenceUrl ?? this.evidenceUrl,
-      evidenceFilePath: evidenceImagePath ?? evidenceFilePath ?? this.evidenceFilePath,
+      evidenceUrl: _resolve(evidenceUrl, this.evidenceUrl),
+      evidenceFilePath: _resolve(evidenceFilePath, this.evidenceFilePath),
       hasNoEvidence: hasNoEvidence ?? this.hasNoEvidence,
-      assistanceNeeded: wantsAssistance ?? assistanceNeeded ?? this.assistanceNeeded,
+      assistanceNeeded: assistanceNeeded ?? this.assistanceNeeded,
       assistanceType: assistanceType ?? this.assistanceType,
       isAnonymous: isAnonymous ?? this.isAnonymous,
-      contactName: contactName ?? this.contactName,
-      contactPhone: contactPhone ?? this.contactPhone,
-      contactEmail: contactEmail ?? this.contactEmail,
-      contactWhatsapp: contactWhatsapp ?? this.contactWhatsapp,
-      urgencyLevel: urgency ?? urgencyLevel ?? this.urgencyLevel,
-      createdAt: createdAt ?? this.createdAt,
+      contactPhone: _resolve(contactPhone, this.contactPhone),
+      contactEmail: _resolve(contactEmail, this.contactEmail),
+      contactWhatsapp: _resolve(contactWhatsapp, this.contactWhatsapp),
+      urgencyLevel: urgencyLevel ?? this.urgencyLevel,
+      createdAt: _resolve(createdAt, this.createdAt),
     );
   }
 }

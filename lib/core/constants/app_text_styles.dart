@@ -9,7 +9,7 @@ class AppTextStyles {
   );
 
   static const TextStyle headerSubtitle = TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
   );
@@ -52,7 +52,7 @@ class AppTextStyles {
   );
 
   static const TextStyle badgeText = TextStyle(
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: FontWeight.w700,
     color: AppColors.primaryOrange,
     letterSpacing: 0.8,
