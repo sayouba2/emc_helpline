@@ -6,6 +6,8 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../../core/localization/report_enum_labels.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../models/report_enums.dart';
+import '../../../models/report_model.dart';
 import '../../../providers/report_provider.dart';
 
 class Step4SummaryScreen extends StatelessWidget {
@@ -86,15 +88,7 @@ class Step4SummaryScreen extends StatelessWidget {
             editLabel: l10n.actionEdit,
             onEdit: () => provider.setWizardStep(ReportProvider.stepEvidence),
             items: [
-              _buildRow(
-                l10n.summaryEvidence,
-                report.evidenceFilePath != null
-                    ? l10n.summaryEvidenceScreenshot
-                    : (report.evidenceUrl != null &&
-                              report.evidenceUrl!.isNotEmpty
-                          ? l10n.summaryEvidenceLink
-                          : l10n.summaryEvidenceNone),
-              ),
+              _buildRow(l10n.summaryEvidence, _describeEvidence(report, l10n)),
               _buildRow(
                 l10n.summaryAssistance,
                 report.assistanceNeeded?.label(l10n) ??
@@ -111,9 +105,39 @@ class Step4SummaryScreen extends StatelessWidget {
               ),
             ],
           ),
+
+          // Card 4: Contact — only exists when the user asked to be called back.
+          if (report.assistanceNeeded == AssistanceNeed.wanted) ...[
+            const SizedBox(height: 14),
+            _buildSummaryCard(
+              context,
+              icon: FontAwesomeIcons.addressBook,
+              title: l10n.summarySectionContact,
+              editLabel: l10n.actionEdit,
+              onEdit: () => provider.setWizardStep(ReportProvider.stepContact),
+              items: [
+                _buildRow(
+                  l10n.summaryPseudo,
+                  report.pseudo ?? l10n.notSpecifiedMasculine,
+                ),
+                _buildRow(
+                  l10n.fieldPhone,
+                  report.contactPhone ?? l10n.notSpecifiedMasculine,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  /// Screenshots take priority in the wording: they are what the team looks at
+  /// first, and a link may sit alongside them.
+  String _describeEvidence(ReportModel report, AppLocalizations l10n) {
+    final count = report.evidenceFilePaths.length;
+    if (count > 0) return l10n.evidenceCount(count);
+    return l10n.summaryEvidenceLinkOnly;
   }
 
   Widget _buildSummaryCard(

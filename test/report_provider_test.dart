@@ -21,7 +21,7 @@ ReportProvider _completeProvider() {
     gender: Gender.undisclosed,
     incidentType: IncidentType.threat,
     platform: ReportPlatform.whatsapp,
-    hasNoEvidence: true,
+    evidenceFilePaths: const ['/tmp/proof.png'],
     assistanceNeeded: AssistanceNeed.wanted,
     assistanceType: AssistanceType.legal,
     urgencyLevel: UrgencyLevel.notUrgent,
@@ -93,14 +93,22 @@ void main() {
       );
     });
 
-    test('passing null clears the evidence (Supprimer la capture)', () {
+    test('screenshots accumulate and can be removed one by one', () {
       final provider = _provider();
-      provider.updateReport(evidenceFilePath: '/tmp/proof.png');
-      expect(provider.currentReport.evidenceFilePath, '/tmp/proof.png');
 
-      provider.updateReport(evidenceFilePath: null);
+      provider.addEvidenceFiles(['/tmp/a.png', '/tmp/b.png']);
+      provider.addEvidenceFiles(['/tmp/b.png', '/tmp/c.png']);
+      expect(
+        provider.currentReport.evidenceFilePaths,
+        ['/tmp/a.png', '/tmp/b.png', '/tmp/c.png'],
+        reason: 'a second pass through the picker must not duplicate',
+      );
 
-      expect(provider.currentReport.evidenceFilePath, isNull);
+      provider.removeEvidenceFile('/tmp/b.png');
+      expect(provider.currentReport.evidenceFilePaths, [
+        '/tmp/a.png',
+        '/tmp/c.png',
+      ]);
     });
   });
 
@@ -216,20 +224,30 @@ void main() {
       expect(provider.wizardStep, ReportProvider.stepAge);
     });
 
-    test('the evidence step accepts an explicit "no evidence"', () {
+    test('the evidence step requires a screenshot or a link', () {
       final provider = _completeProvider();
-      provider.updateReport(hasNoEvidence: false, evidenceUrl: null);
+      provider.updateReport(evidenceFilePaths: const [], evidenceUrl: null);
       provider.setWizardStep(ReportProvider.stepEvidence);
+      expect(
+        provider.canAdvance,
+        isFalse,
+        reason: 'an anonymous report with nothing to look at cannot be triaged',
+      );
+
+      provider.addEvidenceFiles(['/tmp/proof.png']);
+      expect(provider.canAdvance, isTrue);
+
+      provider.removeEvidenceFile('/tmp/proof.png');
       expect(provider.canAdvance, isFalse);
 
-      provider.updateReport(hasNoEvidence: true);
-      expect(provider.canAdvance, isTrue);
+      provider.updateReport(evidenceUrl: 'exemple.com/post/1');
+      expect(provider.canAdvance, isTrue, reason: 'a link alone is enough');
     });
 
     test('the evidence step rejects a malformed link', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepEvidence);
-      provider.updateReport(hasNoEvidence: false, evidenceUrl: 'pas-un-lien');
+      provider.updateReport(evidenceUrl: 'pas-un-lien');
 
       expect(provider.canAdvance, isFalse);
 
@@ -275,7 +293,7 @@ void main() {
           gender: Gender.male,
           incidentType: IncidentType.defamation,
           platform: ReportPlatform.facebook,
-          hasNoEvidence: true,
+          evidenceFilePaths: const ['/tmp/proof.png'],
           assistanceNeeded: AssistanceNeed.unsure,
           assistanceType: AssistanceType.unsure,
           urgencyLevel: UrgencyLevel.unsure,
@@ -293,7 +311,7 @@ void main() {
           gender: Gender.female,
           incidentType: IncidentType.hateSpeech,
           platform: ReportPlatform.tiktok,
-          hasNoEvidence: true,
+          evidenceFilePaths: const ['/tmp/proof.png'],
           assistanceNeeded: AssistanceNeed.none,
           urgencyLevel: UrgencyLevel.urgent,
         );
@@ -327,7 +345,7 @@ void main() {
         gender: Gender.undisclosed,
         incidentType: IncidentType.threat,
         platform: ReportPlatform.whatsapp,
-        hasNoEvidence: true,
+        evidenceFilePaths: const ['/tmp/proof.png'],
         assistanceNeeded: AssistanceNeed.wanted,
         urgencyLevel: UrgencyLevel.notUrgent,
       );
@@ -344,7 +362,7 @@ void main() {
         gender: Gender.female,
         incidentType: IncidentType.hateSpeech,
         platform: ReportPlatform.tiktok,
-        hasNoEvidence: true,
+        evidenceFilePaths: const ['/tmp/proof.png'],
         assistanceNeeded: AssistanceNeed.none,
         urgencyLevel: UrgencyLevel.urgent,
       );
@@ -365,7 +383,7 @@ void main() {
             gender: Gender.undisclosed,
             incidentType: IncidentType.threat,
             platform: ReportPlatform.whatsapp,
-            hasNoEvidence: true,
+            evidenceFilePaths: const ['/tmp/proof.png'],
             assistanceNeeded: AssistanceNeed.none,
             urgencyLevel: UrgencyLevel.notUrgent,
           );

@@ -86,7 +86,7 @@ extension ValidationMessageLabel on ValidationMessage {
     ValidationMessage.chooseGender => l10n.validationGender,
     ValidationMessage.chooseIncident => l10n.validationIncident,
     ValidationMessage.choosePlatform => l10n.validationPlatform,
-    ValidationMessage.chooseEvidence => l10n.validationEvidence,
+    ValidationMessage.missingEvidence => l10n.validationEvidence,
     ValidationMessage.chooseAssistance => l10n.validationAssistance,
     ValidationMessage.chooseAssistanceType => l10n.validationAssistanceType,
     ValidationMessage.chooseUrgency => l10n.validationUrgency,

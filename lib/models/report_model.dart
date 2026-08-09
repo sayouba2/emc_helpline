@@ -23,8 +23,7 @@ class ReportModel {
   final IncidentType? incidentType;
   final ReportPlatform? platform;
   final String? evidenceUrl;
-  final String? evidenceFilePath;
-  final bool hasNoEvidence;
+  final List<String> evidenceFilePaths;
   final AssistanceNeed? assistanceNeeded;
   final AssistanceType? assistanceType;
   final String? contactPhone;
@@ -40,8 +39,7 @@ class ReportModel {
     this.incidentType,
     this.platform,
     this.evidenceUrl,
-    this.evidenceFilePath,
-    this.hasNoEvidence = false,
+    this.evidenceFilePaths = const <String>[],
     this.assistanceNeeded,
     this.assistanceType,
     this.contactPhone,
@@ -49,11 +47,10 @@ class ReportModel {
     this.createdAt,
   });
 
-  /// True once the user has answered the evidence step one way or another —
-  /// including by explicitly declaring they have none.
-  bool get hasEvidenceAnswer =>
-      hasNoEvidence ||
-      evidenceFilePath != null ||
+  /// At least one screenshot or a link. Evidence is required: the team cannot
+  /// triage an anonymous report that carries nothing to look at.
+  bool get hasEvidence =>
+      evidenceFilePaths.isNotEmpty ||
       (evidenceUrl != null && evidenceUrl!.trim().isNotEmpty);
 
   /// True when a way of calling the user back was provided.
@@ -81,8 +78,7 @@ class ReportModel {
     IncidentType? incidentType,
     ReportPlatform? platform,
     Object? evidenceUrl = unsetField,
-    Object? evidenceFilePath = unsetField,
-    bool? hasNoEvidence,
+    List<String>? evidenceFilePaths,
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     Object? contactPhone = unsetField,
@@ -98,8 +94,7 @@ class ReportModel {
       incidentType: incidentType ?? this.incidentType,
       platform: platform ?? this.platform,
       evidenceUrl: _resolve(evidenceUrl, this.evidenceUrl),
-      evidenceFilePath: _resolve(evidenceFilePath, this.evidenceFilePath),
-      hasNoEvidence: hasNoEvidence ?? this.hasNoEvidence,
+      evidenceFilePaths: evidenceFilePaths ?? this.evidenceFilePaths,
       assistanceNeeded: assistanceNeeded ?? this.assistanceNeeded,
       assistanceType: assistanceType ?? this.assistanceType,
       contactPhone: _resolve(contactPhone, this.contactPhone),

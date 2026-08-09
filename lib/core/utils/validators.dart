@@ -9,7 +9,7 @@ enum ValidationMessage {
   chooseGender,
   chooseIncident,
   choosePlatform,
-  chooseEvidence,
+  missingEvidence,
   chooseAssistance,
   chooseAssistanceType,
   chooseUrgency,

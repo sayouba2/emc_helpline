@@ -99,13 +99,8 @@
   "platformSubtitle": "Choisis la plateforme concernée.",
   "platformOnlineGame": "Jeu en ligne",
   "evidenceQuestion": "As-tu une preuve ?",
-  "evidenceSubtitle": "Tu peux ajouter une capture d'écran ou un lien.",
-  "evidenceAdded": "Capture d'écran ajoutée",
-  "evidenceAdd": "Ajouter une capture",
-  "evidenceAddHint": "Image depuis la galerie ou capture d'écran.",
-  "evidenceRemove": "Supprimer la capture",
+  "evidenceSubtitle": "Ajoute au moins une capture d'écran ou le lien du contenu.",
   "evidenceLinkLabel": "Lien vers le contenu",
-  "evidenceNone": "Je n'ai pas de preuve",
   "evidencePickFailed": "Impossible d'ouvrir tes images. Vérifie l'autorisation d'accès à la galerie, ou ajoute plutôt un lien ci-dessous.",
   "separatorOr": "OU",
   "assistanceQuestion": "Veux-tu de l'aide ?",
@@ -158,9 +153,6 @@
   "summaryType": "Type",
   "summaryPlatform": "Plateforme",
   "summaryEvidence": "Preuve",
-  "summaryEvidenceScreenshot": "1 capture d'écran",
-  "summaryEvidenceLink": "Lien web fourni",
-  "summaryEvidenceNone": "Aucune",
   "summaryAssistance": "Aide",
   "summaryAssistanceType": "Type d'aide",
   "summaryUrgency": "Urgence",
@@ -220,7 +212,7 @@
   "validationGender": "Choisis une réponse pour continuer.",
   "validationIncident": "Choisis ce qui ressemble le plus à ta situation.",
   "validationPlatform": "Choisis la plateforme concernée.",
-  "validationEvidence": "Ajoute une capture, un lien, ou choisis « Je n'ai pas de preuve ».",
+  "validationEvidence": "Ajoute au moins une capture d'écran ou un lien.",
   "validationAssistance": "Dis-nous si tu souhaites être accompagné(e).",
   "validationAssistanceType": "Choisis le type d'aide dont tu as besoin.",
   "validationUrgency": "Dis-nous si la situation est urgente.",
@@ -302,5 +294,24 @@
     "description": "Shown when the accompanied user has not chosen a pseudonym yet"
   },
   "validationPhone": "Indique un numéro de téléphone pour qu'on puisse te rappeler.",
-  "contactRequiredNote": "Pour t'accompagner, l'équipe a besoin d'un pseudo et d'un numéro. Ton vrai nom n'est jamais demandé."
+  "contactRequiredNote": "Pour t'accompagner, l'équipe a besoin d'un pseudo et d'un numéro. Ton vrai nom n'est jamais demandé.",
+  "evidenceRequiredNote": "Une preuve est nécessaire pour que l'équipe puisse vérifier et agir. Si tu n'as rien pu garder, appelle la Police (19) ou écris-nous depuis l'onglet Contact.",
+  "evidenceAddScreenshots": "Ajouter des captures",
+  "evidenceAddMore": "Ajouter une autre capture",
+  "evidenceRemoveOne": "Retirer cette capture",
+  "@evidenceRemoveOne": {
+    "description": "Screen-reader label on a thumbnail delete button"
+  },
+  "summarySectionContact": "Contact",
+  "summaryPseudo": "Pseudo",
+  "summaryEvidenceLinkOnly": "Lien web",
+  "evidenceCount": "{count, plural, =1{1 capture d'écran} other{{count} captures d'écran}}",
+  "@evidenceCount": {
+    "description": "Number of screenshots attached to a report",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -102,7 +102,7 @@ class ReportProvider with ChangeNotifier {
             ? ValidationMessage.choosePlatform
             : null;
       case stepEvidence:
-        if (!report.hasEvidenceAnswer) return ValidationMessage.chooseEvidence;
+        if (!report.hasEvidence) return ValidationMessage.missingEvidence;
         return Validators.url(report.evidenceUrl);
       case stepAssistance:
         return report.assistanceNeeded == null
@@ -155,7 +155,7 @@ class ReportProvider with ChangeNotifier {
         report.urgencyLevel != null;
     if (!hasEveryChoice) return false;
 
-    if (!report.hasEvidenceAnswer) return false;
+    if (!report.hasEvidence) return false;
     if (Validators.url(report.evidenceUrl) != null) return false;
 
     // A skipped step can never be required.
@@ -221,9 +221,8 @@ class ReportProvider with ChangeNotifier {
     Gender? gender,
     IncidentType? incidentType,
     ReportPlatform? platform,
-    Object? evidenceFilePath = unsetField,
+    List<String>? evidenceFilePaths,
     Object? evidenceUrl = unsetField,
-    bool? hasNoEvidence,
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     UrgencyLevel? urgencyLevel,
@@ -236,9 +235,8 @@ class ReportProvider with ChangeNotifier {
       gender: gender,
       incidentType: incidentType,
       platform: platform,
-      evidenceFilePath: evidenceFilePath,
+      evidenceFilePaths: evidenceFilePaths,
       evidenceUrl: evidenceUrl,
-      hasNoEvidence: hasNoEvidence,
       assistanceNeeded: assistanceNeeded,
       assistanceType: assistanceType,
       urgencyLevel: urgencyLevel,
@@ -268,6 +266,24 @@ class ReportProvider with ChangeNotifier {
     _isSubmitting = false;
     notifyListeners();
     return code;
+  }
+
+  /// Adds screenshots to the evidence, ignoring the ones already attached so a
+  /// second pass through the picker cannot duplicate them.
+  void addEvidenceFiles(Iterable<String> paths) {
+    final merged = <String>[
+      ..._currentReport.evidenceFilePaths,
+      ...paths.where((p) => !_currentReport.evidenceFilePaths.contains(p)),
+    ];
+    updateReport(evidenceFilePaths: merged);
+  }
+
+  void removeEvidenceFile(String path) {
+    updateReport(
+      evidenceFilePaths: _currentReport.evidenceFilePaths
+          .where((p) => p != path)
+          .toList(growable: false),
+    );
   }
 
   /// Looks a report up by the reference code handed to the user.

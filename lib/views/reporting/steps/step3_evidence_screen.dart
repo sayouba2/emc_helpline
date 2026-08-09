@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +11,10 @@ import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
 
+/// Evidence: one or more screenshots, and/or a link.
+///
+/// At least one of the two is required. An anonymous report carrying nothing to
+/// look at cannot be triaged, and the online reporting portal asks for the same.
 class Step3EvidenceScreen extends StatefulWidget {
   const Step3EvidenceScreen({super.key});
 
@@ -32,18 +38,17 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage(
+  Future<void> _pickImages(
     ReportProvider provider,
     AppLocalizations l10n,
   ) async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      if (image == null) return; // Sélection annulée par l'utilisateur.
-      provider.updateReport(evidenceFilePath: image.path, hasNoEvidence: false);
+      final images = await ImagePicker().pickMultiImage();
+      if (images.isEmpty) return; // Selection cancelled.
+      provider.addEvidenceFiles(images.map((image) => image.path));
     } catch (e) {
-      // Ne jamais enregistrer de preuve factice : l'utilisateur croirait avoir
-      // joint une capture qui n'existe pas.
+      // Never record a fake path: the user would believe a screenshot is
+      // attached when none is.
       debugPrint('Evidence image picking failed: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,7 +64,7 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<ReportProvider>(context);
     final l10n = AppLocalizations.of(context);
-    final report = provider.currentReport;
+    final paths = provider.currentReport.evidenceFilePaths;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -77,87 +82,14 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
             textAlign: TextAlign.center,
             style: AppTextStyles.screenSubtitle,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Upload Card
-          InkWell(
-            onTap: () => _pickImage(provider, l10n),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-              decoration: BoxDecoration(
-                color: report.evidenceFilePath != null
-                    ? AppColors.cardBg
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: report.evidenceFilePath != null
-                      ? AppColors.primaryBlue
-                      : AppColors.border,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: AppColors.cardBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: FaIcon(
-                      report.evidenceFilePath != null
-                          ? FontAwesomeIcons.circleCheck
-                          : FontAwesomeIcons.cloudArrowUp,
-                      color: AppColors.primaryBlue,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    report.evidenceFilePath != null
-                        ? l10n.evidenceAdded
-                        : l10n.evidenceAdd,
-                    style: AppTextStyles.cardTitle.copyWith(fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    report.evidenceFilePath != null
-                        ? report.evidenceFilePath!.split('/').last
-                        : l10n.evidenceAddHint,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.cardSubtitle,
-                  ),
-                  if (report.evidenceFilePath != null) ...[
-                    const SizedBox(height: 10),
-                    TextButton.icon(
-                      onPressed: () {
-                        provider.updateReport(evidenceFilePath: null);
-                      },
-                      icon: const FaIcon(
-                        FontAwesomeIcons.trashCan,
-                        size: 13,
-                        color: AppColors.dangerRed,
-                      ),
-                      label: Text(
-                        l10n.evidenceRemove,
-                        style: const TextStyle(
-                          color: AppColors.dangerRedStrong,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
+          if (paths.isNotEmpty) ...[
+            _buildThumbnails(provider, l10n, paths),
+            const SizedBox(height: 14),
+          ],
+
+          _buildPickerCard(provider, l10n, paths.length),
 
           const SizedBox(height: 20),
           Row(
@@ -178,7 +110,6 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
           ),
           const SizedBox(height: 20),
 
-          // URL Link Input
           Text(
             l10n.evidenceLinkLabel,
             style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5),
@@ -188,12 +119,12 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
             controller: _urlController,
             keyboardType: TextInputType.url,
             autocorrect: false,
-            onChanged: (val) {
-              provider.updateReport(evidenceUrl: val, hasNoEvidence: false);
-            },
+            onChanged: (val) => provider.updateReport(evidenceUrl: val),
             decoration: InputDecoration(
-              hintText: "https://exemple.com/contenu",
-              errorText: Validators.url(report.evidenceUrl)?.text(l10n),
+              hintText: 'https://exemple.com/contenu',
+              errorText: Validators.url(
+                provider.currentReport.evidenceUrl,
+              )?.text(l10n),
               prefixIcon: const Padding(
                 padding: EdgeInsets.all(14.0),
                 child: FaIcon(
@@ -222,44 +153,167 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
-          // Button: "Je n'ai pas de preuve"
-          Semantics(
-            selected: report.hasNoEvidence,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(
-                  color: report.hasNoEvidence
-                      ? AppColors.primaryBlue
-                      : AppColors.border,
-                  width: report.hasNoEvidence ? 2 : 1,
+          // Says why the step cannot be skipped, and where to go otherwise.
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.emergencyBannerBg,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.primaryOrange.withValues(alpha: 0.35),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.circleInfo,
+                  color: AppColors.primaryOrange,
+                  size: 16,
                 ),
-                backgroundColor: report.hasNoEvidence
-                    ? AppColors.cardBg
-                    : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.evidenceRequiredNote,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      height: 1.4,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThumbnails(
+    ReportProvider provider,
+    AppLocalizations l10n,
+    List<String> paths,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.evidenceCount(paths.length),
+          style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final path in paths) _buildThumbnail(provider, l10n, path),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThumbnail(
+    ReportProvider provider,
+    AppLocalizations l10n,
+    String path,
+  ) {
+    return SizedBox(
+      width: 92,
+      height: 92,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: AppColors.bg,
+                  alignment: Alignment.center,
+                  child: const FaIcon(
+                    FontAwesomeIcons.fileImage,
+                    color: AppColors.primaryBlue,
+                    size: 22,
+                  ),
                 ),
               ),
-              onPressed: () {
-                setState(() {
-                  _urlController.clear();
-                });
-                provider.updateReport(
-                  evidenceFilePath: null,
-                  evidenceUrl: null,
-                  hasNoEvidence: true,
-                );
-              },
-              child: Text(
-                l10n.evidenceNone,
-                style: AppTextStyles.buttonTextOutline,
+            ),
+          ),
+          PositionedDirectional(
+            top: 0,
+            end: 0,
+            child: Semantics(
+              button: true,
+              label: l10n.evidenceRemoveOne,
+              child: InkWell(
+                onTap: () => provider.removeEvidenceFile(path),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  margin: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(5),
+                  decoration: const BoxDecoration(
+                    color: AppColors.dangerRedStrong,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPickerCard(
+    ReportProvider provider,
+    AppLocalizations l10n,
+    int count,
+  ) {
+    final hasAny = count > 0;
+
+    return InkWell(
+      onTap: () => _pickImages(provider, l10n),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          vertical: hasAny ? 18 : 32,
+          horizontal: 20,
+        ),
+        decoration: BoxDecoration(
+          color: hasAny ? AppColors.cardBg : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: hasAny ? AppColors.primaryBlue : AppColors.border,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            FaIcon(
+              hasAny
+                  ? FontAwesomeIcons.circlePlus
+                  : FontAwesomeIcons.cloudArrowUp,
+              color: AppColors.primaryBlue,
+              size: hasAny ? 22 : 28,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              hasAny ? l10n.evidenceAddMore : l10n.evidenceAddScreenshots,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
+            ),
+          ],
+        ),
       ),
     );
   }
