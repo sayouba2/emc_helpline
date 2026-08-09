@@ -7,8 +7,6 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/launcher_utils.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/report_model.dart';
-import '../../core/localization/report_enum_labels.dart';
 import '../../providers/report_provider.dart';
 import '../components/animated_entrance.dart';
 import '../tracking/track_request_screen.dart';
@@ -172,38 +170,11 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // User's Submitted Reports
-            if (reportProvider.history.isNotEmpty) ...[
-              AnimatedEntrance(
-                delay: const Duration(milliseconds: 420),
-                child: Row(
-                  children: [
-                    IconUtils.buildIcon(
-                      FontAwesomeIcons.clockRotateLeft,
-                      color: AppColors.primaryBlue,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.recentReports,
-                      style: AppTextStyles.cardTitle.copyWith(
-                        fontSize: 17,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...reportProvider.history.map(
-                (report) => AnimatedEntrance(
-                  delay: const Duration(milliseconds: 480),
-                  child: _buildReportHistoryItem(context, report, l10n),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-
+            // No list of past reports here. On a shared phone — the common
+            // case for this audience — it would show whoever picks the device
+            // up what was reported and about which platform. "Suivre ma
+            // demande" above needs the reference code, which only the author
+            // has.
             // CMRPI & EMC Helpline Prominent Institutional Footer
             AnimatedEntrance(
               delay: const Duration(milliseconds: 520),
@@ -461,71 +432,6 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildReportHistoryItem(
-    BuildContext context,
-    ReportModel report,
-    AppLocalizations l10n,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: GlassContainer(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            IconUtils.buildIcon(
-              FontAwesomeIcons.circleCheck,
-              color: AppColors.primaryOrange,
-              size: 20,
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    report.referenceCode ?? 'REF-EMC-2026',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.5,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.reportHistorySubtitle(
-                      report.incidentType?.label(l10n) ??
-                          l10n.reportFallbackIncident,
-                      report.platform?.label(l10n) ??
-                          l10n.reportFallbackPlatform,
-                    ),
-                    style: AppTextStyles.cardSubtitle.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.whatsappBg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                l10n.reportStatusInProgress,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryBlue,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

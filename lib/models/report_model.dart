@@ -27,7 +27,6 @@ class ReportModel {
   final bool hasNoEvidence;
   final AssistanceNeed? assistanceNeeded;
   final AssistanceType? assistanceType;
-  final bool isAnonymous;
   final String? contactPhone;
   final String? contactEmail;
   final String? contactWhatsapp;
@@ -47,7 +46,6 @@ class ReportModel {
     this.hasNoEvidence = false,
     this.assistanceNeeded,
     this.assistanceType,
-    this.isAnonymous = true,
     this.contactPhone,
     this.contactEmail,
     this.contactWhatsapp,
@@ -69,6 +67,14 @@ class ReportModel {
     contactWhatsapp,
   ].any((value) => value != null && value.trim().isNotEmpty);
 
+  /// The report carries no way of identifying its author.
+  ///
+  /// There is no `isAnonymous` flag any more: anonymity is not a toggle but a
+  /// consequence. A pseudonym plus a phone number is how someone stays
+  /// anonymous *and* reachable, and contact details are only ever collected
+  /// from people who asked to be accompanied.
+  bool get isAnonymous => !hasAnyContactDetail;
+
   /// The enum-typed fields can be changed but never un-answered, so they take
   /// plain nullable arguments. The free-text fields can be erased by the user,
   /// so they default to [unsetField]: omit the argument to keep the current
@@ -86,7 +92,6 @@ class ReportModel {
     bool? hasNoEvidence,
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
-    bool? isAnonymous,
     Object? contactPhone = unsetField,
     Object? contactEmail = unsetField,
     Object? contactWhatsapp = unsetField,
@@ -106,7 +111,6 @@ class ReportModel {
       hasNoEvidence: hasNoEvidence ?? this.hasNoEvidence,
       assistanceNeeded: assistanceNeeded ?? this.assistanceNeeded,
       assistanceType: assistanceType ?? this.assistanceType,
-      isAnonymous: isAnonymous ?? this.isAnonymous,
       contactPhone: _resolve(contactPhone, this.contactPhone),
       contactEmail: _resolve(contactEmail, this.contactEmail),
       contactWhatsapp: _resolve(contactWhatsapp, this.contactWhatsapp),

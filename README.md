@@ -4,9 +4,14 @@ Application mobile Flutter de signalement des violences numériques visant les
 enfants, les jeunes et les femmes au Maroc, en partenariat avec le CMRPI.
 
 L'utilisateur remplit un formulaire en 11 étapes (contexte, profil, incident,
-récapitulatif), peut rester totalement anonyme derrière un pseudo, suivre l'état
-de sa demande avec son numéro de référence, et dispose en permanence des numéros
-d'urgence — Police **19**, Gendarmerie **177**.
+récapitulatif), suit l'état de sa demande avec son numéro de référence, et
+dispose en permanence des numéros d'urgence — Police **19**, Gendarmerie **177**.
+
+Le parcours se scinde en fin de formulaire : qui **décline** un accompagnement
+n'est jamais interrogé sur ses coordonnées et reste totalement anonyme ; qui en
+**demande** un choisit un pseudo et laisse un numéro de téléphone, tous deux
+obligatoires — l'équipe ne peut pas rappeler sans. Le vrai nom n'est jamais
+demandé dans aucun des deux cas.
 
 Interface disponible en **français, arabe et anglais**, avec mise en page
 droite-à-gauche pour l'arabe.
@@ -92,6 +97,11 @@ Le français est la langue source. Pour modifier un texte, éditer
 ## Données et vie privée
 
 Seule la langue choisie est écrite sur l'appareil.
+
+L'accueil n'affiche **aucun historique de signalements** : sur un téléphone
+partagé, la liste montrerait à la première personne qui l'ouvre ce qui a été
+signalé et sur quelle plateforme. Le suivi passe par le numéro de référence,
+que seul l'auteur possède.
 
 **Le contenu des signalements n'est jamais persisté** — ni pseudo, ni
 coordonnées, ni preuves, ni historique. Le suivi d'une demande ne retrouve donc

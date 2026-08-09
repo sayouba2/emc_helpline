@@ -1,14 +1,22 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/utils/icon_utils.dart';
 import '../../../core/localization/report_enum_labels.dart';
+import '../../../core/utils/icon_utils.dart';
 import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
+import '../../components/glass_container.dart';
 
+/// How to reach the user back.
+///
+/// Only shown to people who asked to be accompanied — the wizard skips it
+/// otherwise — so the nickname and the phone number are both required here.
+/// Nothing on this screen asks for a real name.
 class Step3ContactScreen extends StatefulWidget {
   const Step3ContactScreen({super.key});
 
@@ -17,6 +25,7 @@ class Step3ContactScreen extends StatefulWidget {
 }
 
 class _Step3ContactScreenState extends State<Step3ContactScreen> {
+  final TextEditingController _pseudoController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _whatsappController = TextEditingController();
@@ -24,18 +33,41 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
   @override
   void initState() {
     super.initState();
-    final provider = Provider.of<ReportProvider>(context, listen: false);
-    _phoneController.text = provider.currentReport.contactPhone ?? '';
-    _emailController.text = provider.currentReport.contactEmail ?? '';
-    _whatsappController.text = provider.currentReport.contactWhatsapp ?? '';
+    final report = Provider.of<ReportProvider>(
+      context,
+      listen: false,
+    ).currentReport;
+    _pseudoController.text = report.pseudo ?? '';
+    _phoneController.text = report.contactPhone ?? '';
+    _emailController.text = report.contactEmail ?? '';
+    _whatsappController.text = report.contactWhatsapp ?? '';
   }
 
   @override
   void dispose() {
+    _pseudoController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _whatsappController.dispose();
     super.dispose();
+  }
+
+  void _generateRandomPseudo(AppLocalizations l10n) {
+    final suggestions = [
+      l10n.pseudoSuggestion1,
+      l10n.pseudoSuggestion2,
+      l10n.pseudoSuggestion3,
+      l10n.pseudoSuggestion4,
+      l10n.pseudoSuggestion5,
+      l10n.pseudoSuggestion6,
+      l10n.pseudoSuggestion7,
+    ];
+    final chosen = suggestions[Random().nextInt(suggestions.length)];
+    setState(() => _pseudoController.text = chosen);
+    Provider.of<ReportProvider>(
+      context,
+      listen: false,
+    ).updateReport(pseudo: chosen);
   }
 
   @override
@@ -60,81 +92,116 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
             textAlign: TextAlign.center,
             style: AppTextStyles.screenSubtitle,
           ),
-          const SizedBox(height: 24),
-
-          // Anonymous Option Button
-          Semantics(
-            selected: report.isAnonymous,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: BorderSide(
-                  color: report.isAnonymous
-                      ? AppColors.primaryBlue
-                      : AppColors.border,
-                  width: report.isAnonymous ? 2 : 1,
-                ),
-                backgroundColor: report.isAnonymous
-                    ? AppColors.cardBg
-                    : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              onPressed: () {
-                setState(() {
-                  _phoneController.clear();
-                  _emailController.clear();
-                  _whatsappController.clear();
-                });
-                provider.updateReport(
-                  isAnonymous: true,
-                  contactPhone: null,
-                  contactEmail: null,
-                  contactWhatsapp: null,
-                );
-              },
-              icon: IconUtils.buildIcon(
-                FontAwesomeIcons.userSecret,
-                color: report.isAnonymous
-                    ? AppColors.primaryBlue
-                    : AppColors.textSecondary,
-                size: 18,
-              ),
-              label: Text(
-                l10n.stayAnonymous,
-                style: TextStyle(
-                  color: report.isAnonymous
-                      ? AppColors.primaryBlue
-                      : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.5,
-                ),
-              ),
-            ),
-          ),
-
           const SizedBox(height: 20),
-          Row(
-            children: [
-              const Expanded(child: Divider()),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  l10n.orGiveDetails,
+
+          // Pseudonym — moved here from the first step, because this is where
+          // it is used: the team calls back using it, never a real name.
+          GlassContainer(
+            padding: const EdgeInsets.all(18),
+            borderColor: AppColors.primaryOrange.withValues(alpha: 0.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryOrange.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconUtils.buildIcon(
+                        FontAwesomeIcons.userSecret,
+                        color: AppColors.primaryOrange,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.anonymityTitle,
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  l10n.contactRequiredNote,
                   style: const TextStyle(
+                    fontSize: 12.5,
+                    height: 1.35,
                     color: AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const Expanded(child: Divider()),
-            ],
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _pseudoController,
+                  autocorrect: false,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.pseudoHint,
+                    filled: true,
+                    fillColor: AppColors.bg,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryOrange,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  onChanged: (val) => provider.updateReport(pseudo: val),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      backgroundColor: AppColors.primaryOrange.withValues(
+                        alpha: 0.1,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () => _generateRandomPseudo(l10n),
+                    icon: const Text('🎲', style: TextStyle(fontSize: 12)),
+                    label: Text(
+                      l10n.pseudoAuto,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryOrange,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
 
-          // Phone Field
           _buildTextField(
             controller: _phoneController,
             label: l10n.fieldPhone,
@@ -142,13 +209,10 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
             icon: FontAwesomeIcons.phone,
             keyboardType: TextInputType.phone,
             errorText: Validators.phone(report.contactPhone)?.text(l10n),
-            onChanged: (val) {
-              provider.updateReport(contactPhone: val, isAnonymous: false);
-            },
+            onChanged: (val) => provider.updateReport(contactPhone: val),
           ),
           const SizedBox(height: 14),
 
-          // WhatsApp Field
           _buildTextField(
             controller: _whatsappController,
             label: l10n.fieldWhatsapp,
@@ -156,29 +220,27 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
             icon: FontAwesomeIcons.whatsapp,
             iconColor: AppColors.whatsappGreen,
             keyboardType: TextInputType.phone,
+            isOptional: true,
+            optionalLabel: l10n.fieldOptional,
             errorText: Validators.phone(report.contactWhatsapp)?.text(l10n),
-            onChanged: (val) {
-              provider.updateReport(contactWhatsapp: val, isAnonymous: false);
-            },
+            onChanged: (val) => provider.updateReport(contactWhatsapp: val),
           ),
           const SizedBox(height: 14),
 
-          // Email Field
           _buildTextField(
             controller: _emailController,
             label: l10n.fieldEmail,
             hint: l10n.fieldEmailHint,
             icon: FontAwesomeIcons.envelope,
             keyboardType: TextInputType.emailAddress,
+            isOptional: true,
+            optionalLabel: l10n.fieldOptional,
             errorText: Validators.email(report.contactEmail)?.text(l10n),
-            onChanged: (val) {
-              provider.updateReport(contactEmail: val, isAnonymous: false);
-            },
+            onChanged: (val) => provider.updateReport(contactEmail: val),
           ),
 
           const SizedBox(height: 20),
 
-          // Confidentiality Note
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -218,12 +280,33 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
     Color? iconColor,
     TextInputType? keyboardType,
     String? errorText,
+    bool isOptional = false,
+    String? optionalLabel,
     required ValueChanged<String> onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5)),
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5),
+              ),
+            ),
+            if (isOptional && optionalLabel != null) ...[
+              const SizedBox(width: 6),
+              Text(
+                '· $optionalLabel',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: controller,

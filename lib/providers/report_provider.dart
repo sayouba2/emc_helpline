@@ -62,7 +62,11 @@ class ReportProvider with ChangeNotifier {
   /// True while the report is on its way. The wizard shows a sending screen.
   bool get isSubmitting => _isSubmitting;
 
-  bool get _skipsAssistanceType =>
+  /// Someone who declined support is asked neither what kind of support they
+  /// want nor how to reach them: both questions only exist to serve a follow-up
+  /// that will not happen. Steps [stepAssistanceType] and [stepContact] are
+  /// skipped together.
+  bool get _declinedAssistance =>
       _currentReport.assistanceNeeded == AssistanceNeed.none;
 
   /// Why the current step cannot be left yet, or `null` when it is complete.
@@ -109,9 +113,16 @@ class ReportProvider with ChangeNotifier {
     }
   }
 
+  /// Reached only by people who asked to be accompanied, so a pseudonym and a
+  /// phone number are both required — the team has no other way to call back.
+  /// The e-mail and WhatsApp fields stay optional.
   ValidationMessage? _contactStepError(ReportModel report) {
-    if (report.isAnonymous) return null;
-    if (!report.hasAnyContactDetail) return ValidationMessage.missingContact;
+    if (Validators.isBlank(report.pseudo)) {
+      return ValidationMessage.missingPseudo;
+    }
+    if (Validators.isBlank(report.contactPhone)) {
+      return ValidationMessage.missingPhone;
+    }
     return Validators.phone(report.contactPhone) ??
         Validators.phone(report.contactWhatsapp) ??
         Validators.email(report.contactEmail);
@@ -136,13 +147,14 @@ class ReportProvider with ChangeNotifier {
         report.urgencyLevel != null;
     if (!hasEveryChoice) return false;
 
-    final needsAssistanceType = report.assistanceNeeded != AssistanceNeed.none;
-    if (needsAssistanceType && report.assistanceType == null) return false;
-
     if (!report.hasEvidenceAnswer) return false;
+    if (Validators.url(report.evidenceUrl) != null) return false;
 
-    return Validators.url(report.evidenceUrl) == null &&
-        _contactStepError(report) == null;
+    // Declining support skips both the type and the contact questions, so
+    // neither may be required here.
+    if (_declinedAssistance) return true;
+
+    return report.assistanceType != null && _contactStepError(report) == null;
   }
 
   void setTab(int tabIndex) {
@@ -164,8 +176,8 @@ class ReportProvider with ChangeNotifier {
 
   void nextWizardStep() {
     if (!canAdvance) return;
-    if (_wizardStep == stepAssistance && _skipsAssistanceType) {
-      _wizardStep = stepContact;
+    if (_wizardStep == stepAssistance && _declinedAssistance) {
+      _wizardStep = stepUrgency;
     } else if (_wizardStep < stepSummary) {
       _wizardStep++;
     }
@@ -173,7 +185,7 @@ class ReportProvider with ChangeNotifier {
   }
 
   void previousWizardStep() {
-    if (_wizardStep == stepContact && _skipsAssistanceType) {
+    if (_wizardStep == stepUrgency && _declinedAssistance) {
       _wizardStep = stepAssistance;
     } else if (_wizardStep > stepWho) {
       _wizardStep--;
@@ -206,7 +218,6 @@ class ReportProvider with ChangeNotifier {
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     UrgencyLevel? urgencyLevel,
-    bool? isAnonymous,
     Object? contactPhone = unsetField,
     Object? contactEmail = unsetField,
     Object? contactWhatsapp = unsetField,
@@ -224,7 +235,6 @@ class ReportProvider with ChangeNotifier {
       assistanceNeeded: assistanceNeeded,
       assistanceType: assistanceType,
       urgencyLevel: urgencyLevel,
-      isAnonymous: isAnonymous,
       contactPhone: contactPhone,
       contactEmail: contactEmail,
       contactWhatsapp: contactWhatsapp,

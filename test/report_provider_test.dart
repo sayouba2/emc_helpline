@@ -25,6 +25,8 @@ ReportProvider _completeProvider() {
     assistanceNeeded: AssistanceNeed.wanted,
     assistanceType: AssistanceType.legal,
     urgencyLevel: UrgencyLevel.notUrgent,
+    pseudo: 'HérosDiscret42',
+    contactPhone: '0612345678',
   );
 }
 
@@ -72,17 +74,16 @@ void main() {
       expect(provider.currentReport.contactEmail, 'a@b.co');
     });
 
-    test('passing null clears the contact details (Rester 100% Anonyme)', () {
+    test('passing null clears every contact detail', () {
       final provider = _provider();
       provider.updateReport(
         contactPhone: '0612345678',
         contactEmail: 'a@b.co',
         contactWhatsapp: '+212612345678',
-        isAnonymous: false,
       );
+      expect(provider.currentReport.isAnonymous, isFalse);
 
       provider.updateReport(
-        isAnonymous: true,
         contactPhone: null,
         contactEmail: null,
         contactWhatsapp: null,
@@ -91,7 +92,11 @@ void main() {
       expect(provider.currentReport.contactPhone, isNull);
       expect(provider.currentReport.contactEmail, isNull);
       expect(provider.currentReport.contactWhatsapp, isNull);
-      expect(provider.currentReport.isAnonymous, isTrue);
+      expect(
+        provider.currentReport.isAnonymous,
+        isTrue,
+        reason: 'anonymity is derived from the absence of details',
+      );
     });
 
     test('passing null clears the evidence (Supprimer la capture)', () {
@@ -122,20 +127,24 @@ void main() {
       expect(provider.wizardStep, ReportProvider.stepAssistanceType);
     });
 
-    test('skips the assistance type step when no assistance is wanted', () {
+    test('declining support skips both the type and the contact steps', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepAssistance);
       provider.updateReport(assistanceNeeded: AssistanceNeed.none);
 
       provider.nextWizardStep();
 
-      expect(provider.wizardStep, ReportProvider.stepContact);
+      expect(
+        provider.wizardStep,
+        ReportProvider.stepUrgency,
+        reason: 'nobody who declined help is asked how to reach them',
+      );
     });
 
-    test('skips it backwards too, symmetrically', () {
+    test('skips them backwards too, symmetrically', () {
       final provider = _completeProvider();
       provider.updateReport(assistanceNeeded: AssistanceNeed.none);
-      provider.setWizardStep(ReportProvider.stepContact);
+      provider.setWizardStep(ReportProvider.stepUrgency);
 
       provider.previousWizardStep();
 
@@ -218,37 +227,62 @@ void main() {
       expect(provider.canAdvance, isTrue);
     });
 
-    test('the contact step passes when staying anonymous', () {
+    test('the contact step requires a pseudonym and a phone number', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepContact);
-
-      expect(provider.currentReport.isAnonymous, isTrue);
       expect(provider.canAdvance, isTrue);
-    });
 
-    test('the contact step requires a detail once anonymity is dropped', () {
-      final provider = _completeProvider();
-      provider.setWizardStep(ReportProvider.stepContact);
-      provider.updateReport(isAnonymous: false);
+      provider.updateReport(pseudo: '  ');
+      expect(
+        provider.canAdvance,
+        isFalse,
+        reason: 'the team calls back using the pseudonym',
+      );
 
+      provider.updateReport(pseudo: 'ÉtoileSecrète99', contactPhone: '');
       expect(provider.canAdvance, isFalse);
+
+      provider.updateReport(contactPhone: '0612345678');
+      expect(provider.canAdvance, isTrue);
     });
 
     test('the contact step rejects malformed details', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepContact);
 
-      provider.updateReport(isAnonymous: false, contactEmail: 'pas-un-email');
-      expect(provider.canAdvance, isFalse);
-
-      provider.updateReport(contactEmail: 'moi@exemple.ma');
-      expect(provider.canAdvance, isTrue);
-
       provider.updateReport(contactPhone: '123');
       expect(provider.canAdvance, isFalse);
 
       provider.updateReport(contactPhone: '0612345678');
       expect(provider.canAdvance, isTrue);
+
+      provider.updateReport(contactEmail: 'pas-un-email');
+      expect(
+        provider.canAdvance,
+        isFalse,
+        reason: 'optional but must be valid',
+      );
+
+      provider.updateReport(contactEmail: 'moi@exemple.ma');
+      expect(provider.canAdvance, isTrue);
+    });
+
+    test('a report that declines support needs no contact details', () {
+      final provider = _provider()
+        ..updateReport(
+          whoFor: WhoFor.someoneElse,
+          ageGroup: AgeGroup.child,
+          gender: Gender.female,
+          incidentType: IncidentType.hateSpeech,
+          platform: ReportPlatform.tiktok,
+          hasNoEvidence: true,
+          assistanceNeeded: AssistanceNeed.none,
+          urgencyLevel: UrgencyLevel.urgent,
+        );
+
+      expect(provider.currentReport.pseudo, isNull);
+      expect(provider.currentReport.isAnonymous, isTrue);
+      expect(provider.isReportComplete, isTrue);
     });
 
     test('an incomplete report cannot be submitted from the summary', () async {
