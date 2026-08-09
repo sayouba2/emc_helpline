@@ -3,37 +3,59 @@
 Application mobile Flutter de signalement des violences numériques visant les
 enfants, les jeunes et les femmes au Maroc, en partenariat avec le CMRPI.
 
-L'utilisateur remplit un formulaire en 11 étapes (contexte, profil, incident,
-récapitulatif), suit l'état de sa demande avec son numéro de référence, et
-dispose en permanence des numéros d'urgence — Police **19**, Gendarmerie **177**.
+Interface en **français, arabe et anglais**, avec mise en page droite-à-gauche
+pour l'arabe. Au lancement, le logo apparaît en fondu puis laisse la place à
+l'application ; le splash natif Android affiche le même logo, donc la transition
+est invisible.
 
-Le parcours se scinde en fin de formulaire, selon la réponse à « Veux-tu de
-l'aide ? » :
+## Ce que fait l'application
+
+- **Signaler** — un formulaire en 11 étapes : contexte, profil, incident,
+  récapitulatif. Chaque étape est validée avant de pouvoir avancer, et le bouton
+  désactivé est accompagné d'un message qui dit ce qui manque.
+- **Suivre ma demande** — un écran dédié où l'utilisateur saisit le numéro de
+  référence reçu à l'envoi et consulte l'état de son dossier.
+- **Ressources** — les gestes à adopter face à un incident.
+- **Contact** — WhatsApp, téléphone, e-mail et portail web de l'équipe.
+- **Chatbot** (+12 ans) — assistant proposé depuis l'étape « âge » et depuis
+  l'écran de confirmation, là où commence l'attente d'une réponse humaine.
+
+Les numéros d'urgence sont accessibles en permanence : Police **19**,
+Gendarmerie **177**.
+
+## Règles du formulaire
+
+Trois d'entre elles ne sont pas évidentes à la lecture du code seul.
+
+**Les preuves ne peuvent pas être passées à vide.** Il faut au moins une capture
+d'écran — elles sont multiples, avec vignettes et suppression individuelle —, un
+lien, **ou** un récit d'au moins `Validators.minDescriptionLength` caractères.
+Un signalement anonyme sans rien à examiner ne peut être ni vérifié ni instruit,
+et le portail en ligne demande la même chose. Mais le cas le plus grave est
+souvent celui où l'agresseur a effacé les traces, où le contenu était éphémère,
+ou où l'enfant a été contraint de supprimer : le récit tient donc lieu de preuve
+plutôt que de fermer la porte. Le champ reste visible même quand une preuve est
+jointe — marqué facultatif — pour que rien de ce qui a été écrit ne disparaisse.
+
+**La fin du parcours dépend de la réponse à « Veux-tu de l'aide ? ».**
 
 | Réponse | Type d'aide | Coordonnées |
 |---|---|---|
-| Accompagnement | demandé | **pseudo + téléphone, obligatoires** |
+| Accompagnement | demandée | **pseudo + téléphone, obligatoires** |
 | Je ne sais pas | sautée | sautées — le signalement reste anonyme |
 | Pas d'accompagnement | sautée | sautées — le signalement reste anonyme |
 
-Seuls un pseudo et un numéro de téléphone sont demandés : ni e-mail, ni
-WhatsApp, ni vrai nom.
+Ces deux questions n'existent que pour permettre un rappel : elles ne se posent
+donc qu'à qui l'a explicitement demandé. Les étapes conditionnelles sont
+déclarées une seule fois dans `ReportProvider._isStepSkipped()`, et la navigation
+avant comme arrière les enjambe à partir de cette définition — elles ne peuvent
+pas diverger.
 
-L'étape « preuves » ne peut pas être passée à vide. Il faut au moins une
-capture d'écran (elles sont multiples), un lien, **ou** — si la personne n'a
-rien pu conserver — un récit d'au moins
-`Validators.minDescriptionLength` caractères. Un signalement anonyme sans rien
-à examiner ne peut être ni vérifié ni instruit ; mais le cas le plus grave est
-souvent celui où l'agresseur a effacé les traces, donc le récit tient lieu de
-preuve plutôt que de fermer la porte. Les étapes conditionnelles
-sont déclarées dans `ReportProvider._isStepSkipped()`, et la navigation avant
-comme arrière les enjambe à partir de cette seule définition.
-
-Interface disponible en **français, arabe et anglais**, avec mise en page
-droite-à-gauche pour l'arabe.
-
-Au lancement, le logo apparaît en fondu puis laisse la place à l'application ;
-le splash natif Android affiche le même logo, donc la transition est invisible.
+**L'anonymat n'est pas un interrupteur mais une conséquence.** Il n'existe pas
+de bouton « rester anonyme » : le vrai nom n'est demandé nulle part, et un
+pseudo associé à un numéro est précisément ce qui permet d'être joint sans se
+nommer. `ReportModel.isAnonymous` se déduit de l'absence de coordonnées. Seuls un
+pseudo et un téléphone sont collectés : ni e-mail, ni WhatsApp.
 
 ---
 
@@ -44,13 +66,14 @@ pas encore de backend : `ReportProvider.submitReport()` génère un numéro de
 référence localement et ajoute le dossier à une liste en mémoire. L'application
 n'a pas vocation à être déployée avant que le backend existe.
 
-Les points d'accroche sont déjà en place et n'attendent que l'appel réseau :
+Les points d'accroche sont en place et n'attendent que l'appel réseau :
 
 | À remplacer | Où |
 |---|---|
-| Envoi du signalement | `ReportProvider.submitReport()` — le délai simulé `submissionLatency` devient l'appel réseau, l'écran d'envoi réagit déjà à `isSubmitting` |
+| Envoi du signalement | `ReportProvider.submitReport()` — le délai simulé `submissionLatency` devient l'appel réseau, l'écran d'envoi animé réagit déjà à `isSubmitting` |
 | Suivi d'une demande | `ReportProvider.findByReference()` — lit l'historique de session, deviendra une requête serveur |
 | Numéro de référence | généré avec `Random()` côté client, devra venir du serveur |
+| Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
 
 ## Démarrer
 
@@ -76,15 +99,17 @@ Les mêmes commandes tournent en CI ([`.github/workflows/ci.yml`](.github/workfl
 lib/
 ├── core/
 │   ├── constants/     couleurs, styles, numéros d'urgence
-│   ├── localization/  libellés localisés des enums métier
+│   ├── localization/  libellés localisés des enums métier et des messages de validation
 │   ├── storage/       préférences (langue) — voir « Données » ci-dessous
 │   └── utils/         lancement d'appels/liens, validateurs
 ├── l10n/              app_fr.arb, app_ar.arb, app_en.arb (source des traductions)
 ├── models/            ReportModel (immuable) + enums métier
 ├── providers/         ReportProvider : état du wizard, validation, historique
-└── views/             écrans et composants partagés
+└── views/
+    ├── components/    composants partagés (cartes, stepper, transitions)
     ├── reporting/     wizard, écran d'envoi animé, confirmation
-    └── tracking/      suivi d'une demande par numéro de référence
+    ├── tracking/      suivi d'une demande par numéro de référence
+    └── …              accueil, ressources, contact, chatbot, splash
 ```
 
 **Gestion d'état** : `provider` / `ChangeNotifier`. `ReportProvider` détient la
@@ -96,8 +121,21 @@ décalages.
 ne peut donc pas casser la logique de branchement. Les libellés vivent dans
 [`report_enum_labels.dart`](lib/core/localization/report_enum_labels.dart).
 
+**Validation** : le provider ne renvoie pas des phrases mais des
+`ValidationMessage` — il n'a pas de `BuildContext`, et la formulation appartient
+aux fichiers ARB.
+
+**Modification du modèle** : `ReportModel.copyWith()` distingue « argument omis »
+de « champ à effacer » grâce à une sentinelle `unsetField`. Omettre conserve,
+passer `null` efface. Les champs à choix (enums) n'acceptent pas d'effacement :
+un choix se change, il ne s'annule pas.
+
 **Thème** : clair uniquement, volontairement. Une variante sombre a existé mais
 était inatteignable et illisible sur les deux tiers des écrans.
+
+**Écrans** : un seul est construit à la fois. Les deux `IndexedStack` imbriqués
+d'origine gardaient ~15 écrans vivants à chaque frame, ce qui suffisait à
+étrangler un émulateur.
 
 ## Traductions
 
@@ -130,9 +168,10 @@ signalement n'atteint le disque.
 
 ## Accessibilité
 
-Quatre garde-fous automatisés dans `test/accessibility_test.dart` : contraste
-WCAG AA, cibles tactiles ≥ 48 dp, étiquettes pour lecteurs d'écran, et absence
-de débordement de mise en page jusqu'à un agrandissement du texte de 2×.
+Cinq garde-fous automatisés dans `test/accessibility_test.dart` : contraste
+WCAG AA, cibles tactiles ≥ 48 dp, étiquettes pour lecteurs d'écran, absence de
+débordement de mise en page jusqu'à un agrandissement du texte de 2×, et une
+barre de navigation qui reste à sa taille.
 
 L'orange de marque est volontairement plus sombre que le #EA580C d'origine
 (3,56:1 contre le blanc, sous le seuil AA) ; la teinte claire reste disponible
@@ -145,3 +184,5 @@ en `AppColors.primaryOrangeBright` pour les usages décoratifs.
   défaut.
 - Le sélecteur de langue est annoncé au sein du titre de l'`AppBar`, que Flutter
   fusionne en un seul nœud sémantique, plutôt que comme un bouton distinct.
+- Le récapitulatif indique qu'un récit a été écrit mais ne l'affiche pas : il
+  peut faire plusieurs centaines de caractères. « Modifier » ouvre l'étape.
