@@ -325,7 +325,6 @@
     "description": "Marker next to a field that may be left empty"
   },
   "summaryEvidenceDescription": "Description écrite",
-  "summaryDescription": "Récit",
   "validationDescriptionTooShort": "{count, plural, other{Raconte un peu plus : au moins {count} caractères.}}",
   "@validationDescriptionTooShort": {
     "description": "Minimum length required when a report carries no evidence",

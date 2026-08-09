@@ -223,7 +223,6 @@
   "fieldRequired": "required",
   "fieldOptional": "optional",
   "summaryEvidenceDescription": "Written description",
-  "summaryDescription": "Account",
   "validationDescriptionTooShort": "{count, plural, other{Tell us a bit more: at least {count} characters.}}",
   "evidenceDescriptionCounter": "{count, plural, other{{count} / {min} characters}}"
 }

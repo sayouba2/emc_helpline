@@ -223,7 +223,6 @@
   "fieldRequired": "إلزامي",
   "fieldOptional": "اختياري",
   "summaryEvidenceDescription": "وصف مكتوب",
-  "summaryDescription": "الرواية",
   "validationDescriptionTooShort": "{count, plural, other{احكِ أكثر قليلاً: {count} حرفاً على الأقل.}}",
   "evidenceDescriptionCounter": "{count, plural, other{{count} / {min} حرفاً}}"
 }
