@@ -10,6 +10,7 @@ import '../../../core/localization/report_enum_labels.dart';
 import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
+import '../../components/scrollable_page.dart';
 
 /// Evidence: one or more screenshots, and/or a link.
 ///
@@ -72,8 +73,7 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
     final l10n = AppLocalizations.of(context);
     final paths = provider.currentReport.evidenceFilePaths;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -159,183 +159,188 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Partner Header Banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: AppColors.whatsappBg,
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/images/cmrpi.png',
-                  height: 20,
-                  width: 20,
-                  errorBuilder: (c, e, s) => const SizedBox(),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.cmrpiPartner,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Messages List
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isBot = msg.isBot;
-                final text = msg.text ?? l10n.chatbotGreeting;
-
-                return Align(
-                  alignment: isBot
-                      ? Alignment.centerLeft
-                      : Alignment.centerRight,
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.8,
-                    ),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: isBot ? Colors.white : AppColors.primaryOrange,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isBot ? 4 : 18),
-                        bottomRight: Radius.circular(isBot ? 18 : 4),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      text,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.4,
-                        color: isBot ? AppColors.textPrimary : Colors.white,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Quick Suggestion Chips
-          SizedBox(
-            height: 52,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: quickQuestions.length,
-              itemBuilder: (context, index) {
-                final q = quickQuestions[index];
-                final isFormAction = q == l10n.chatbotBackToForm;
-
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ActionChip(
-                    backgroundColor: isFormAction
-                        ? AppColors.primaryOrange.withValues(alpha: 0.15)
-                        : Colors.white,
-                    side: BorderSide(
-                      color: isFormAction
-                          ? AppColors.primaryOrange
-                          : AppColors.border,
-                    ),
-                    label: Text(
-                      q,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isFormAction
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: isFormAction
-                            ? AppColors.primaryOrange
-                            : AppColors.primaryBlue,
-                      ),
-                    ),
-                    onPressed: () => _sendMessage(q, l10n),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Input Bar
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: AppColors.border)),
-            ),
-            child: SafeArea(
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Column(
+          children: [
+            // Partner Header Banner
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.whatsappBg,
               child: Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _inputController,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: l10n.chatbotInputHint,
-                        hintStyle: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13.5,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.bg,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      onSubmitted: (value) => _sendMessage(value, l10n),
-                    ),
+                  Image.asset(
+                    'assets/images/cmrpi.png',
+                    height: 20,
+                    width: 20,
+                    errorBuilder: (c, e, s) => const SizedBox(),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filled(
-                    tooltip: l10n.a11ySendMessage,
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.primaryOrange,
-                      minimumSize: const Size(48, 48),
+                  Expanded(
+                    child: Text(
+                      l10n.cmrpiPartner,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
-                    icon: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    onPressed: () => _sendMessage(_inputController.text, l10n),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // Messages List
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+                  final isBot = msg.isBot;
+                  final text = msg.text ?? l10n.chatbotGreeting;
+
+                  return Align(
+                    alignment: isBot
+                        ? Alignment.centerLeft
+                        : Alignment.centerRight,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.8,
+                      ),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isBot ? Colors.white : AppColors.primaryOrange,
+                        borderRadius: BorderRadius.only(
+                          topLeft: const Radius.circular(18),
+                          topRight: const Radius.circular(18),
+                          bottomLeft: Radius.circular(isBot ? 4 : 18),
+                          bottomRight: Radius.circular(isBot ? 18 : 4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        text,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: isBot ? AppColors.textPrimary : Colors.white,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Quick Suggestion Chips
+            SizedBox(
+              height: 52,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: quickQuestions.length,
+                itemBuilder: (context, index) {
+                  final q = quickQuestions[index];
+                  final isFormAction = q == l10n.chatbotBackToForm;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ActionChip(
+                      backgroundColor: isFormAction
+                          ? AppColors.primaryOrange.withValues(alpha: 0.15)
+                          : Colors.white,
+                      side: BorderSide(
+                        color: isFormAction
+                            ? AppColors.primaryOrange
+                            : AppColors.border,
+                      ),
+                      label: Text(
+                        q,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isFormAction
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isFormAction
+                              ? AppColors.primaryOrange
+                              : AppColors.primaryBlue,
+                        ),
+                      ),
+                      onPressed: () => _sendMessage(q, l10n),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Input Bar
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: AppColors.border)),
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _inputController,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: l10n.chatbotInputHint,
+                          hintStyle: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13.5,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.bg,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onSubmitted: (value) => _sendMessage(value, l10n),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      tooltip: l10n.a11ySendMessage,
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.primaryOrange,
+                        minimumSize: const Size(48, 48),
+                      ),
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onPressed: () =>
+                          _sendMessage(_inputController.text, l10n),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

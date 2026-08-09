@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
 import '../chatbot/emc_chatbot_screen.dart';
 import '../components/glass_container.dart';
+import '../components/scrollable_page.dart';
 
 class ReportSuccessScreen extends StatelessWidget {
   final String referenceCode;
@@ -21,7 +22,7 @@ class ReportSuccessScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SingleChildScrollView(
+      body: ScrollablePage(
         padding: const EdgeInsets.only(
           left: 24,
           right: 24,

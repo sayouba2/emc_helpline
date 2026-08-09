@@ -34,9 +34,19 @@ class MainNavigationScreen extends StatelessWidget {
       backgroundColor: AppColors.bg,
       extendBody: true,
       appBar: HeaderAppBar(height: HeaderAppBar.heightFor(context)),
-      body: AnimatedScreenSwitcher(
-        index: reportProvider.currentTab,
-        children: pages,
+      // En paysage, une encoche latérale mange le bord de l'écran. Seul le
+      // contenu s'en écarte : le fond, lui, continue de couvrir toute la
+      // largeur, sinon une bande vide apparaîtrait le long de l'encoche.
+      // En paysage, une encoche latérale mange le bord de l'écran. Seul le
+      // contenu s'en écarte : le fond, lui, continue de couvrir toute la
+      // largeur, sinon une bande vide apparaîtrait le long de l'encoche.
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: AnimatedScreenSwitcher(
+          index: reportProvider.currentTab,
+          children: pages,
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(

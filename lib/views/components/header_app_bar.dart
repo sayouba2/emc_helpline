@@ -47,7 +47,10 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     // share of it, floored so they stay legible and capped so they never crowd
     // out the title.
     final width = MediaQuery.sizeOf(context).width;
-    final leadingWidth = (width * 0.24).clamp(72.0, 104.0);
+    // Encoche latérale en paysage : le fond blanc de l'AppBar continue de
+    // couvrir toute la largeur, seuls les logos s'en écartent.
+    final sideInset = MediaQuery.paddingOf(context);
+    final leadingWidth = (width * 0.24).clamp(72.0, 104.0) + sideInset.left;
     final partnerWidth = (width * 0.21).clamp(60.0, 92.0);
     final logoHeight = (height - 24).clamp(32.0, 56.0);
 
@@ -59,7 +62,11 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
       toolbarHeight: height,
       leadingWidth: leadingWidth,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 14.0, top: 4, bottom: 4),
+        padding: EdgeInsetsDirectional.only(
+          start: 14.0 + sideInset.left,
+          top: 4,
+          bottom: 4,
+        ),
         child: Semantics(
           button: true,
           label: l10n.a11yAppLogo,
@@ -151,9 +158,9 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         // CMRPI Partner Logo (Occupe TOUT l'espace de droite sans aucune obstruction)
         Padding(
-          padding: const EdgeInsets.only(
-            right: 14.0,
-            left: 4.0,
+          padding: EdgeInsetsDirectional.only(
+            end: 14.0 + sideInset.right,
+            start: 4.0,
             top: 4,
             bottom: 4,
           ),

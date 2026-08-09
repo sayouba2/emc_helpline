@@ -11,6 +11,7 @@ import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
 import '../../components/glass_container.dart';
+import '../../components/scrollable_page.dart';
 
 /// How to reach the user back.
 ///
@@ -70,8 +71,7 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
     final l10n = AppLocalizations.of(context);
     final report = provider.currentReport;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

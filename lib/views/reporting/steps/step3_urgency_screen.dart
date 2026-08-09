@@ -10,6 +10,7 @@ import '../../../models/report_enums.dart';
 import '../../../core/localization/report_enum_labels.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
+import '../../components/scrollable_page.dart';
 
 typedef _OptionStyle = ({
   FaIconData icon,
@@ -49,8 +50,7 @@ class Step3UrgencyScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final selectedUrgency = provider.currentReport.urgencyLevel;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

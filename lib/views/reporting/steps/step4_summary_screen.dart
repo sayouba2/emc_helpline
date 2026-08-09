@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/report_enums.dart';
 import '../../../models/report_model.dart';
 import '../../../providers/report_provider.dart';
+import '../../components/scrollable_page.dart';
 
 class Step4SummaryScreen extends StatelessWidget {
   const Step4SummaryScreen({super.key});
@@ -19,8 +20,7 @@ class Step4SummaryScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final report = provider.currentReport;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../components/animated_entrance.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
+import '../components/scrollable_page.dart';
 
 class ContactScreen extends StatelessWidget {
   const ContactScreen({super.key});
@@ -62,7 +63,7 @@ class ContactScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SingleChildScrollView(
+      body: ScrollablePage(
         padding: const EdgeInsets.only(
           left: 20,
           right: 20,

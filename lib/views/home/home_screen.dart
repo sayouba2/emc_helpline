@@ -13,6 +13,7 @@ import '../tracking/track_request_screen.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
 import '../components/pulsing_widget.dart';
+import '../components/scrollable_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -24,7 +25,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      body: SingleChildScrollView(
+      body: ScrollablePage(
         padding: const EdgeInsets.only(
           left: 18.0,
           right: 18.0,

@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/report_model.dart';
 import '../../providers/report_provider.dart';
 import '../components/glass_container.dart';
+import '../components/scrollable_page.dart';
 
 /// Looks a report up by the reference code handed to the user.
 ///
@@ -63,101 +64,104 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.trackRequestSubtitle,
-              style: AppTextStyles.screenSubtitle.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            Text(
-              l10n.trackRequestFieldLabel,
-              style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _codeController,
-              autocorrect: false,
-              textCapitalization: TextCapitalization.characters,
-              textInputAction: TextInputAction.search,
-              onChanged: (_) => setState(() => _searched = false),
-              onSubmitted: (_) => _search(),
-              decoration: InputDecoration(
-                hintText: 'REF-EMC-2026-123456',
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.all(14.0),
-                  child: FaIcon(
-                    FontAwesomeIcons.hashtag,
-                    color: AppColors.primaryBlue,
-                    size: 16,
-                  ),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryBlue,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryOrange,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.primaryOrange.withValues(
-                  alpha: 0.35,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              onPressed: code.isEmpty ? null : _search,
-              icon: const Icon(Icons.search_rounded, size: 18),
-              label: Text(
-                l10n.trackRequestAction,
-                style: AppTextStyles.buttonText.copyWith(fontSize: 15),
-              ),
-            ),
-
-            if (code.isEmpty && _searched) ...[
-              const SizedBox(height: 16),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ScrollablePage(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                l10n.trackRequestEmptyField,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.dangerRedStrong,
+                l10n.trackRequestSubtitle,
+                style: AppTextStyles.screenSubtitle.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
-            ],
+              const SizedBox(height: 20),
 
-            if (_searched && code.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              if (_result != null)
-                _buildResultCard(context, l10n, _result!)
-              else
-                _buildNotFoundCard(l10n),
+              Text(
+                l10n.trackRequestFieldLabel,
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _codeController,
+                autocorrect: false,
+                textCapitalization: TextCapitalization.characters,
+                textInputAction: TextInputAction.search,
+                onChanged: (_) => setState(() => _searched = false),
+                onSubmitted: (_) => _search(),
+                decoration: InputDecoration(
+                  hintText: 'REF-EMC-2026-123456',
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.all(14.0),
+                    child: FaIcon(
+                      FontAwesomeIcons.hashtag,
+                      color: AppColors.primaryBlue,
+                      size: 16,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryBlue,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryOrange,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.primaryOrange.withValues(
+                    alpha: 0.35,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: code.isEmpty ? null : _search,
+                icon: const Icon(Icons.search_rounded, size: 18),
+                label: Text(
+                  l10n.trackRequestAction,
+                  style: AppTextStyles.buttonText.copyWith(fontSize: 15),
+                ),
+              ),
+
+              if (code.isEmpty && _searched) ...[
+                const SizedBox(height: 16),
+                Text(
+                  l10n.trackRequestEmptyField,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.dangerRedStrong,
+                  ),
+                ),
+              ],
+
+              if (_searched && code.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                if (_result != null)
+                  _buildResultCard(context, l10n, _result!)
+                else
+                  _buildNotFoundCard(l10n),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

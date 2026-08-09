@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
 import '../../components/glass_container.dart';
 import '../../components/interactive_card.dart';
+import '../../components/scrollable_page.dart';
 
 typedef _BrandStyle = ({FaIconData icon, Color color, Color background});
 
@@ -56,8 +57,7 @@ class Step3PlatformScreen extends StatelessWidget {
     final selectedPlatform = reportProvider.currentReport.platform;
     const platforms = ReportPlatform.values;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

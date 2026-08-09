@@ -168,10 +168,19 @@ signalement n'atteint le disque.
 
 ## Accessibilité
 
-Cinq garde-fous automatisés dans `test/accessibility_test.dart` : contraste
+Sept garde-fous automatisés dans `test/accessibility_test.dart` : contraste
 WCAG AA, cibles tactiles ≥ 48 dp, étiquettes pour lecteurs d'écran, absence de
-débordement de mise en page jusqu'à un agrandissement du texte de 2×, et une
-barre de navigation qui reste à sa taille.
+débordement jusqu'à un agrandissement du texte de 2×, barre de navigation qui
+reste à sa taille, dégagement du header sous une encoche haute, et contenu qui
+évite une encoche latérale en paysage.
+
+Les écrans qui défilent passent par [`ScrollablePage`](lib/views/components/scrollable_page.dart) :
+la barre de défilement reste visible dès que le contenu dépasse, pour qu'on
+sache en arrivant sur une étape qu'il y a autre chose plus bas. Flutter ne
+dessine rien quand tout tient à l'écran, donc une étape courte reste nette.
+
+Le contenu s'écarte des encoches latérales en paysage, sans que les fonds
+cessent de couvrir toute la largeur.
 
 L'orange de marque est volontairement plus sombre que le #EA580C d'origine
 (3,56:1 contre le blanc, sous le seuil AA) ; la teinte claire reste disponible
@@ -186,3 +195,5 @@ en `AppColors.primaryOrangeBright` pour les usages décoratifs.
   fusionne en un seul nœud sémantique, plutôt que comme un bouton distinct.
 - Le récapitulatif indique qu'un récit a été écrit mais ne l'affiche pas : il
   peut faire plusieurs centaines de caractères. « Modifier » ouvre l'étape.
+- L'orientation n'est pas verrouillée, mais la mise en page est pensée pour le
+  portrait ; le paysage reste utilisable sans être soigné.

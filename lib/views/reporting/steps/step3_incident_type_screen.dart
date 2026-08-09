@@ -8,6 +8,7 @@ import '../../../models/report_enums.dart';
 import '../../../core/localization/report_enum_labels.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
+import '../../components/scrollable_page.dart';
 
 class Step3IncidentTypeScreen extends StatelessWidget {
   const Step3IncidentTypeScreen({super.key});
@@ -28,8 +29,7 @@ class Step3IncidentTypeScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final selectedType = provider.currentReport.incidentType;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

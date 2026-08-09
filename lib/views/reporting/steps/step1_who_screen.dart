@@ -9,6 +9,7 @@ import '../../../models/report_enums.dart';
 import '../../../providers/report_provider.dart';
 import '../../components/glass_container.dart';
 import '../../components/interactive_card.dart';
+import '../../components/scrollable_page.dart';
 
 /// First step: who the report is for.
 ///
@@ -25,8 +26,7 @@ class Step1WhoScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final currentSelection = reportProvider.currentReport.whoFor;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

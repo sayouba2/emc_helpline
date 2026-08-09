@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
 import '../../chatbot/emc_chatbot_screen.dart';
 import '../../components/glass_container.dart';
+import '../../components/scrollable_page.dart';
 
 class Step2AgeScreen extends StatelessWidget {
   const Step2AgeScreen({super.key});
@@ -27,8 +28,7 @@ class Step2AgeScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final selectedAge = provider.currentReport.ageGroup;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+    return ScrollablePage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

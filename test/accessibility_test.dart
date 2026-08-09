@@ -18,6 +18,7 @@ Future<void> _pumpApp(
   double textScale = 1.0,
   Size size = _phone,
   double topInset = 0,
+  double sideInset = 0,
 }) async {
   // A stored preference also exercises the persistence path.
   SharedPreferences.setMockInitialValues({'settings.localeLanguageCode': 'fr'});
@@ -25,9 +26,14 @@ Future<void> _pumpApp(
 
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
-  if (topInset > 0) {
-    tester.view.padding = FakeViewPadding(top: topInset);
-    tester.view.viewPadding = FakeViewPadding(top: topInset);
+  if (topInset > 0 || sideInset > 0) {
+    final padding = FakeViewPadding(
+      top: topInset,
+      left: sideInset,
+      right: sideInset,
+    );
+    tester.view.padding = padding;
+    tester.view.viewPadding = padding;
   }
   addTearDown(tester.view.reset);
 
@@ -100,6 +106,34 @@ void main() {
         lessThan(atNormalScale * 1.5),
         reason: 'a header that grew unbounded would swallow the screen',
       );
+    });
+
+    testWidgets('content clears a side cutout in landscape', (tester) async {
+      const inset = 90.0;
+      await _pumpApp(
+        tester,
+        size: const Size(844, 390), // paysage
+        sideInset: inset,
+      );
+
+      final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
+
+      // Le fond doit rester pleine largeur…
+      expect(tester.getSize(find.byType(HeaderAppBar)).width, 844);
+
+      // …mais rien de lisible ne doit tomber dans la bande de l'encoche.
+      for (final finder in [
+        find.text(l10n.heroTitle),
+        find.text(l10n.emergencyNumbers),
+      ]) {
+        final rect = tester.getRect(finder);
+        expect(
+          rect.left,
+          greaterThanOrEqualTo(inset),
+          reason: 'du texte sous une encoche latérale est illisible',
+        );
+        expect(rect.right, lessThanOrEqualTo(844 - inset));
+      }
     });
 
     testWidgets('the bottom navigation bar hugs its content', (tester) async {
