@@ -19,9 +19,13 @@ l'aide ? » :
 Seuls un pseudo et un numéro de téléphone sont demandés : ni e-mail, ni
 WhatsApp, ni vrai nom.
 
-L'étape « preuves » est **obligatoire** : au moins une capture d'écran (elles
-sont multiples) ou un lien. Un signalement anonyme sans rien à examiner ne peut
-être ni vérifié ni instruit, et le portail en ligne demande la même chose. Les étapes conditionnelles
+L'étape « preuves » ne peut pas être passée à vide. Il faut au moins une
+capture d'écran (elles sont multiples), un lien, **ou** — si la personne n'a
+rien pu conserver — un récit d'au moins
+`Validators.minDescriptionLength` caractères. Un signalement anonyme sans rien
+à examiner ne peut être ni vérifié ni instruit ; mais le cas le plus grave est
+souvent celui où l'agresseur a effacé les traces, donc le récit tient lieu de
+preuve plutôt que de fermer la porte. Les étapes conditionnelles
 sont déclarées dans `ReportProvider._isStepSkipped()`, et la navigation avant
 comme arrière les enjambe à partir de cette seule définition.
 

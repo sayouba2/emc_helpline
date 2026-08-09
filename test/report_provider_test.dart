@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:emc_helpline/core/storage/settings_store.dart';
+import 'package:emc_helpline/core/utils/validators.dart';
 import 'package:emc_helpline/models/report_enums.dart';
 import 'package:emc_helpline/providers/report_provider.dart';
 
@@ -242,6 +243,45 @@ void main() {
 
       provider.updateReport(evidenceUrl: 'exemple.com/post/1');
       expect(provider.canAdvance, isTrue, reason: 'a link alone is enough');
+    });
+
+    test('without evidence, a long enough account unblocks the step', () {
+      final provider = _completeProvider();
+      provider.updateReport(evidenceFilePaths: const [], evidenceUrl: null);
+      provider.setWizardStep(ReportProvider.stepEvidence);
+      expect(provider.canAdvance, isFalse);
+
+      provider.updateReport(description: 'Il m\'insulte.');
+      expect(
+        provider.canAdvance,
+        isFalse,
+        reason: 'a couple of words costs a prankster nothing',
+      );
+
+      provider.updateReport(description: 'a' * Validators.minDescriptionLength);
+      expect(provider.canAdvance, isTrue);
+      expect(provider.isReportComplete, isTrue);
+    });
+
+    test('an account is not required once evidence is attached', () {
+      final provider = _completeProvider();
+      provider.setWizardStep(ReportProvider.stepEvidence);
+
+      expect(provider.currentReport.description, isNull);
+      expect(provider.currentReport.hasEvidence, isTrue);
+      expect(provider.canAdvance, isTrue);
+    });
+
+    test('whitespace does not count towards the minimum', () {
+      final provider = _completeProvider();
+      provider.updateReport(
+        evidenceFilePaths: const [],
+        evidenceUrl: null,
+        description: '   ${'a' * (Validators.minDescriptionLength - 1)}   ',
+      );
+      provider.setWizardStep(ReportProvider.stepEvidence);
+
+      expect(provider.canAdvance, isFalse);
     });
 
     test('the evidence step rejects a malformed link', () {

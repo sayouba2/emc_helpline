@@ -9,7 +9,8 @@ enum ValidationMessage {
   chooseGender,
   chooseIncident,
   choosePlatform,
-  missingEvidence,
+  missingEvidenceOrDescription,
+  descriptionTooShort,
   chooseAssistance,
   chooseAssistanceType,
   chooseUrgency,
@@ -33,7 +34,17 @@ class Validators {
   static const int _minPhoneDigits = 9;
   static const int _maxPhoneDigits = 15;
 
+  /// How much someone has to write when they have no screenshot and no link.
+  ///
+  /// Long enough that a prank costs real effort, short enough that a frightened
+  /// child can still get through it — two or three sentences. Raise it if the
+  /// team sees too much noise; it is the only place the number lives.
+  static const int minDescriptionLength = 120;
+
   static bool isBlank(String? value) => value == null || value.trim().isEmpty;
+
+  static bool isDescriptionLongEnough(String? value) =>
+      (value?.trim().length ?? 0) >= minDescriptionLength;
 
   static ValidationMessage? phone(String? value) {
     if (isBlank(value)) return null;

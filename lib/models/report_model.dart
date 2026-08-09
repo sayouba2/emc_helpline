@@ -24,6 +24,10 @@ class ReportModel {
   final ReportPlatform? platform;
   final String? evidenceUrl;
   final List<String> evidenceFilePaths;
+
+  /// What happened, in the user's own words. Required when no screenshot and
+  /// no link were provided — see `Validators.minDescriptionLength`.
+  final String? description;
   final AssistanceNeed? assistanceNeeded;
   final AssistanceType? assistanceType;
   final String? contactPhone;
@@ -40,6 +44,7 @@ class ReportModel {
     this.platform,
     this.evidenceUrl,
     this.evidenceFilePaths = const <String>[],
+    this.description,
     this.assistanceNeeded,
     this.assistanceType,
     this.contactPhone,
@@ -79,6 +84,7 @@ class ReportModel {
     ReportPlatform? platform,
     Object? evidenceUrl = unsetField,
     List<String>? evidenceFilePaths,
+    Object? description = unsetField,
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     Object? contactPhone = unsetField,
@@ -95,6 +101,7 @@ class ReportModel {
       platform: platform ?? this.platform,
       evidenceUrl: _resolve(evidenceUrl, this.evidenceUrl),
       evidenceFilePaths: evidenceFilePaths ?? this.evidenceFilePaths,
+      description: _resolve(description, this.description),
       assistanceNeeded: assistanceNeeded ?? this.assistanceNeeded,
       assistanceType: assistanceType ?? this.assistanceType,
       contactPhone: _resolve(contactPhone, this.contactPhone),

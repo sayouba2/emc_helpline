@@ -24,17 +24,23 @@ class Step3EvidenceScreen extends StatefulWidget {
 
 class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
   final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final provider = Provider.of<ReportProvider>(context, listen: false);
-    _urlController.text = provider.currentReport.evidenceUrl ?? '';
+    final report = Provider.of<ReportProvider>(
+      context,
+      listen: false,
+    ).currentReport;
+    _urlController.text = report.evidenceUrl ?? '';
+    _descriptionController.text = report.description ?? '';
   }
 
   @override
   void dispose() {
     _urlController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -155,6 +161,10 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
 
           const SizedBox(height: 20),
 
+          _buildDescriptionField(provider, l10n),
+
+          const SizedBox(height: 20),
+
           // Says why the step cannot be skipped, and where to go otherwise.
           Container(
             padding: const EdgeInsets.all(14),
@@ -189,6 +199,96 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Always visible, so nothing typed here ever disappears — but only required
+  /// while the report carries neither a screenshot nor a link.
+  Widget _buildDescriptionField(
+    ReportProvider provider,
+    AppLocalizations l10n,
+  ) {
+    final report = provider.currentReport;
+    final isRequired = !report.hasEvidence;
+    final length = report.description?.trim().length ?? 0;
+    final isTooShort =
+        isRequired &&
+        length > 0 &&
+        !Validators.isDescriptionLongEnough(report.description);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                l10n.evidenceDescriptionLabel,
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '· ${isRequired ? l10n.fieldRequired : l10n.fieldOptional}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isRequired ? FontWeight.bold : FontWeight.normal,
+                color: isRequired
+                    ? AppColors.primaryOrange
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _descriptionController,
+          minLines: 4,
+          maxLines: 8,
+          keyboardType: TextInputType.multiline,
+          textCapitalization: TextCapitalization.sentences,
+          onChanged: (val) => provider.updateReport(description: val),
+          decoration: InputDecoration(
+            hintText: l10n.evidenceDescriptionHint,
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppColors.primaryBlue,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+        if (isRequired) ...[
+          const SizedBox(height: 6),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(
+              l10n.evidenceDescriptionCounter(
+                length,
+                Validators.minDescriptionLength,
+              ),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isTooShort
+                    ? AppColors.primaryOrange
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

@@ -99,7 +99,7 @@
   "platformSubtitle": "Choisis la plateforme concernée.",
   "platformOnlineGame": "Jeu en ligne",
   "evidenceQuestion": "As-tu une preuve ?",
-  "evidenceSubtitle": "Ajoute au moins une capture d'écran ou le lien du contenu.",
+  "evidenceSubtitle": "Ajoute une capture d'écran ou un lien. Si tu n'as rien pu garder, raconte ce qui s'est passé.",
   "evidenceLinkLabel": "Lien vers le contenu",
   "evidencePickFailed": "Impossible d'ouvrir tes images. Vérifie l'autorisation d'accès à la galerie, ou ajoute plutôt un lien ci-dessous.",
   "separatorOr": "OU",
@@ -212,7 +212,7 @@
   "validationGender": "Choisis une réponse pour continuer.",
   "validationIncident": "Choisis ce qui ressemble le plus à ta situation.",
   "validationPlatform": "Choisis la plateforme concernée.",
-  "validationEvidence": "Ajoute au moins une capture d'écran ou un lien.",
+  "validationEvidence": "Ajoute une preuve, ou raconte ce qui s'est passé ci-dessous.",
   "validationAssistance": "Dis-nous si tu souhaites être accompagné(e).",
   "validationAssistanceType": "Choisis le type d'aide dont tu as besoin.",
   "validationUrgency": "Dis-nous si la situation est urgente.",
@@ -295,7 +295,7 @@
   },
   "validationPhone": "Indique un numéro de téléphone pour qu'on puisse te rappeler.",
   "contactRequiredNote": "Pour t'accompagner, l'équipe a besoin d'un pseudo et d'un numéro. Ton vrai nom n'est jamais demandé.",
-  "evidenceRequiredNote": "Une preuve est nécessaire pour que l'équipe puisse vérifier et agir. Si tu n'as rien pu garder, appelle la Police (19) ou écris-nous depuis l'onglet Contact.",
+  "evidenceRequiredNote": "L'équipe a besoin d'éléments pour vérifier et agir. Si tu es en danger maintenant, appelle la Police (19) sans attendre.",
   "evidenceAddScreenshots": "Ajouter des captures",
   "evidenceAddMore": "Ajouter une autre capture",
   "evidenceRemoveOne": "Retirer cette capture",
@@ -310,6 +310,39 @@
     "description": "Number of screenshots attached to a report",
     "placeholders": {
       "count": {
+        "type": "int"
+      }
+    }
+  },
+  "evidenceDescriptionLabel": "Raconte ce qui s'est passé",
+  "evidenceDescriptionHint": "Explique la situation avec tes mots : ce qui s'est passé, quand, et qui est concerné.",
+  "fieldRequired": "obligatoire",
+  "@fieldRequired": {
+    "description": "Marker next to a field that must be filled"
+  },
+  "fieldOptional": "facultatif",
+  "@fieldOptional": {
+    "description": "Marker next to a field that may be left empty"
+  },
+  "summaryEvidenceDescription": "Description écrite",
+  "summaryDescription": "Récit",
+  "validationDescriptionTooShort": "{count, plural, other{Raconte un peu plus : au moins {count} caractères.}}",
+  "@validationDescriptionTooShort": {
+    "description": "Minimum length required when a report carries no evidence",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "evidenceDescriptionCounter": "{count, plural, other{{count} / {min} caractères}}",
+  "@evidenceDescriptionCounter": {
+    "description": "Live counter under the description field",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "min": {
         "type": "int"
       }
     }

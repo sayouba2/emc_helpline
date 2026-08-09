@@ -102,8 +102,7 @@ class ReportProvider with ChangeNotifier {
             ? ValidationMessage.choosePlatform
             : null;
       case stepEvidence:
-        if (!report.hasEvidence) return ValidationMessage.missingEvidence;
-        return Validators.url(report.evidenceUrl);
+        return _evidenceStepError(report);
       case stepAssistance:
         return report.assistanceNeeded == null
             ? ValidationMessage.chooseAssistance
@@ -121,6 +120,22 @@ class ReportProvider with ChangeNotifier {
       default:
         return null;
     }
+  }
+
+  /// A report has to carry something the team can look at: a screenshot, a
+  /// link, or — when the user could keep none of it — an account of what
+  /// happened, long enough to be worth reading.
+  ValidationMessage? _evidenceStepError(ReportModel report) {
+    final urlError = Validators.url(report.evidenceUrl);
+    if (urlError != null) return urlError;
+    if (report.hasEvidence) return null;
+    if (Validators.isBlank(report.description)) {
+      return ValidationMessage.missingEvidenceOrDescription;
+    }
+    if (!Validators.isDescriptionLongEnough(report.description)) {
+      return ValidationMessage.descriptionTooShort;
+    }
+    return null;
   }
 
   /// Reached only by people who asked to be accompanied. A pseudonym and a
@@ -155,8 +170,7 @@ class ReportProvider with ChangeNotifier {
         report.urgencyLevel != null;
     if (!hasEveryChoice) return false;
 
-    if (!report.hasEvidence) return false;
-    if (Validators.url(report.evidenceUrl) != null) return false;
+    if (_evidenceStepError(report) != null) return false;
 
     // A skipped step can never be required.
     if (!_wantsAssistance) return true;
@@ -223,6 +237,7 @@ class ReportProvider with ChangeNotifier {
     ReportPlatform? platform,
     List<String>? evidenceFilePaths,
     Object? evidenceUrl = unsetField,
+    Object? description = unsetField,
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     UrgencyLevel? urgencyLevel,
@@ -237,6 +252,7 @@ class ReportProvider with ChangeNotifier {
       platform: platform,
       evidenceFilePaths: evidenceFilePaths,
       evidenceUrl: evidenceUrl,
+      description: description,
       assistanceNeeded: assistanceNeeded,
       assistanceType: assistanceType,
       urgencyLevel: urgencyLevel,

@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/icon_utils.dart';
 import '../../../core/localization/report_enum_labels.dart';
+import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/report_enums.dart';
 import '../../../models/report_model.dart';
@@ -89,6 +90,8 @@ class Step4SummaryScreen extends StatelessWidget {
             onEdit: () => provider.setWizardStep(ReportProvider.stepEvidence),
             items: [
               _buildRow(l10n.summaryEvidence, _describeEvidence(report, l10n)),
+              if (!Validators.isBlank(report.description))
+                _buildRow(l10n.summaryDescription, report.description!.trim()),
               _buildRow(
                 l10n.summaryAssistance,
                 report.assistanceNeeded?.label(l10n) ??
@@ -137,7 +140,10 @@ class Step4SummaryScreen extends StatelessWidget {
   String _describeEvidence(ReportModel report, AppLocalizations l10n) {
     final count = report.evidenceFilePaths.length;
     if (count > 0) return l10n.evidenceCount(count);
-    return l10n.summaryEvidenceLinkOnly;
+    if (report.evidenceUrl != null && report.evidenceUrl!.trim().isNotEmpty) {
+      return l10n.summaryEvidenceLinkOnly;
+    }
+    return l10n.summaryEvidenceDescription;
   }
 
   Widget _buildSummaryCard(
