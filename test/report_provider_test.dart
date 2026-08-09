@@ -141,6 +141,25 @@ void main() {
       );
     });
 
+    test('being unsure keeps the type step but skips the contact one', () {
+      final provider = _completeProvider();
+      provider.setWizardStep(ReportProvider.stepAssistance);
+      provider.updateReport(assistanceNeeded: AssistanceNeed.unsure);
+
+      provider.nextWizardStep();
+      expect(provider.wizardStep, ReportProvider.stepAssistanceType);
+
+      provider.nextWizardStep();
+      expect(
+        provider.wizardStep,
+        ReportProvider.stepUrgency,
+        reason: '"I don\'t know" is not a request to be called back',
+      );
+
+      provider.previousWizardStep();
+      expect(provider.wizardStep, ReportProvider.stepAssistanceType);
+    });
+
     test('skips them backwards too, symmetrically', () {
       final provider = _completeProvider();
       provider.updateReport(assistanceNeeded: AssistanceNeed.none);
@@ -265,6 +284,24 @@ void main() {
 
       provider.updateReport(contactEmail: 'moi@exemple.ma');
       expect(provider.canAdvance, isTrue);
+    });
+
+    test('an unsure report is complete without contact details', () {
+      final provider = _provider()
+        ..updateReport(
+          whoFor: WhoFor.self,
+          ageGroup: AgeGroup.adult,
+          gender: Gender.male,
+          incidentType: IncidentType.defamation,
+          platform: ReportPlatform.facebook,
+          hasNoEvidence: true,
+          assistanceNeeded: AssistanceNeed.unsure,
+          assistanceType: AssistanceType.unsure,
+          urgencyLevel: UrgencyLevel.unsure,
+        );
+
+      expect(provider.currentReport.isAnonymous, isTrue);
+      expect(provider.isReportComplete, isTrue);
     });
 
     test('a report that declines support needs no contact details', () {

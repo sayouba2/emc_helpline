@@ -7,11 +7,18 @@ L'utilisateur remplit un formulaire en 11 étapes (contexte, profil, incident,
 récapitulatif), suit l'état de sa demande avec son numéro de référence, et
 dispose en permanence des numéros d'urgence — Police **19**, Gendarmerie **177**.
 
-Le parcours se scinde en fin de formulaire : qui **décline** un accompagnement
-n'est jamais interrogé sur ses coordonnées et reste totalement anonyme ; qui en
-**demande** un choisit un pseudo et laisse un numéro de téléphone, tous deux
-obligatoires — l'équipe ne peut pas rappeler sans. Le vrai nom n'est jamais
-demandé dans aucun des deux cas.
+Le parcours se scinde en fin de formulaire, selon la réponse à « Veux-tu de
+l'aide ? » :
+
+| Réponse | Type d'aide | Coordonnées |
+|---|---|---|
+| Accompagnement | demandé | **pseudo + téléphone obligatoires** |
+| Je ne sais pas | demandé | sautées — le signalement reste anonyme |
+| Pas d'accompagnement | sautée | sautées — le signalement reste anonyme |
+
+Le vrai nom n'est jamais demandé, dans aucun cas. Les étapes conditionnelles
+sont déclarées dans `ReportProvider._isStepSkipped()`, et la navigation avant
+comme arrière les enjambe à partir de cette seule définition.
 
 Interface disponible en **français, arabe et anglais**, avec mise en page
 droite-à-gauche pour l'arabe.

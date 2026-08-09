@@ -62,12 +62,26 @@ class ReportProvider with ChangeNotifier {
   /// True while the report is on its way. The wizard shows a sending screen.
   bool get isSubmitting => _isSubmitting;
 
-  /// Someone who declined support is asked neither what kind of support they
-  /// want nor how to reach them: both questions only exist to serve a follow-up
-  /// that will not happen. Steps [stepAssistanceType] and [stepContact] are
-  /// skipped together.
-  bool get _declinedAssistance =>
+  /// Someone who declined support is not asked what kind of support they want.
+  bool get _skipsAssistanceType =>
       _currentReport.assistanceNeeded == AssistanceNeed.none;
+
+  /// Contact details are only collected from someone who clearly asked to be
+  /// accompanied. Declining, and being unsure, both leave the report anonymous:
+  /// "I don't know" is not a request to be called back.
+  bool get _skipsContact =>
+      _currentReport.assistanceNeeded != AssistanceNeed.wanted;
+
+  /// Which steps the current answers make irrelevant.
+  ///
+  /// Navigation walks over this rather than jumping between hardcoded indices,
+  /// so adding a conditional step cannot leave the forward and backward paths
+  /// disagreeing — which is exactly how the skip logic broke before.
+  bool _isStepSkipped(int step) => switch (step) {
+    stepAssistanceType => _skipsAssistanceType,
+    stepContact => _skipsContact,
+    _ => false,
+  };
 
   /// Why the current step cannot be left yet, or `null` when it is complete.
   ///
@@ -150,11 +164,11 @@ class ReportProvider with ChangeNotifier {
     if (!report.hasEvidenceAnswer) return false;
     if (Validators.url(report.evidenceUrl) != null) return false;
 
-    // Declining support skips both the type and the contact questions, so
-    // neither may be required here.
-    if (_declinedAssistance) return true;
+    // A skipped step can never be required.
+    if (!_skipsAssistanceType && report.assistanceType == null) return false;
+    if (!_skipsContact && _contactStepError(report) != null) return false;
 
-    return report.assistanceType != null && _contactStepError(report) == null;
+    return true;
   }
 
   void setTab(int tabIndex) {
@@ -176,20 +190,20 @@ class ReportProvider with ChangeNotifier {
 
   void nextWizardStep() {
     if (!canAdvance) return;
-    if (_wizardStep == stepAssistance && _declinedAssistance) {
-      _wizardStep = stepUrgency;
-    } else if (_wizardStep < stepSummary) {
-      _wizardStep++;
-    }
+    var next = _wizardStep;
+    do {
+      next++;
+    } while (next < stepSummary && _isStepSkipped(next));
+    _wizardStep = next.clamp(stepWho, stepSummary);
     notifyListeners();
   }
 
   void previousWizardStep() {
-    if (_wizardStep == stepUrgency && _declinedAssistance) {
-      _wizardStep = stepAssistance;
-    } else if (_wizardStep > stepWho) {
-      _wizardStep--;
-    }
+    var previous = _wizardStep;
+    do {
+      previous--;
+    } while (previous > stepWho && _isStepSkipped(previous));
+    _wizardStep = previous.clamp(stepWho, stepSummary);
     notifyListeners();
   }
 
