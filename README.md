@@ -12,11 +12,12 @@ l'aide ? » :
 
 | Réponse | Type d'aide | Coordonnées |
 |---|---|---|
-| Accompagnement | demandé | **pseudo + téléphone obligatoires** |
-| Je ne sais pas | demandé | sautées — le signalement reste anonyme |
+| Accompagnement | demandé | **pseudo + téléphone, obligatoires** |
+| Je ne sais pas | sautée | sautées — le signalement reste anonyme |
 | Pas d'accompagnement | sautée | sautées — le signalement reste anonyme |
 
-Le vrai nom n'est jamais demandé, dans aucun cas. Les étapes conditionnelles
+Seuls un pseudo et un numéro de téléphone sont demandés : ni e-mail, ni
+WhatsApp, ni vrai nom. Les étapes conditionnelles
 sont déclarées dans `ReportProvider._isStepSkipped()`, et la navigation avant
 comme arrière les enjambe à partir de cette seule définition.
 

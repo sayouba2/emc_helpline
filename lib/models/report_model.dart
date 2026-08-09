@@ -28,8 +28,6 @@ class ReportModel {
   final AssistanceNeed? assistanceNeeded;
   final AssistanceType? assistanceType;
   final String? contactPhone;
-  final String? contactEmail;
-  final String? contactWhatsapp;
   final UrgencyLevel? urgencyLevel;
   final DateTime? createdAt;
 
@@ -47,8 +45,6 @@ class ReportModel {
     this.assistanceNeeded,
     this.assistanceType,
     this.contactPhone,
-    this.contactEmail,
-    this.contactWhatsapp,
     this.urgencyLevel,
     this.createdAt,
   });
@@ -60,12 +56,9 @@ class ReportModel {
       evidenceFilePath != null ||
       (evidenceUrl != null && evidenceUrl!.trim().isNotEmpty);
 
-  /// True when at least one way of calling the user back was provided.
-  bool get hasAnyContactDetail => [
-    contactPhone,
-    contactEmail,
-    contactWhatsapp,
-  ].any((value) => value != null && value.trim().isNotEmpty);
+  /// True when a way of calling the user back was provided.
+  bool get hasAnyContactDetail =>
+      contactPhone != null && contactPhone!.trim().isNotEmpty;
 
   /// The report carries no way of identifying its author.
   ///
@@ -93,8 +86,6 @@ class ReportModel {
     AssistanceNeed? assistanceNeeded,
     AssistanceType? assistanceType,
     Object? contactPhone = unsetField,
-    Object? contactEmail = unsetField,
-    Object? contactWhatsapp = unsetField,
     UrgencyLevel? urgencyLevel,
     Object? createdAt = unsetField,
   }) {
@@ -112,8 +103,6 @@ class ReportModel {
       assistanceNeeded: assistanceNeeded ?? this.assistanceNeeded,
       assistanceType: assistanceType ?? this.assistanceType,
       contactPhone: _resolve(contactPhone, this.contactPhone),
-      contactEmail: _resolve(contactEmail, this.contactEmail),
-      contactWhatsapp: _resolve(contactWhatsapp, this.contactWhatsapp),
       urgencyLevel: urgencyLevel ?? this.urgencyLevel,
       createdAt: _resolve(createdAt, this.createdAt),
     );

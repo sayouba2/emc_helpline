@@ -35,16 +35,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final store = await SettingsStore.open();
     final provider = ReportProvider(store)
-      ..updateReport(
-        pseudo: 'HérosDiscret42',
-        contactPhone: '0612345678',
-        contactEmail: 'moi@exemple.ma',
-      );
+      ..updateReport(pseudo: 'HérosDiscret42', contactPhone: '0612345678');
     provider.setLocale(const Locale('fr'));
 
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getKeys().map((k) => '$k=${prefs.get(k)}').join('|');
-    for (final secret in ['HérosDiscret42', '0612345678', 'moi@exemple.ma']) {
+    for (final secret in ['HérosDiscret42', '0612345678']) {
       expect(
         stored.contains(secret),
         isFalse,

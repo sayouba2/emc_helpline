@@ -68,34 +68,28 @@ void main() {
       final provider = _provider();
       provider.updateReport(contactPhone: '0612345678');
 
-      provider.updateReport(contactEmail: 'a@b.co');
+      provider.updateReport(pseudo: 'ÉtoileSecrète99');
 
       expect(provider.currentReport.contactPhone, '0612345678');
-      expect(provider.currentReport.contactEmail, 'a@b.co');
+      expect(provider.currentReport.pseudo, 'ÉtoileSecrète99');
     });
 
-    test('passing null clears every contact detail', () {
+    test('passing null clears the contact details', () {
       final provider = _provider();
       provider.updateReport(
+        pseudo: 'HérosDiscret42',
         contactPhone: '0612345678',
-        contactEmail: 'a@b.co',
-        contactWhatsapp: '+212612345678',
       );
       expect(provider.currentReport.isAnonymous, isFalse);
 
-      provider.updateReport(
-        contactPhone: null,
-        contactEmail: null,
-        contactWhatsapp: null,
-      );
+      provider.updateReport(pseudo: null, contactPhone: null);
 
+      expect(provider.currentReport.pseudo, isNull);
       expect(provider.currentReport.contactPhone, isNull);
-      expect(provider.currentReport.contactEmail, isNull);
-      expect(provider.currentReport.contactWhatsapp, isNull);
       expect(
         provider.currentReport.isAnonymous,
         isTrue,
-        reason: 'anonymity is derived from the absence of details',
+        reason: 'anonymity is derived from the absence of a phone number',
       );
     });
 
@@ -141,23 +135,20 @@ void main() {
       );
     });
 
-    test('being unsure keeps the type step but skips the contact one', () {
+    test('being unsure skips the type and the contact steps too', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepAssistance);
       provider.updateReport(assistanceNeeded: AssistanceNeed.unsure);
 
       provider.nextWizardStep();
-      expect(provider.wizardStep, ReportProvider.stepAssistanceType);
-
-      provider.nextWizardStep();
       expect(
         provider.wizardStep,
         ReportProvider.stepUrgency,
-        reason: '"I don\'t know" is not a request to be called back',
+        reason: '"I don\'t know" is neither an answer nor a call-back request',
       );
 
       provider.previousWizardStep();
-      expect(provider.wizardStep, ReportProvider.stepAssistanceType);
+      expect(provider.wizardStep, ReportProvider.stepAssistance);
     });
 
     test('skips them backwards too, symmetrically', () {
@@ -265,7 +256,7 @@ void main() {
       expect(provider.canAdvance, isTrue);
     });
 
-    test('the contact step rejects malformed details', () {
+    test('the contact step rejects a malformed phone number', () {
       final provider = _completeProvider();
       provider.setWizardStep(ReportProvider.stepContact);
 
@@ -273,16 +264,6 @@ void main() {
       expect(provider.canAdvance, isFalse);
 
       provider.updateReport(contactPhone: '0612345678');
-      expect(provider.canAdvance, isTrue);
-
-      provider.updateReport(contactEmail: 'pas-un-email');
-      expect(
-        provider.canAdvance,
-        isFalse,
-        reason: 'optional but must be valid',
-      );
-
-      provider.updateReport(contactEmail: 'moi@exemple.ma');
       expect(provider.canAdvance, isTrue);
     });
 

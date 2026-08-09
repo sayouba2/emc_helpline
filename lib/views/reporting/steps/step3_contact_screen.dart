@@ -27,8 +27,6 @@ class Step3ContactScreen extends StatefulWidget {
 class _Step3ContactScreenState extends State<Step3ContactScreen> {
   final TextEditingController _pseudoController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _whatsappController = TextEditingController();
 
   @override
   void initState() {
@@ -39,16 +37,12 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
     ).currentReport;
     _pseudoController.text = report.pseudo ?? '';
     _phoneController.text = report.contactPhone ?? '';
-    _emailController.text = report.contactEmail ?? '';
-    _whatsappController.text = report.contactWhatsapp ?? '';
   }
 
   @override
   void dispose() {
     _pseudoController.dispose();
     _phoneController.dispose();
-    _emailController.dispose();
-    _whatsappController.dispose();
     super.dispose();
   }
 
@@ -211,33 +205,6 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
             errorText: Validators.phone(report.contactPhone)?.text(l10n),
             onChanged: (val) => provider.updateReport(contactPhone: val),
           ),
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _whatsappController,
-            label: l10n.fieldWhatsapp,
-            hint: l10n.fieldWhatsappHint,
-            icon: FontAwesomeIcons.whatsapp,
-            iconColor: AppColors.whatsappGreen,
-            keyboardType: TextInputType.phone,
-            isOptional: true,
-            optionalLabel: l10n.fieldOptional,
-            errorText: Validators.phone(report.contactWhatsapp)?.text(l10n),
-            onChanged: (val) => provider.updateReport(contactWhatsapp: val),
-          ),
-          const SizedBox(height: 14),
-
-          _buildTextField(
-            controller: _emailController,
-            label: l10n.fieldEmail,
-            hint: l10n.fieldEmailHint,
-            icon: FontAwesomeIcons.envelope,
-            keyboardType: TextInputType.emailAddress,
-            isOptional: true,
-            optionalLabel: l10n.fieldOptional,
-            errorText: Validators.email(report.contactEmail)?.text(l10n),
-            onChanged: (val) => provider.updateReport(contactEmail: val),
-          ),
 
           const SizedBox(height: 20),
 
@@ -280,33 +247,12 @@ class _Step3ContactScreenState extends State<Step3ContactScreen> {
     Color? iconColor,
     TextInputType? keyboardType,
     String? errorText,
-    bool isOptional = false,
-    String? optionalLabel,
     required ValueChanged<String> onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                label,
-                style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5),
-              ),
-            ),
-            if (isOptional && optionalLabel != null) ...[
-              const SizedBox(width: 6),
-              Text(
-                '· $optionalLabel',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ],
-        ),
+        Text(label, style: AppTextStyles.cardTitle.copyWith(fontSize: 13.5)),
         const SizedBox(height: 6),
         TextField(
           controller: controller,

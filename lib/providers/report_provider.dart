@@ -62,15 +62,12 @@ class ReportProvider with ChangeNotifier {
   /// True while the report is on its way. The wizard shows a sending screen.
   bool get isSubmitting => _isSubmitting;
 
-  /// Someone who declined support is not asked what kind of support they want.
-  bool get _skipsAssistanceType =>
-      _currentReport.assistanceNeeded == AssistanceNeed.none;
-
-  /// Contact details are only collected from someone who clearly asked to be
-  /// accompanied. Declining, and being unsure, both leave the report anonymous:
-  /// "I don't know" is not a request to be called back.
-  bool get _skipsContact =>
-      _currentReport.assistanceNeeded != AssistanceNeed.wanted;
+  /// Only an explicit request for support opens the two follow-up questions.
+  /// Declining and being unsure both leave the report anonymous: "I don't know"
+  /// is not a request to be called back, nor an answer about what kind of help
+  /// is needed.
+  bool get _wantsAssistance =>
+      _currentReport.assistanceNeeded == AssistanceNeed.wanted;
 
   /// Which steps the current answers make irrelevant.
   ///
@@ -78,8 +75,7 @@ class ReportProvider with ChangeNotifier {
   /// so adding a conditional step cannot leave the forward and backward paths
   /// disagreeing — which is exactly how the skip logic broke before.
   bool _isStepSkipped(int step) => switch (step) {
-    stepAssistanceType => _skipsAssistanceType,
-    stepContact => _skipsContact,
+    stepAssistanceType || stepContact => !_wantsAssistance,
     _ => false,
   };
 
@@ -127,9 +123,9 @@ class ReportProvider with ChangeNotifier {
     }
   }
 
-  /// Reached only by people who asked to be accompanied, so a pseudonym and a
-  /// phone number are both required — the team has no other way to call back.
-  /// The e-mail and WhatsApp fields stay optional.
+  /// Reached only by people who asked to be accompanied. A pseudonym and a
+  /// phone number are all that is asked, and both are required — the team has
+  /// no other way to call back.
   ValidationMessage? _contactStepError(ReportModel report) {
     if (Validators.isBlank(report.pseudo)) {
       return ValidationMessage.missingPseudo;
@@ -137,9 +133,7 @@ class ReportProvider with ChangeNotifier {
     if (Validators.isBlank(report.contactPhone)) {
       return ValidationMessage.missingPhone;
     }
-    return Validators.phone(report.contactPhone) ??
-        Validators.phone(report.contactWhatsapp) ??
-        Validators.email(report.contactEmail);
+    return Validators.phone(report.contactPhone);
   }
 
   bool get canAdvance => currentStepError == null;
@@ -165,8 +159,9 @@ class ReportProvider with ChangeNotifier {
     if (Validators.url(report.evidenceUrl) != null) return false;
 
     // A skipped step can never be required.
-    if (!_skipsAssistanceType && report.assistanceType == null) return false;
-    if (!_skipsContact && _contactStepError(report) != null) return false;
+    if (!_wantsAssistance) return true;
+    if (report.assistanceType == null) return false;
+    if (_contactStepError(report) != null) return false;
 
     return true;
   }
@@ -233,8 +228,6 @@ class ReportProvider with ChangeNotifier {
     AssistanceType? assistanceType,
     UrgencyLevel? urgencyLevel,
     Object? contactPhone = unsetField,
-    Object? contactEmail = unsetField,
-    Object? contactWhatsapp = unsetField,
   }) {
     _currentReport = _currentReport.copyWith(
       whoFor: whoFor,
@@ -250,8 +243,6 @@ class ReportProvider with ChangeNotifier {
       assistanceType: assistanceType,
       urgencyLevel: urgencyLevel,
       contactPhone: contactPhone,
-      contactEmail: contactEmail,
-      contactWhatsapp: contactWhatsapp,
     );
     notifyListeners();
   }

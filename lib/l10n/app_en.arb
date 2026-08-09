@@ -111,10 +111,7 @@
   "contactSubtitle": "These details let the team get back to you.",
   "fieldPhone": "Phone",
   "fieldPhoneHint": "e.g. 06 12 34 56 78",
-  "fieldWhatsapp": "WhatsApp",
-  "fieldWhatsappHint": "e.g. +212 6 12 34 56 78",
   "fieldEmail": "Email",
-  "fieldEmailHint": "e.g. myaddress@example.com",
   "contactConfidentialNote": "Your details stay strictly confidential and will never be disclosed.",
   "urgencyQuestion": "Is it urgent?",
   "urgencySubtitle": "Tell us if you are in danger right now.",
@@ -197,7 +194,6 @@
   "validationAssistance": "Tell us whether you want support.",
   "validationAssistanceType": "Choose the kind of help you need.",
   "validationUrgency": "Tell us whether the situation is urgent.",
-  "validationInvalidEmail": "This email address doesn't look valid.",
   "validationInvalidPhone": "This number doesn't look valid.",
   "validationInvalidUrl": "This link doesn't look valid.",
   "callFailed": "Could not start the call. Dial {number} yourself.",
@@ -221,6 +217,5 @@
   "trackRequestEmptyField": "Enter a reference number.",
   "validationPseudo": "Pick a nickname: the team will use it, never your real name.",
   "validationPhone": "Give a phone number so we can call you back.",
-  "contactRequiredNote": "To support you, the team needs a nickname and a number. Your real name is never asked for.",
-  "fieldOptional": "optional"
+  "contactRequiredNote": "To support you, the team needs a nickname and a number. Your real name is never asked for."
 }

@@ -92,7 +92,6 @@ extension ValidationMessageLabel on ValidationMessage {
     ValidationMessage.chooseUrgency => l10n.validationUrgency,
     ValidationMessage.missingPseudo => l10n.validationPseudo,
     ValidationMessage.missingPhone => l10n.validationPhone,
-    ValidationMessage.invalidEmail => l10n.validationInvalidEmail,
     ValidationMessage.invalidPhone => l10n.validationInvalidPhone,
     ValidationMessage.invalidUrl => l10n.validationInvalidUrl,
   };

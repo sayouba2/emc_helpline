@@ -15,7 +15,6 @@ enum ValidationMessage {
   chooseUrgency,
   missingPseudo,
   missingPhone,
-  invalidEmail,
   invalidPhone,
   invalidUrl,
 }
@@ -28,8 +27,6 @@ enum ValidationMessage {
 class Validators {
   const Validators._();
 
-  static final RegExp _emailPattern = RegExp(r'^[\w.+-]+@[\w-]+(\.[\w-]+)+$');
-
   /// Moroccan numbers are 10 digits locally (06…) or 12 with the +212 prefix.
   /// We stay permissive to accommodate foreign numbers, and only reject what is
   /// obviously not a phone number.
@@ -37,13 +34,6 @@ class Validators {
   static const int _maxPhoneDigits = 15;
 
   static bool isBlank(String? value) => value == null || value.trim().isEmpty;
-
-  static ValidationMessage? email(String? value) {
-    if (isBlank(value)) return null;
-    return _emailPattern.hasMatch(value!.trim())
-        ? null
-        : ValidationMessage.invalidEmail;
-  }
 
   static ValidationMessage? phone(String? value) {
     if (isBlank(value)) return null;

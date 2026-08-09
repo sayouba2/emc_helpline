@@ -111,10 +111,7 @@
   "contactSubtitle": "تتيح هذه المعلومات للفريق التواصل معك مجدداً.",
   "fieldPhone": "الهاتف",
   "fieldPhoneHint": "مثال: 06 12 34 56 78",
-  "fieldWhatsapp": "واتساب",
-  "fieldWhatsappHint": "مثال: ‎+212 6 12 34 56 78",
   "fieldEmail": "البريد الإلكتروني",
-  "fieldEmailHint": "مثال: monadresse@exemple.com",
   "contactConfidentialNote": "تبقى بيانات التواصل الخاصة بك سرية تماماً ولن يتم الإفصاح عنها أبداً.",
   "urgencyQuestion": "هل الأمر عاجل؟",
   "urgencySubtitle": "أخبرنا إن كنت في خطر الآن.",
@@ -197,7 +194,6 @@
   "validationAssistance": "أخبرنا إن كنت تريد المرافقة.",
   "validationAssistanceType": "اختر نوع المساعدة التي تحتاجها.",
   "validationUrgency": "أخبرنا إن كان الوضع عاجلاً.",
-  "validationInvalidEmail": "يبدو أن هذا البريد الإلكتروني غير صالح.",
   "validationInvalidPhone": "يبدو أن هذا الرقم غير صالح.",
   "validationInvalidUrl": "يبدو أن هذا الرابط غير صالح.",
   "callFailed": "تعذر إجراء المكالمة. اطلب الرقم {number} بنفسك.",
@@ -221,6 +217,5 @@
   "trackRequestEmptyField": "أدخل رقم المرجع.",
   "validationPseudo": "اختر اسماً مستعاراً: سيناديك الفريق به، وليس باسمك الحقيقي أبداً.",
   "validationPhone": "أدخل رقم هاتف حتى نتمكن من معاودة الاتصال بك.",
-  "contactRequiredNote": "لمرافقتك، يحتاج الفريق إلى اسم مستعار ورقم هاتف. لا يُطلب اسمك الحقيقي أبداً.",
-  "fieldOptional": "اختياري"
+  "contactRequiredNote": "لمرافقتك، يحتاج الفريق إلى اسم مستعار ورقم هاتف. لا يُطلب اسمك الحقيقي أبداً."
 }

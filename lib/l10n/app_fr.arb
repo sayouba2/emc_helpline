@@ -135,10 +135,7 @@
   "contactSubtitle": "Ces informations permettent à l'équipe de te recontacter.",
   "fieldPhone": "Téléphone",
   "fieldPhoneHint": "ex: 06 12 34 56 78",
-  "fieldWhatsapp": "WhatsApp",
-  "fieldWhatsappHint": "ex: +212 6 12 34 56 78",
   "fieldEmail": "E-mail",
-  "fieldEmailHint": "ex: monadresse@exemple.com",
   "contactConfidentialNote": "Vos coordonnées restent strictement confidentielles et ne seront jamais divulguées.",
   "urgencyQuestion": "Est-ce urgent ?",
   "urgencySubtitle": "Dis-nous si tu es en danger maintenant.",
@@ -227,7 +224,6 @@
   "validationAssistance": "Dis-nous si tu souhaites être accompagné(e).",
   "validationAssistanceType": "Choisis le type d'aide dont tu as besoin.",
   "validationUrgency": "Dis-nous si la situation est urgente.",
-  "validationInvalidEmail": "Cette adresse e-mail ne semble pas valide.",
   "validationInvalidPhone": "Ce numéro ne semble pas valide.",
   "validationInvalidUrl": "Ce lien ne semble pas valide.",
   "callFailed": "Impossible de lancer l'appel. Compose le {number} toi-même.",
@@ -306,9 +302,5 @@
     "description": "Shown when the accompanied user has not chosen a pseudonym yet"
   },
   "validationPhone": "Indique un numéro de téléphone pour qu'on puisse te rappeler.",
-  "contactRequiredNote": "Pour t'accompagner, l'équipe a besoin d'un pseudo et d'un numéro. Ton vrai nom n'est jamais demandé.",
-  "fieldOptional": "facultatif",
-  "@fieldOptional": {
-    "description": "Marker next to a field that may be left empty"
-  }
+  "contactRequiredNote": "Pour t'accompagner, l'équipe a besoin d'un pseudo et d'un numéro. Ton vrai nom n'est jamais demandé."
 }
