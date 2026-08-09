@@ -215,7 +215,16 @@
   "a11ySendMessage": "إرسال الرسالة",
   "a11yStep": "الخطوة {current} من {total}: {label}",
   "a11yCall": "الاتصال بـ {service}، الرقم {number}",
-  "demoNoticeTitle": "نسخة تجريبية",
-  "demoNoticeBody": "لا تُرسل البلاغات بعد إلى أي فريق. إذا كنت في خطر، اتصل بالشرطة (19) أو الدرك (177).",
-  "demoSuccessNotice": "لم يتم إرسال هذا البلاغ: التطبيق في نسخة تجريبية. احتفظ بالرقم أعلاه، لكن تواصل مع الفريق مباشرة إذا كنت بحاجة إلى مساعدة."
+  "sendingTitle": "جارٍ الإرسال…",
+  "sendingBody": "بلاغك في طريقه إلى خبرائنا. ابق على هذه الشاشة بضع ثوانٍ.",
+  "successChatbotTitle": "سؤال في انتظار الرد؟ (+12 سنة)",
+  "successChatbotBody": "عمرك يتجاوز 12 سنة: يمكن لمساعدنا أن ينصحك بينما يدرس الفريق ملفك.",
+  "trackRequest": "تتبع طلبي",
+  "trackRequestSubtitle": "أدخل رقم المرجع الذي حصلت عليه في نهاية بلاغك.",
+  "trackRequestFieldLabel": "رقم المرجع",
+  "trackRequestAction": "بحث",
+  "trackRequestNotFound": "لا يوجد ملف مطابق لهذا الرقم على هذا الجهاز. تحقق من الرقم، أو تواصل مع فريق EMC Helpline وأعطهم إياه.",
+  "trackRequestStatus": "الحالة",
+  "trackRequestFiledOn": "أُودع في",
+  "trackRequestEmptyField": "أدخل رقم المرجع."
 }

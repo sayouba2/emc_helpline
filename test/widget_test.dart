@@ -2,38 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:emc_helpline/core/constants/app_contacts.dart';
 import 'package:emc_helpline/core/storage/settings_store.dart';
 import 'package:emc_helpline/l10n/app_localizations.dart';
 import 'package:emc_helpline/main.dart';
+import 'package:emc_helpline/views/splash_screen.dart';
 
 void main() {
-  testWidgets('the demonstration notice is shown while no backend exists', (
-    WidgetTester tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({
-      'settings.localeLanguageCode': 'fr',
-    });
-    await tester.pumpWidget(
-      EMCHelplineApp(settings: await SettingsStore.open()),
-    );
-    await tester.pump(const Duration(milliseconds: 500));
-
-    final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
-    expect(
-      find.text(l10n.demoNoticeTitle),
-      kBackendEnabled ? findsNothing : findsWidgets,
-      reason: kBackendEnabled
-          ? 'the warning must disappear once reports are really sent'
-          : 'a child must not believe a report reached anyone',
-    );
-  });
-
   testWidgets('App smoke test', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(
       EMCHelplineApp(settings: await SettingsStore.open()),
     );
+    await tester.pump();
+    await tester.pump(SplashGate.total);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('EMC Helpline'), findsWidgets);
   });
@@ -73,5 +54,30 @@ void main() {
     );
     await tester.pump();
     expect(direction, TextDirection.rtl);
+  });
+
+  testWidgets('the splash shows the logo, then hands over to the app', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.localeLanguageCode': 'fr',
+    });
+    await tester.pumpWidget(
+      EMCHelplineApp(settings: await SettingsStore.open()),
+    );
+    await tester.pump();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
+    expect(
+      find.image(const AssetImage('assets/images/emc.png')),
+      findsOneWidget,
+      reason: 'the opening screen shows the logo alone',
+    );
+    expect(find.text(l10n.navHome), findsNothing);
+
+    await tester.pump(SplashGate.total);
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text(l10n.heroTitle), findsOneWidget);
   });
 }

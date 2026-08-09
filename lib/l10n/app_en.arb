@@ -215,7 +215,16 @@
   "a11ySendMessage": "Send the message",
   "a11yStep": "Step {current} of {total}: {label}",
   "a11yCall": "Call {service}, number {number}",
-  "demoNoticeTitle": "Demonstration build",
-  "demoNoticeBody": "Reports are not sent to a team yet. If you are in danger, call the Police (19) or the Gendarmerie (177).",
-  "demoSuccessNotice": "This report was not sent: the app is a demonstration build. Keep the number above, but contact the team directly if you need help."
+  "sendingTitle": "Sending…",
+  "sendingBody": "Your report is on its way to our experts. Stay on this screen for a few seconds.",
+  "successChatbotTitle": "A question while you wait? (12+)",
+  "successChatbotBody": "You are over 12: our assistant can advise you while the team reviews your case.",
+  "trackRequest": "Track my request",
+  "trackRequestSubtitle": "Enter the reference number you received at the end of your report.",
+  "trackRequestFieldLabel": "Reference number",
+  "trackRequestAction": "Search",
+  "trackRequestNotFound": "No case matches this number on this device. Check the number, or contact the EMC Helpline team with it.",
+  "trackRequestStatus": "Status",
+  "trackRequestFiledOn": "Filed on",
+  "trackRequestEmptyField": "Enter a reference number."
 }

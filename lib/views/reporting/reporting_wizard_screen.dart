@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -8,6 +10,7 @@ import '../../providers/report_provider.dart';
 import '../components/animated_screen_switcher.dart';
 import '../components/stepper_widget.dart';
 import 'report_success_screen.dart';
+import 'sending_screen.dart';
 import 'steps/step1_who_screen.dart';
 import 'steps/step2_age_screen.dart';
 import 'steps/step2_gender_screen.dart';
@@ -34,6 +37,8 @@ class ReportingWizardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final reportProvider = Provider.of<ReportProvider>(context);
     final l10n = AppLocalizations.of(context);
+
+    if (reportProvider.isSubmitting) return const SendingScreen();
 
     final submittedRefCode = reportProvider.submittedRefCode;
     if (submittedRefCode != null) {
@@ -155,7 +160,7 @@ class ReportingWizardScreen extends StatelessWidget {
                             // bannière de l'étape "âge" : "Suivant" ne doit
                             // jamais détourner le parcours vers celui-ci.
                             onPressed: isLastStep
-                                ? reportProvider.submitReport
+                                ? () => unawaited(reportProvider.submitReport())
                                 : reportProvider.nextWizardStep,
                           ),
                         ),

@@ -6,6 +6,7 @@ import 'package:emc_helpline/core/storage/settings_store.dart';
 import 'package:emc_helpline/l10n/app_localizations.dart';
 import 'package:emc_helpline/main.dart';
 import 'package:emc_helpline/views/components/glass_container.dart';
+import 'package:emc_helpline/views/splash_screen.dart';
 
 /// Phone-sized surface: the tightest realistic layout, where overflows show up
 /// first.
@@ -30,6 +31,9 @@ Future<void> _pumpApp(
       child: EMCHelplineApp(settings: settings),
     ),
   );
+  // Let the opening logo fade out before looking at the app.
+  await tester.pump();
+  await tester.pump(SplashGate.total);
   await tester.pump(const Duration(milliseconds: 600));
 }
 

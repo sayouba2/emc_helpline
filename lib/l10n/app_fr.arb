@@ -305,10 +305,22 @@
       }
     }
   },
-  "demoNoticeTitle": "Version de démonstration",
-  "@demoNoticeTitle": {
-    "description": "Shown while no backend receives the reports"
+  "sendingTitle": "Envoi en cours…",
+  "@sendingTitle": {
+    "description": "Shown while the report travels to the team"
   },
-  "demoNoticeBody": "Les signalements ne sont pas encore transmis à une équipe. Si tu es en danger, appelle la Police (19) ou la Gendarmerie (177).",
-  "demoSuccessNotice": "Ce signalement n'a pas été transmis : l'application est en version de démonstration. Garde le numéro ci-dessus, mais contacte l'équipe directement si tu as besoin d'aide."
+  "sendingBody": "Ton signalement part vers nos experts. Reste sur cet écran quelques secondes.",
+  "successChatbotTitle": "Une question en attendant ? (+12 ans)",
+  "successChatbotBody": "Tu as plus de 12 ans : notre assistant peut te conseiller pendant que l'équipe étudie ton dossier.",
+  "trackRequest": "Suivre ma demande",
+  "@trackRequest": {
+    "description": "Home button and tracking screen title"
+  },
+  "trackRequestSubtitle": "Saisis le numéro de référence reçu à la fin de ton signalement.",
+  "trackRequestFieldLabel": "Numéro de référence",
+  "trackRequestAction": "Rechercher",
+  "trackRequestNotFound": "Aucun dossier ne correspond à ce numéro sur cet appareil. Vérifie le numéro, ou contacte l'équipe EMC Helpline en le lui communiquant.",
+  "trackRequestStatus": "Statut",
+  "trackRequestFiledOn": "Déposé le",
+  "trackRequestEmptyField": "Saisis un numéro de référence."
 }

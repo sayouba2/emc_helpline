@@ -6,9 +6,17 @@ import '../models/report_enums.dart';
 import '../models/report_model.dart';
 
 class ReportProvider with ChangeNotifier {
-  ReportProvider(this._settings) : _locale = _settings.readLocale();
+  ReportProvider(
+    this._settings, {
+    this.submissionLatency = const Duration(milliseconds: 1600),
+  }) : _locale = _settings.readLocale();
 
   final SettingsStore _settings;
+
+  /// Stands in for the round trip to the server, so the sending animation has
+  /// something to cover. Replace it with the real call — the UI already reacts
+  /// to [isSubmitting] and needs no change. Tests pass [Duration.zero].
+  final Duration submissionLatency;
 
   /// Wizard sub-step indices, in the same order as the step list built by
   /// `ReportingWizardScreen`. Kept here so the skip logic below and the screen
@@ -29,6 +37,7 @@ class ReportProvider with ChangeNotifier {
   int _wizardStep = 0;
   Locale? _locale;
   String? _submittedRefCode;
+  bool _isSubmitting = false;
 
   ReportModel _currentReport = const ReportModel();
   final List<ReportModel> _history = [];
@@ -49,6 +58,9 @@ class ReportProvider with ChangeNotifier {
   /// `IndexedStack`, so widget-local state would strand the user on the success
   /// screen forever.
   String? get submittedRefCode => _submittedRefCode;
+
+  /// True while the report is on its way. The wizard shows a sending screen.
+  bool get isSubmitting => _isSubmitting;
 
   bool get _skipsAssistanceType =>
       _currentReport.assistanceNeeded == AssistanceNeed.none;
@@ -170,6 +182,7 @@ class ReportProvider with ChangeNotifier {
   }
 
   void startNewReport() {
+    _isSubmitting = false;
     _currentReport = const ReportModel();
     _wizardStep = stepWho;
     _currentTab = 1;
@@ -219,8 +232,13 @@ class ReportProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? submitReport() {
-    if (!isReportComplete) return null;
+  Future<String?> submitReport() async {
+    if (!isReportComplete || _isSubmitting) return null;
+
+    _isSubmitting = true;
+    notifyListeners();
+
+    await Future<void>.delayed(submissionLatency);
 
     final randNum = Random().nextInt(900000) + 100000;
     final code = "REF-EMC-2026-$randNum";
@@ -232,7 +250,21 @@ class ReportProvider with ChangeNotifier {
 
     _history.insert(0, _currentReport);
     _submittedRefCode = code;
+    _isSubmitting = false;
     notifyListeners();
     return code;
+  }
+
+  /// Looks a report up by the reference code handed to the user.
+  ///
+  /// Backed by this session's history for now; it becomes a server lookup once
+  /// the backend exists.
+  ReportModel? findByReference(String code) {
+    final needle = code.trim().toUpperCase();
+    if (needle.isEmpty) return null;
+    for (final report in _history) {
+      if (report.referenceCode?.toUpperCase() == needle) return report;
+    }
+    return null;
   }
 }

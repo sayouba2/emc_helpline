@@ -4,29 +4,32 @@ Application mobile Flutter de signalement des violences numériques visant les
 enfants, les jeunes et les femmes au Maroc, en partenariat avec le CMRPI.
 
 L'utilisateur remplit un formulaire en 11 étapes (contexte, profil, incident,
-récapitulatif), peut rester totalement anonyme derrière un pseudo, et dispose en
-permanence des numéros d'urgence — Police **19**, Gendarmerie **177**.
+récapitulatif), peut rester totalement anonyme derrière un pseudo, suivre l'état
+de sa demande avec son numéro de référence, et dispose en permanence des numéros
+d'urgence — Police **19**, Gendarmerie **177**.
 
 Interface disponible en **français, arabe et anglais**, avec mise en page
 droite-à-gauche pour l'arabe.
 
+Au lancement, le logo apparaît en fondu puis laisse la place à l'application ;
+le splash natif Android affiche le même logo, donc la transition est invisible.
+
 ---
 
-## ⚠️ État actuel : version de démonstration
+## État : frontend
 
-**Aucun signalement n'est transmis.** `ReportProvider.submitReport()` ajoute le
-dossier à une liste en mémoire et génère un numéro de référence local ; il
-n'existe pas encore de backend.
+Le développement est découpé en étapes et celle-ci couvre le frontend. Il n'y a
+pas encore de backend : `ReportProvider.submitReport()` génère un numéro de
+référence localement et ajoute le dossier à une liste en mémoire. L'application
+n'a pas vocation à être déployée avant que le backend existe.
 
-Tant que c'est le cas, l'application affiche un avertissement explicite sur
-l'accueil et sur l'écran de confirmation, pour qu'un enfant en danger ne croie
-pas avoir alerté quelqu'un. Ce bandeau disparaît lorsque le backend existe :
+Les points d'accroche sont déjà en place et n'attendent que l'appel réseau :
 
-```bash
-flutter build apk --dart-define=EMC_BACKEND_ENABLED=true
-```
-
-Le drapeau est défini dans [`lib/core/constants/app_contacts.dart`](lib/core/constants/app_contacts.dart).
+| À remplacer | Où |
+|---|---|
+| Envoi du signalement | `ReportProvider.submitReport()` — le délai simulé `submissionLatency` devient l'appel réseau, l'écran d'envoi réagit déjà à `isSubmitting` |
+| Suivi d'une demande | `ReportProvider.findByReference()` — lit l'historique de session, deviendra une requête serveur |
+| Numéro de référence | généré avec `Random()` côté client, devra venir du serveur |
 
 ## Démarrer
 
@@ -51,7 +54,7 @@ Les mêmes commandes tournent en CI ([`.github/workflows/ci.yml`](.github/workfl
 ```
 lib/
 ├── core/
-│   ├── constants/     couleurs, styles, numéros d'urgence, drapeau backend
+│   ├── constants/     couleurs, styles, numéros d'urgence
 │   ├── localization/  libellés localisés des enums métier
 │   ├── storage/       préférences (langue) — voir « Données » ci-dessous
 │   └── utils/         lancement d'appels/liens, validateurs
@@ -59,6 +62,8 @@ lib/
 ├── models/            ReportModel (immuable) + enums métier
 ├── providers/         ReportProvider : état du wizard, validation, historique
 └── views/             écrans et composants partagés
+    ├── reporting/     wizard, écran d'envoi animé, confirmation
+    └── tracking/      suivi d'une demande par numéro de référence
 ```
 
 **Gestion d'état** : `provider` / `ChangeNotifier`. `ReportProvider` détient la
@@ -89,7 +94,9 @@ Le français est la langue source. Pour modifier un texte, éditer
 Seule la langue choisie est écrite sur l'appareil.
 
 **Le contenu des signalements n'est jamais persisté** — ni pseudo, ni
-coordonnées, ni preuves, ni historique. C'est délibéré : l'application vise des
+coordonnées, ni preuves, ni historique. Le suivi d'une demande ne retrouve donc
+un dossier que pendant la session où il a été envoyé ; il s'appuiera sur le
+serveur une fois celui-ci en place. C'est délibéré : l'application vise des
 enfants qui partagent souvent leur téléphone, parfois avec la personne qu'ils
 signalent. Une trace lisible localement serait un risque, pas une fonctionnalité.
 Un test (`test/settings_store_test.dart`) vérifie qu'aucune donnée de
@@ -112,5 +119,3 @@ en `AppColors.primaryOrangeBright` pour les usages décoratifs.
   défaut.
 - Le sélecteur de langue est annoncé au sein du titre de l'`AppBar`, que Flutter
   fusionne en un seul nœud sémantique, plutôt que comme un bouton distinct.
-- Le numéro de référence est généré localement avec `Random()` ; il devra venir
-  du serveur.

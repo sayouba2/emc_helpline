@@ -85,29 +85,39 @@ class _Step1WhoScreenState extends State<Step1WhoScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Option 1: Pour moi
-          _buildOptionCard(
-            context,
-            title: l10n.whoForSelf,
-            subtitle: l10n.whoForSelfSubtitle,
-            icon: FontAwesomeIcons.user,
-            isSelected: currentSelection == WhoFor.self,
-            onTap: () {
-              reportProvider.updateReport(whoFor: WhoFor.self);
-            },
-          ),
-          const SizedBox(height: 14),
-
-          // Option 2: Pour quelqu'un d'autre
-          _buildOptionCard(
-            context,
-            title: l10n.whoForSomeoneElse,
-            subtitle: l10n.whoForSomeoneElseSubtitle,
-            icon: FontAwesomeIcons.userGroup,
-            isSelected: currentSelection == WhoFor.someoneElse,
-            onTap: () {
-              reportProvider.updateReport(whoFor: WhoFor.someoneElse);
-            },
+          // Les deux options côte à côte : pleine largeur, elles se lisaient
+          // comme des sections plutôt que comme un choix à faire.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _buildOptionCard(
+                    context,
+                    title: l10n.whoForSelf,
+                    subtitle: l10n.whoForSelfSubtitle,
+                    icon: FontAwesomeIcons.user,
+                    isSelected: currentSelection == WhoFor.self,
+                    onTap: () {
+                      reportProvider.updateReport(whoFor: WhoFor.self);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildOptionCard(
+                    context,
+                    title: l10n.whoForSomeoneElse,
+                    subtitle: l10n.whoForSomeoneElseSubtitle,
+                    icon: FontAwesomeIcons.userGroup,
+                    isSelected: currentSelection == WhoFor.someoneElse,
+                    onTap: () {
+                      reportProvider.updateReport(whoFor: WhoFor.someoneElse);
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -256,39 +266,53 @@ class _Step1WhoScreenState extends State<Step1WhoScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: GlassContainer(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           borderColor: isSelected ? AppColors.primaryBlue : null,
           borderWidth: isSelected ? 2.5 : 1,
           child: Column(
             children: [
+              // A radio marker makes it read as a choice, which two big cards
+              // side by side otherwise do not.
+              Align(
+                alignment: AlignmentDirectional.topEnd,
+                child: Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  size: 18,
+                  color: isSelected ? AppColors.primaryBlue : AppColors.border,
+                ),
+              ),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.whatsappBg : AppColors.bg,
                   shape: BoxShape.circle,
                 ),
                 child: IconUtils.buildIcon(
                   icon,
-                  size: 24,
+                  size: 20,
                   color: AppColors.primaryBlue,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.cardTitle.copyWith(
-                  fontSize: 16,
+                  fontSize: 14.5,
                   color: isSelected
                       ? AppColors.primaryBlue
                       : AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.cardSubtitle.copyWith(
+                  fontSize: 12,
+                  height: 1.3,
                   color: AppColors.textSecondary,
                 ),
               ),

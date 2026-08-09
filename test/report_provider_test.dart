@@ -9,7 +9,8 @@ import 'package:emc_helpline/providers/report_provider.dart';
 /// store is enough for every test here.
 late SettingsStore _settings;
 
-ReportProvider _provider() => ReportProvider(_settings);
+ReportProvider _provider() =>
+    ReportProvider(_settings, submissionLatency: Duration.zero);
 
 /// Fills in every answer the wizard requires, so navigation tests are not
 /// blocked by the step validation.
@@ -40,16 +41,16 @@ void main() {
       expect(_provider().submittedRefCode, isNull);
     });
 
-    test('is exposed after submitReport', () {
+    test('is exposed after submitReport', () async {
       final provider = _completeProvider();
-      final code = provider.submitReport();
+      final code = await provider.submitReport();
       expect(provider.submittedRefCode, code);
       expect(provider.history, hasLength(1));
     });
 
-    test('startNewReport clears it so a second report is possible', () {
+    test('startNewReport clears it so a second report is possible', () async {
       final provider = _completeProvider();
-      provider.submitReport();
+      await provider.submitReport();
 
       provider.startNewReport();
 
@@ -250,7 +251,7 @@ void main() {
       expect(provider.canAdvance, isTrue);
     });
 
-    test('an incomplete report cannot be submitted from the summary', () {
+    test('an incomplete report cannot be submitted from the summary', () async {
       final provider = _provider();
       // The summary step asks no question of its own, so being on it is not
       // enough — the whole report has to hold together.
@@ -258,7 +259,7 @@ void main() {
 
       expect(provider.canAdvance, isTrue);
       expect(provider.isReportComplete, isFalse);
-      expect(provider.submitReport(), isNull);
+      expect(await provider.submitReport(), isNull);
       expect(provider.history, isEmpty);
       expect(provider.submittedRefCode, isNull);
     });
@@ -297,6 +298,71 @@ void main() {
       );
 
       expect(provider.isReportComplete, isTrue);
+    });
+  });
+
+  group('submission feedback', () {
+    test('isSubmitting is raised while the report is on its way', () async {
+      final provider =
+          ReportProvider(
+            _settings,
+            submissionLatency: const Duration(milliseconds: 40),
+          )..updateReport(
+            whoFor: WhoFor.self,
+            ageGroup: AgeGroup.teen,
+            gender: Gender.undisclosed,
+            incidentType: IncidentType.threat,
+            platform: ReportPlatform.whatsapp,
+            hasNoEvidence: true,
+            assistanceNeeded: AssistanceNeed.none,
+            urgencyLevel: UrgencyLevel.notUrgent,
+          );
+
+      final pending = provider.submitReport();
+      expect(
+        provider.isSubmitting,
+        isTrue,
+        reason: 'the sending screen is shown off this flag',
+      );
+
+      await pending;
+      expect(provider.isSubmitting, isFalse);
+      expect(provider.submittedRefCode, isNotNull);
+    });
+
+    test('a second tap while sending is ignored', () async {
+      final provider = _completeProvider();
+
+      final first = provider.submitReport();
+      final second = await provider.submitReport();
+      await first;
+
+      expect(second, isNull);
+      expect(provider.history, hasLength(1));
+    });
+  });
+
+  group('tracking a request', () {
+    test('finds a submitted report by its reference code', () async {
+      final provider = _completeProvider();
+      final code = await provider.submitReport();
+
+      expect(provider.findByReference(code!), isNotNull);
+      expect(
+        provider.findByReference(code.toLowerCase()),
+        isNotNull,
+        reason: 'the code is typed by hand, so case must not matter',
+      );
+      expect(provider.findByReference('  $code  '), isNotNull);
+    });
+
+    test('returns null for an unknown or empty code', () async {
+      final provider = _completeProvider();
+      await provider.submitReport();
+
+      expect(provider.findByReference('REF-EMC-2026-000000'), isNull);
+      expect(provider.findByReference(''), isNull);
+      expect(provider.findByReference('   '), isNull);
     });
   });
 }

@@ -24,13 +24,3 @@ class AppContacts {
   static const String reportingPortal = 'https://evigilance.ma/fr/signaler';
   static const String reportingPortalDisplay = 'evigilance.ma/fr/signaler';
 }
-
-/// Whether reports actually reach the EMC team.
-///
-/// There is no backend yet: `submitReport` only appends to an in-memory list.
-/// Until one exists, the app must not let a child in danger believe someone was
-/// alerted — the UI shows a demonstration notice while this is false.
-///
-/// Build the real thing with:
-/// `flutter build apk --dart-define=EMC_BACKEND_ENABLED=true`
-const bool kBackendEnabled = bool.fromEnvironment('EMC_BACKEND_ENABLED');

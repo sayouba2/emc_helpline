@@ -6,8 +6,7 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
-import '../../core/constants/app_contacts.dart';
-import '../components/demo_notice.dart';
+import '../chatbot/emc_chatbot_screen.dart';
 import '../components/glass_container.dart';
 
 class ReportSuccessScreen extends StatelessWidget {
@@ -106,9 +105,6 @@ class ReportSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            const DemoNotice(dense: true),
-            if (!kBackendEnabled) const SizedBox(height: 16),
-
             // Info Card
             GlassContainer(
               padding: const EdgeInsets.all(16),
@@ -133,6 +129,12 @@ class ReportSuccessScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (reportProvider.currentReport.ageGroup?.isChatbotEligible ??
+                false) ...[
+              const SizedBox(height: 16),
+              _buildChatbotCard(context, l10n),
+            ],
+
             const SizedBox(height: 32),
 
             // CTA Button 1: "Voir les conseils"
@@ -191,6 +193,88 @@ class ReportSuccessScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The chatbot is designed for the 12+ audience, so it is only offered to
+  /// them — and only here, where the wait for a human answer starts.
+  Widget _buildChatbotCard(BuildContext context, AppLocalizations l10n) {
+    return GlassContainer(
+      padding: const EdgeInsets.all(18),
+      borderColor: AppColors.primaryOrange.withValues(alpha: 0.4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryOrange.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: IconUtils.buildIcon(
+                  FontAwesomeIcons.robot,
+                  color: AppColors.primaryOrange,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.successChatbotTitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            l10n.successChatbotBody,
+            style: const TextStyle(
+              fontSize: 12.5,
+              height: 1.35,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryOrange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const EmcChatbotScreen(),
+                ),
+              ),
+              icon: IconUtils.buildIcon(
+                FontAwesomeIcons.comments,
+                size: 15,
+                color: Colors.white,
+              ),
+              label: Text(
+                l10n.chatbotOpenButton,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

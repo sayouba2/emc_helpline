@@ -5,7 +5,7 @@ import 'core/constants/app_colors.dart';
 import 'core/storage/settings_store.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/report_provider.dart';
-import 'views/main_navigation_screen.dart';
+import 'views/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +58,7 @@ class EMCHelplineApp extends StatelessWidget {
                 iconTheme: IconThemeData(color: AppColors.primaryBlue),
               ),
             ),
-            home: const MainNavigationScreen(),
+            home: const SplashGate(),
           );
         },
       ),

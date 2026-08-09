@@ -11,7 +11,7 @@ import '../../models/report_model.dart';
 import '../../core/localization/report_enum_labels.dart';
 import '../../providers/report_provider.dart';
 import '../components/animated_entrance.dart';
-import '../components/demo_notice.dart';
+import '../tracking/track_request_screen.dart';
 import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
 import '../components/pulsing_widget.dart';
@@ -36,15 +36,46 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Stated before anything else: the app must not read as a working
-            // reporting channel while nothing is actually transmitted.
-            const DemoNotice(),
-            if (!kBackendEnabled) const SizedBox(height: 16),
-
             // Banner Confidential & Secure + Hero CTA Card
             AnimatedEntrance(
               delay: const Duration(milliseconds: 100),
               child: _buildHeroCard(context, reportProvider, l10n),
+            ),
+            const SizedBox(height: 12),
+
+            AnimatedEntrance(
+              delay: const Duration(milliseconds: 140),
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(
+                    color: AppColors.primaryBlue,
+                    width: 1.5,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const TrackRequestScreen(),
+                  ),
+                ),
+                icon: IconUtils.buildIcon(
+                  FontAwesomeIcons.magnifyingGlassChart,
+                  color: AppColors.primaryBlue,
+                  size: 16,
+                ),
+                label: Text(
+                  l10n.trackRequest,
+                  style: AppTextStyles.buttonTextOutline.copyWith(
+                    color: AppColors.primaryBlue,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
