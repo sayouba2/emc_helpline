@@ -33,7 +33,7 @@ class MainNavigationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bg,
       extendBody: true,
-      appBar: const HeaderAppBar(),
+      appBar: HeaderAppBar(height: HeaderAppBar.heightFor(context)),
       body: AnimatedScreenSwitcher(
         index: reportProvider.currentTab,
         children: pages,

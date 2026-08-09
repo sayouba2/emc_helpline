@@ -6,6 +6,7 @@ import 'package:emc_helpline/core/storage/settings_store.dart';
 import 'package:emc_helpline/l10n/app_localizations.dart';
 import 'package:emc_helpline/main.dart';
 import 'package:emc_helpline/views/components/glass_container.dart';
+import 'package:emc_helpline/views/components/header_app_bar.dart';
 import 'package:emc_helpline/views/splash_screen.dart';
 
 /// Phone-sized surface: the tightest realistic layout, where overflows show up
@@ -16,6 +17,7 @@ Future<void> _pumpApp(
   WidgetTester tester, {
   double textScale = 1.0,
   Size size = _phone,
+  double topInset = 0,
 }) async {
   // A stored preference also exercises the persistence path.
   SharedPreferences.setMockInitialValues({'settings.localeLanguageCode': 'fr'});
@@ -23,11 +25,20 @@ Future<void> _pumpApp(
 
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
+  if (topInset > 0) {
+    tester.view.padding = FakeViewPadding(top: topInset);
+    tester.view.viewPadding = FakeViewPadding(top: topInset);
+  }
   addTearDown(tester.view.reset);
 
   await tester.pumpWidget(
     MediaQuery(
-      data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+      // Built from the view rather than from scratch: a bare MediaQueryData
+      // has zero padding and would wipe the status bar / cutout inset the test
+      // is trying to exercise.
+      data: MediaQueryData.fromView(
+        tester.view,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
       child: EMCHelplineApp(settings: settings),
     ),
   );
@@ -52,6 +63,45 @@ void main() {
   });
 
   group('layout', () {
+    testWidgets('the header clears the status bar and the display cutout', (
+      tester,
+    ) async {
+      // A centred punch-hole camera sits inside this inset. The header used to
+      // set preferredSize without toolbarHeight, so the AppBar laid its content
+      // out in the default 56dp and jammed the title under the camera.
+      const inset = 120.0;
+      await _pumpApp(tester, topInset: inset);
+
+      final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
+      final clearance = tester.getTopLeft(find.text(l10n.appTitle)).dy - inset;
+
+      // Not just "below the inset": a cutout can reach a few dp past the status
+      // bar, and the title used to sit ~2dp under it. Content is now centred in
+      // the reserved height instead of pinned to its top.
+      expect(
+        clearance,
+        greaterThanOrEqualTo(8.0),
+        reason: 'the title needs breathing room under a punch-hole camera',
+      );
+    });
+
+    testWidgets('the header grows with the text scale, within reason', (
+      tester,
+    ) async {
+      await _pumpApp(tester);
+      final atNormalScale = tester.getSize(find.byType(HeaderAppBar)).height;
+
+      await _pumpApp(tester, textScale: 2.0);
+      final atDoubleScale = tester.getSize(find.byType(HeaderAppBar)).height;
+
+      expect(atDoubleScale, greaterThan(atNormalScale));
+      expect(
+        atDoubleScale,
+        lessThan(atNormalScale * 1.5),
+        reason: 'a header that grew unbounded would swallow the screen',
+      );
+    });
+
     testWidgets('the bottom navigation bar hugs its content', (tester) async {
       await _pumpApp(tester);
 
