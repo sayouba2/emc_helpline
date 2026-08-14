@@ -9,10 +9,10 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/report_enums.dart';
 import '../../../models/report_model.dart';
 import '../../../providers/report_provider.dart';
-import '../../components/scrollable_page.dart';
+import '../../components/step_layout.dart';
 
-class Step4SummaryScreen extends StatelessWidget {
-  const Step4SummaryScreen({super.key});
+class StepSummaryScreen extends StatelessWidget {
+  const StepSummaryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,118 +20,102 @@ class Step4SummaryScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final report = provider.currentReport;
 
-    return ScrollablePage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.summaryTitle,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.screenTitle,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.summarySubtitle,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.screenSubtitle,
-          ),
-          const SizedBox(height: 20),
+    return StepLayout(
+      title: l10n.summaryTitle,
+      subtitle: l10n.summarySubtitle,
+      children: [
+        // Card 1: Contexte
+        _buildSummaryCard(
+          context,
+          icon: FontAwesomeIcons.user,
+          title: l10n.summarySectionContext,
+          editLabel: l10n.actionEdit,
+          onEdit: () => provider.setWizardStep(ReportProvider.stepWho),
+          items: [
+            _buildRow(
+              l10n.summaryFor,
+              report.whoFor?.label(l10n) ?? l10n.notSpecifiedMasculine,
+            ),
+            _buildRow(
+              l10n.summaryAge,
+              report.ageGroup?.label(l10n) ?? l10n.notSpecifiedMasculine,
+            ),
+            if (report.gender != null)
+              _buildRow(l10n.summaryGender, report.gender!.label(l10n)),
+          ],
+        ),
+        const SizedBox(height: 14),
 
-          // Card 1: Contexte
-          _buildSummaryCard(
-            context,
-            icon: FontAwesomeIcons.user,
-            title: l10n.summarySectionContext,
-            editLabel: l10n.actionEdit,
-            onEdit: () => provider.setWizardStep(ReportProvider.stepWho),
-            items: [
-              _buildRow(
-                l10n.summaryFor,
-                report.whoFor?.label(l10n) ?? l10n.notSpecifiedMasculine,
-              ),
-              _buildRow(
-                l10n.summaryAge,
-                report.ageGroup?.label(l10n) ?? l10n.notSpecifiedMasculine,
-              ),
-              if (report.gender != null)
-                _buildRow(l10n.summaryGender, report.gender!.label(l10n)),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Card 2: Problème
-          _buildSummaryCard(
-            context,
-            icon: FontAwesomeIcons.triangleExclamation,
-            title: l10n.summarySectionProblem,
-            editLabel: l10n.actionEdit,
-            onEdit: () =>
-                provider.setWizardStep(ReportProvider.stepIncidentType),
-            items: [
-              _buildRow(
-                l10n.summaryType,
-                report.incidentType?.label(l10n) ?? l10n.notSpecifiedMasculine,
-              ),
-              _buildRow(
-                l10n.summaryPlatform,
-                report.platform?.label(l10n) ?? l10n.notSpecifiedFeminine,
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Card 3: Détails & Preuves
-          _buildSummaryCard(
-            context,
-            icon: FontAwesomeIcons.paperclip,
-            title: l10n.summarySectionDetails,
-            editLabel: l10n.actionEdit,
-            onEdit: () => provider.setWizardStep(ReportProvider.stepEvidence),
-            items: [
-              // The account itself is not shown: it can run to several hundred
-              // characters and would swallow the card. "Description écrite"
-              // tells the user it was recorded; "Modifier" opens it.
-              _buildRow(l10n.summaryEvidence, _describeEvidence(report, l10n)),
-              _buildRow(
-                l10n.summaryAssistance,
-                report.assistanceNeeded?.label(l10n) ??
-                    l10n.notSpecifiedFeminine,
-              ),
-              if (report.assistanceType != null)
-                _buildRow(
-                  l10n.summaryAssistanceType,
-                  report.assistanceType!.label(l10n),
-                ),
-              _buildRow(
-                l10n.summaryUrgency,
-                report.urgencyLevel?.label(l10n) ?? l10n.notSpecifiedFeminine,
-              ),
-            ],
-          ),
-
-          // Card 4: Contact — only exists when the user asked to be called back.
-          if (report.assistanceNeeded == AssistanceNeed.wanted) ...[
-            const SizedBox(height: 14),
-            _buildSummaryCard(
-              context,
-              icon: FontAwesomeIcons.addressBook,
-              title: l10n.summarySectionContact,
-              editLabel: l10n.actionEdit,
-              onEdit: () => provider.setWizardStep(ReportProvider.stepContact),
-              items: [
-                _buildRow(
-                  l10n.summaryPseudo,
-                  report.pseudo ?? l10n.notSpecifiedMasculine,
-                ),
-                _buildRow(
-                  l10n.fieldPhone,
-                  report.contactPhone ?? l10n.notSpecifiedMasculine,
-                ),
-              ],
+        // Card 2: Problème
+        _buildSummaryCard(
+          context,
+          icon: FontAwesomeIcons.triangleExclamation,
+          title: l10n.summarySectionProblem,
+          editLabel: l10n.actionEdit,
+          onEdit: () => provider.setWizardStep(ReportProvider.stepIncidentType),
+          items: [
+            _buildRow(
+              l10n.summaryType,
+              report.incidentType?.label(l10n) ?? l10n.notSpecifiedMasculine,
+            ),
+            _buildRow(
+              l10n.summaryPlatform,
+              report.platform?.label(l10n) ?? l10n.notSpecifiedFeminine,
             ),
           ],
+        ),
+        const SizedBox(height: 14),
+
+        // Card 3: Détails & Preuves
+        _buildSummaryCard(
+          context,
+          icon: FontAwesomeIcons.paperclip,
+          title: l10n.summarySectionDetails,
+          editLabel: l10n.actionEdit,
+          onEdit: () => provider.setWizardStep(ReportProvider.stepEvidence),
+          items: [
+            // The account itself is not shown: it can run to several hundred
+            // characters and would swallow the card. "Description écrite"
+            // tells the user it was recorded; "Modifier" opens it.
+            _buildRow(l10n.summaryEvidence, _describeEvidence(report, l10n)),
+            _buildRow(
+              l10n.summaryAssistance,
+              report.assistanceNeeded?.label(l10n) ?? l10n.notSpecifiedFeminine,
+            ),
+            if (report.assistanceType != null)
+              _buildRow(
+                l10n.summaryAssistanceType,
+                report.assistanceType!.label(l10n),
+              ),
+            _buildRow(
+              l10n.summaryUrgency,
+              report.urgencyLevel?.label(l10n) ?? l10n.notSpecifiedFeminine,
+            ),
+          ],
+        ),
+
+        // Card 4: Contact — only exists when the user asked to be called back.
+        if (report.assistanceNeeded == AssistanceNeed.wanted) ...[
+          const SizedBox(height: 14),
+          _buildSummaryCard(
+            context,
+            icon: FontAwesomeIcons.addressBook,
+            title: l10n.summarySectionContact,
+            editLabel: l10n.actionEdit,
+            onEdit: () => provider.setWizardStep(ReportProvider.stepContact),
+            items: [
+              _buildRow(
+                l10n.summaryPseudo,
+                report.pseudo ?? l10n.notSpecifiedMasculine,
+              ),
+              _buildRow(
+                l10n.fieldPhone,
+                report.contactPhone ?? l10n.notSpecifiedMasculine,
+              ),
+            ],
+          ),
         ],
-      ),
+      ],
     );
   }
 

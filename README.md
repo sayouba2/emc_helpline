@@ -106,7 +106,7 @@ lib/
 ├── models/            ReportModel (immuable) + enums métier
 ├── providers/         ReportProvider : état du wizard, validation, historique
 └── views/
-    ├── components/    composants partagés (cartes, stepper, transitions)
+    ├── components/    composants partagés (ChoiceCard, StepLayout, stepper…)
     ├── reporting/     wizard, écran d'envoi animé, confirmation
     ├── tracking/      suivi d'une demande par numéro de référence
     └── …              accueil, ressources, contact, chatbot, splash
@@ -132,6 +132,13 @@ un choix se change, il ne s'annule pas.
 
 **Thème** : clair uniquement, volontairement. Une variante sombre a existé mais
 était inatteignable et illisible sur les deux tiers des écrans.
+
+**Étapes du wizard** : les onze écrans sont déclaratifs. `StepLayout` porte la
+question et le sous-titre, `ChoiceCard` / `ChoiceTile` portent une réponse
+sélectionnable — état choisi, sémantique et zone tactile compris. Un écran de
+choix tient en une quarantaine de lignes, et l'état « sélectionné » annoncé aux
+lecteurs d'écran ne peut plus être oublié sur une étape. Les fichiers sont
+numérotés d'après les indices de `ReportProvider` (`step00_who` … `step10_summary`).
 
 **Écrans** : un seul est construit à la fois. Les deux `IndexedStack` imbriqués
 d'origine gardaient ~15 écrans vivants à chaque frame, ce qui suffisait à

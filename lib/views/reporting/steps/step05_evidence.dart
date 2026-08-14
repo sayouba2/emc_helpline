@@ -10,20 +10,20 @@ import '../../../core/localization/report_enum_labels.dart';
 import '../../../core/utils/validators.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../providers/report_provider.dart';
-import '../../components/scrollable_page.dart';
+import '../../components/step_layout.dart';
 
 /// Evidence: one or more screenshots, and/or a link.
 ///
 /// At least one of the two is required. An anonymous report carrying nothing to
 /// look at cannot be triaged, and the online reporting portal asks for the same.
-class Step3EvidenceScreen extends StatefulWidget {
-  const Step3EvidenceScreen({super.key});
+class StepEvidenceScreen extends StatefulWidget {
+  const StepEvidenceScreen({super.key});
 
   @override
-  State<Step3EvidenceScreen> createState() => _Step3EvidenceScreenState();
+  State<StepEvidenceScreen> createState() => _Step3EvidenceScreenState();
 }
 
-class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
+class _Step3EvidenceScreenState extends State<StepEvidenceScreen> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -73,132 +73,118 @@ class _Step3EvidenceScreenState extends State<Step3EvidenceScreen> {
     final l10n = AppLocalizations.of(context);
     final paths = provider.currentReport.evidenceFilePaths;
 
-    return ScrollablePage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.evidenceQuestion,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.screenTitle,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.evidenceSubtitle,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.screenSubtitle,
-          ),
-          const SizedBox(height: 20),
+    return StepLayout(
+      title: l10n.evidenceQuestion,
+      subtitle: l10n.evidenceSubtitle,
+      children: [
+        if (paths.isNotEmpty) ...[
+          _buildThumbnails(provider, l10n, paths),
+          const SizedBox(height: 14),
+        ],
 
-          if (paths.isNotEmpty) ...[
-            _buildThumbnails(provider, l10n, paths),
-            const SizedBox(height: 14),
+        _buildPickerCard(provider, l10n, paths.length),
+
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                l10n.separatorOr,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Expanded(child: Divider()),
           ],
+        ),
+        const SizedBox(height: 20),
 
-          _buildPickerCard(provider, l10n, paths.length),
+        Text(
+          l10n.evidenceLinkLabel,
+          style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _urlController,
+          keyboardType: TextInputType.url,
+          autocorrect: false,
+          onChanged: (val) => provider.updateReport(evidenceUrl: val),
+          decoration: InputDecoration(
+            hintText: 'https://exemple.com/contenu',
+            errorText: Validators.url(
+              provider.currentReport.evidenceUrl,
+            )?.text(l10n),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.all(14.0),
+              child: FaIcon(
+                FontAwesomeIcons.link,
+                color: AppColors.primaryBlue,
+                size: 16,
+              ),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppColors.primaryBlue,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
 
-          const SizedBox(height: 20),
-          Row(
+        const SizedBox(height: 20),
+
+        _buildDescriptionField(provider, l10n),
+
+        const SizedBox(height: 20),
+
+        // Says why the step cannot be skipped, and where to go otherwise.
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.emergencyBannerBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: AppColors.primaryOrange.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(child: Divider()),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const FaIcon(
+                FontAwesomeIcons.circleInfo,
+                color: AppColors.primaryOrange,
+                size: 16,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Text(
-                  l10n.separatorOr,
+                  l10n.evidenceRequiredNote,
                   style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                    height: 1.4,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              const Expanded(child: Divider()),
             ],
           ),
-          const SizedBox(height: 20),
-
-          Text(
-            l10n.evidenceLinkLabel,
-            style: AppTextStyles.cardTitle.copyWith(fontSize: 14.5),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _urlController,
-            keyboardType: TextInputType.url,
-            autocorrect: false,
-            onChanged: (val) => provider.updateReport(evidenceUrl: val),
-            decoration: InputDecoration(
-              hintText: 'https://exemple.com/contenu',
-              errorText: Validators.url(
-                provider.currentReport.evidenceUrl,
-              )?.text(l10n),
-              prefixIcon: const Padding(
-                padding: EdgeInsets.all(14.0),
-                child: FaIcon(
-                  FontAwesomeIcons.link,
-                  color: AppColors.primaryBlue,
-                  size: 16,
-                ),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: AppColors.primaryBlue,
-                  width: 2,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          _buildDescriptionField(provider, l10n),
-
-          const SizedBox(height: 20),
-
-          // Says why the step cannot be skipped, and where to go otherwise.
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.emergencyBannerBg,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.primaryOrange.withValues(alpha: 0.35),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const FaIcon(
-                  FontAwesomeIcons.circleInfo,
-                  color: AppColors.primaryOrange,
-                  size: 16,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.evidenceRequiredNote,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      height: 1.4,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

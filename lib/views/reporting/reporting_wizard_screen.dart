@@ -11,17 +11,17 @@ import '../components/animated_screen_switcher.dart';
 import '../components/stepper_widget.dart';
 import 'report_success_screen.dart';
 import 'sending_screen.dart';
-import 'steps/step1_who_screen.dart';
-import 'steps/step2_age_screen.dart';
-import 'steps/step2_gender_screen.dart';
-import 'steps/step3_incident_type_screen.dart';
-import 'steps/step3_platform_screen.dart';
-import 'steps/step3_evidence_screen.dart';
-import 'steps/step3_assistance_screen.dart';
-import 'steps/step3_assistance_type_screen.dart';
-import 'steps/step3_contact_screen.dart';
-import 'steps/step3_urgency_screen.dart';
-import 'steps/step4_summary_screen.dart';
+import 'steps/step00_who.dart';
+import 'steps/step01_age.dart';
+import 'steps/step02_gender.dart';
+import 'steps/step03_incident.dart';
+import 'steps/step04_platform.dart';
+import 'steps/step05_evidence.dart';
+import 'steps/step06_assistance.dart';
+import 'steps/step07_assistance_type.dart';
+import 'steps/step08_contact.dart';
+import 'steps/step09_urgency.dart';
+import 'steps/step10_summary.dart';
 
 class ReportingWizardScreen extends StatelessWidget {
   const ReportingWizardScreen({super.key});
@@ -52,17 +52,17 @@ class ReportingWizardScreen extends StatelessWidget {
     final canAdvance = blockingMessage == null;
 
     final List<Widget> stepWidgets = [
-      const Step1WhoScreen(),
-      const Step2AgeScreen(),
-      const Step2GenderScreen(),
-      const Step3IncidentTypeScreen(),
-      const Step3PlatformScreen(),
-      const Step3EvidenceScreen(),
-      const Step3AssistanceScreen(),
-      const Step3AssistanceTypeScreen(),
-      const Step3ContactScreen(),
-      const Step3UrgencyScreen(),
-      const Step4SummaryScreen(),
+      const StepWhoScreen(),
+      const StepAgeScreen(),
+      const StepGenderScreen(),
+      const StepIncidentScreen(),
+      const StepPlatformScreen(),
+      const StepEvidenceScreen(),
+      const StepAssistanceScreen(),
+      const StepAssistanceTypeScreen(),
+      const StepContactScreen(),
+      const StepUrgencyScreen(),
+      const StepSummaryScreen(),
     ];
 
     return Scaffold(
@@ -70,7 +70,13 @@ class ReportingWizardScreen extends StatelessWidget {
       body: Column(
         children: [
           // Stepper bar
-          StepperWidget(currentStep: stepperNumber),
+          StepperWidget(
+            currentStep: stepperNumber,
+            progress: (subStep + 1) / stepWidgets.length,
+            // En paysage, la hauteur restante ne suffit pas pour les libellés
+            // de phase en plus de la barre d'action.
+            compact: MediaQuery.sizeOf(context).height < 560,
+          ),
           const Divider(height: 1, color: AppColors.border),
 
           // Current Step Content with AnimatedIndexedStack
@@ -136,6 +142,8 @@ class ReportingWizardScreen extends StatelessWidget {
                             ),
                             label: Text(
                               l10n.actionPrevious,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.buttonTextOutline.copyWith(
                                 color: AppColors.primaryBlue,
                               ),
@@ -225,15 +233,21 @@ class ReportingWizardScreen extends StatelessWidget {
         shadowColor: AppColors.primaryOrange.withValues(alpha: 0.4),
       ),
       onPressed: isEnabled ? onPressed : null,
+      // Le libellé cède avant de déborder : à 2× la police, « Précédent » et
+      // « Suivant » ne tiennent plus côte à côte dans la barre d'action.
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            label,
-            style: AppTextStyles.buttonText.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: contentColor,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.buttonText.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: contentColor,
+              ),
             ),
           ),
           const SizedBox(width: 8),
