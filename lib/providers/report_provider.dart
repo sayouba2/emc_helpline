@@ -38,6 +38,7 @@ class ReportProvider with ChangeNotifier {
   Locale? _locale;
   String? _submittedRefCode;
   bool _isSubmitting = false;
+  bool _isWizardOpen = false;
 
   ReportModel _currentReport = const ReportModel();
   final List<ReportModel> _history = [];
@@ -61,6 +62,14 @@ class ReportProvider with ChangeNotifier {
 
   /// True while the report is on its way. The wizard shows a sending screen.
   bool get isSubmitting => _isSubmitting;
+
+  /// Whether the report tab shows the form or its landing screen.
+  ///
+  /// Tapping the tab used to drop straight into an eleven-step form, which is
+  /// a lot to commit to for someone who only wanted to check on an existing
+  /// case. The landing offers both. The home call to action still opens the
+  /// form directly — that path is for someone who has already decided.
+  bool get isWizardOpen => _isWizardOpen;
 
   /// Only an explicit request for support opens the two follow-up questions.
   /// Declining and being unsure both leave the report anonymous: "I don't know"
@@ -216,7 +225,16 @@ class ReportProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Shows the report tab's landing screen, leaving any answers untouched.
+  void openReportLanding() {
+    _isWizardOpen = false;
+    _currentTab = 1;
+    _submittedRefCode = null;
+    notifyListeners();
+  }
+
   void startNewReport() {
+    _isWizardOpen = true;
     _isSubmitting = false;
     _currentReport = const ReportModel();
     _wizardStep = stepWho;

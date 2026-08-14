@@ -77,9 +77,9 @@
   "ageTeen": "13 à 17 ans",
   "ageAdult": "18 ans et plus",
   "ageUndisclosed": "Je préfère ne pas le dire",
-  "chatbotBannerTitle": "Besoin d'aide interactive immédiate ? (+12 ans)",
-  "chatbotBannerBody": "Comme tu as plus de 12 ans, tu peux poser tes questions en direct au Chatbot EMC ou continuer ton signalement.",
-  "chatbotOpenButton": "Ouvrir le Chatbot EMC (+12 ans)",
+  "chatbotBannerTitle": "Besoin d'une réponse tout de suite ?",
+  "chatbotBannerBody": "Tu peux poser tes questions à notre assistant, ou continuer ton signalement.",
+  "chatbotOpenButton": "Ouvrir l'assistant",
   "genderQuestion": "Comment veux-tu répondre ?",
   "genderSubtitle": "Cette information nous aide à mieux comprendre ta situation.",
   "genderFemale": "Féminin",
@@ -168,7 +168,7 @@
   "keepReference": "Conserve ce numéro précieusement. Il te permettra de suivre l'avancement de ton dossier lors de tes prochains échanges avec l'équipe.",
   "seeAdvice": "Voir les conseils",
   "contactEmcHelpline": "Contacter EMC Helpline",
-  "chatbotTitle": "Assistant EMC",
+  "chatbotTitle": "EMC Assistant",
   "chatbotStatus": "En ligne",
   "chatbotGreeting": "Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nJe suis là pour t'écouter, t'aider et te guider en toute confidentialité.\nComment puis-je t'aider aujourd'hui ?",
   "chatbotQuestionBlock": "Comment bloquer un harceleur ?",
@@ -273,8 +273,8 @@
     "description": "Shown while the report travels to the team"
   },
   "sendingBody": "Ton signalement part vers nos experts. Reste sur cet écran quelques secondes.",
-  "successChatbotTitle": "Une question en attendant ? (+12 ans)",
-  "successChatbotBody": "Tu as plus de 12 ans : notre assistant peut te conseiller pendant que l'équipe étudie ton dossier.",
+  "successChatbotTitle": "Une question en attendant ?",
+  "successChatbotBody": "Notre assistant peut te conseiller pendant que l'équipe étudie ton dossier.",
   "trackRequest": "Suivre ma demande",
   "@trackRequest": {
     "description": "Home button and tracking screen title"
@@ -346,5 +346,16 @@
   "chatbotBetaBadge": "BÊTA",
   "@chatbotBetaBadge": {
     "description": "Badge next to the assistant name while it is a simulation"
-  }
+  },
+  "@chatbotTitle": {
+    "description": "Product name, deliberately identical in every locale"
+  },
+  "reportLandingTitle": "Que veux-tu faire ?",
+  "@reportLandingTitle": {
+    "description": "Landing screen of the report tab"
+  },
+  "reportLandingSubtitle": "Signale une situation, ou retrouve où en est un dossier déjà envoyé.",
+  "reportLandingNew": "Faire un signalement",
+  "reportLandingNewSubtitle": "Un formulaire guidé, anonyme si tu le souhaites.",
+  "reportLandingTrackSubtitle": "Avec le numéro de référence reçu à l'envoi."
 }

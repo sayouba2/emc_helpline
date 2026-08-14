@@ -37,9 +37,6 @@ class MainNavigationScreen extends StatelessWidget {
       // En paysage, une encoche latérale mange le bord de l'écran. Seul le
       // contenu s'en écarte : le fond, lui, continue de couvrir toute la
       // largeur, sinon une bande vide apparaîtrait le long de l'encoche.
-      // En paysage, une encoche latérale mange le bord de l'écran. Seul le
-      // contenu s'en écarte : le fond, lui, continue de couvrir toute la
-      // largeur, sinon une bande vide apparaîtrait le long de l'encoche.
       body: SafeArea(
         top: false,
         bottom: false,
@@ -76,16 +73,10 @@ class MainNavigationScreen extends StatelessWidget {
                     currentIndex: reportProvider.currentTab,
                     label: l10n.navReport,
                     icon: FontAwesomeIcons.fileShield,
-                    onTap: () {
-                      // Repartir de zéro en arrivant sur l'onglet, mais aussi
-                      // quand on y est déjà et qu'un signalement vient d'être
-                      // envoyé : sinon l'écran de succès reste affiché et plus
-                      // aucun nouveau signalement n'est possible.
-                      if (reportProvider.currentTab != 1 ||
-                          reportProvider.submittedRefCode != null) {
-                        reportProvider.startNewReport();
-                      }
-                    },
+                    // L'onglet ouvre sur la page de choix, pas directement sur
+                    // le formulaire. Elle efface aussi l'écran de succès, sans
+                    // quoi il resterait affiché indéfiniment.
+                    onTap: reportProvider.openReportLanding,
                   ),
                 ),
                 Flexible(

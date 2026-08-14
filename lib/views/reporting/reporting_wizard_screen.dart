@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
 import '../components/animated_screen_switcher.dart';
 import '../components/stepper_widget.dart';
+import 'report_landing_screen.dart';
 import 'report_success_screen.dart';
 import 'sending_screen.dart';
 import 'steps/step00_who.dart';
@@ -38,6 +39,7 @@ class ReportingWizardScreen extends StatelessWidget {
     final reportProvider = Provider.of<ReportProvider>(context);
     final l10n = AppLocalizations.of(context);
 
+    if (!reportProvider.isWizardOpen) return const ReportLandingScreen();
     if (reportProvider.isSubmitting) return const SendingScreen();
 
     final submittedRefCode = reportProvider.submittedRefCode;
@@ -104,76 +106,69 @@ class ReportingWizardScreen extends StatelessWidget {
                     _buildStepHint(blockingMessage),
                     const SizedBox(height: 10),
                   ],
-                  if (subStep == ReportProvider.stepWho)
-                    // Step 1: Single Centered "Continuer" Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: _buildForwardButton(
-                        label: l10n.actionContinue,
-                        icon: Icons.arrow_forward_rounded,
-                        verticalPadding: 15,
-                        isEnabled: canAdvance,
-                        onPressed: reportProvider.nextWizardStep,
-                      ),
-                    )
-                  else
-                    // Steps > 0: "Précédent" & "Suivant" / "Envoyer" Buttons in a Row
-                    Row(
-                      children: [
-                        // Précédent Button
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: Colors.white,
-                              side: const BorderSide(
-                                color: AppColors.border,
-                                width: 1.5,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
+                  // Le bouton retour existe dès la première étape : il ramène
+                  // à la page de choix, pour que le formulaire ne soit pas une
+                  // porte à sens unique une fois qu'on y est entré.
+                  Row(
+                    children: [
+                      // Précédent Button
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(
+                              color: AppColors.border,
+                              width: 1.5,
                             ),
-                            onPressed: reportProvider.previousWizardStep,
-                            icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              size: 18,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: subStep == ReportProvider.stepWho
+                              ? reportProvider.openReportLanding
+                              : reportProvider.previousWizardStep,
+                          icon: const Icon(
+                            Icons.arrow_back_rounded,
+                            size: 18,
+                            color: AppColors.primaryBlue,
+                          ),
+                          label: Text(
+                            l10n.actionPrevious,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.buttonTextOutline.copyWith(
                               color: AppColors.primaryBlue,
                             ),
-                            label: Text(
-                              l10n.actionPrevious,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.buttonTextOutline.copyWith(
-                                color: AppColors.primaryBlue,
-                              ),
-                            ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(width: 14),
+                      const SizedBox(width: 14),
 
-                        // Suivant / Envoyer Button
-                        Expanded(
-                          child: _buildForwardButton(
-                            label: isLastStep
-                                ? l10n.actionSend
-                                : l10n.actionNext,
-                            icon: isLastStep
-                                ? Icons.send_rounded
-                                : Icons.arrow_forward_rounded,
-                            verticalPadding: 14,
-                            isEnabled: canAdvance,
-                            // Le Chatbot (+12 ans) reste accessible depuis la
-                            // bannière de l'étape "âge" : "Suivant" ne doit
-                            // jamais détourner le parcours vers celui-ci.
-                            onPressed: isLastStep
-                                ? () => unawaited(reportProvider.submitReport())
-                                : reportProvider.nextWizardStep,
-                          ),
+                      // Suivant / Envoyer Button
+                      Expanded(
+                        child: _buildForwardButton(
+                          label: isLastStep
+                              ? l10n.actionSend
+                              : (subStep == ReportProvider.stepWho
+                                    ? l10n.actionContinue
+                                    : l10n.actionNext),
+                          icon: isLastStep
+                              ? Icons.send_rounded
+                              : Icons.arrow_forward_rounded,
+                          verticalPadding: 14,
+                          isEnabled: canAdvance,
+                          // Le Chatbot (+12 ans) reste accessible depuis la
+                          // bannière de l'étape "âge" : "Suivant" ne doit
+                          // jamais détourner le parcours vers celui-ci.
+                          onPressed: isLastStep
+                              ? () => unawaited(reportProvider.submitReport())
+                              : reportProvider.nextWizardStep,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

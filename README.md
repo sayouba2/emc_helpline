@@ -10,11 +10,14 @@ est invisible.
 
 ## Ce que fait l'application
 
-- **Signaler** — un formulaire en 11 étapes : contexte, profil, incident,
-  récapitulatif. Chaque étape est validée avant de pouvoir avancer, et le bouton
-  désactivé est accompagné d'un message qui dit ce qui manque.
-- **Suivre ma demande** — un écran dédié où l'utilisateur saisit le numéro de
-  référence reçu à l'envoi et consulte l'état de son dossier.
+- **Signaler** — l'onglet ouvre sur un choix : déposer un signalement, ou
+  suivre une demande. Le formulaire fait 11 étapes — contexte, profil, incident,
+  récapitulatif —, chacune validée avant de pouvoir avancer, avec un message qui
+  dit ce qui manque quand le bouton est désactivé. Le bouton « SIGNALER
+  MAINTENANT » de l'accueil ouvre le formulaire directement : qui l'utilise a
+  déjà décidé.
+- **Suivre ma demande** — l'utilisateur saisit le numéro de référence reçu à
+  l'envoi et consulte l'état de son dossier.
 - **Ressources** — les gestes à adopter face à un incident.
 - **Contact** — WhatsApp, téléphone, e-mail et portail web de l'équipe.
 - **Chatbot** (+12 ans) — assistant proposé depuis l'étape « âge » et depuis
@@ -197,7 +200,9 @@ en `AppColors.primaryOrangeBright` pour les usages décoratifs.
 
 - Le chatbot est simulé : réponses scriptées, détection par mots-clés **en
   français uniquement**. Un message en arabe tombe toujours sur la réponse par
-  défaut.
+  défaut. Le badge BÊTA de son en-tête le signale à l'utilisateur.
+- Le seuil d'âge qui décide de proposer l'assistant est une règle interne :
+  aucun texte ne le mentionne, un test le vérifie.
 - Le sélecteur de langue est annoncé au sein du titre de l'`AppBar`, que Flutter
   fusionne en un seul nœud sémantique, plutôt que comme un bouton distinct.
 - Le récapitulatif indique qu'un récit a été écrit mais ne l'affiche pas : il

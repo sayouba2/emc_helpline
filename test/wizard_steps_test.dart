@@ -45,7 +45,8 @@ Future<ReportProvider> _openWizard(
     tester.element(find.byType(MaterialApp)),
     listen: false,
   );
-  provider.setTab(1);
+  // L'onglet ouvre sur la page de choix ; le formulaire s'ouvre depuis là.
+  provider.startNewReport();
   if (fillAnswers) {
     provider.updateReport(
       whoFor: WhoFor.self,
