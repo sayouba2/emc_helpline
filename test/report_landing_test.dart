@@ -125,4 +125,18 @@ void main() {
       );
     }
   });
+
+  testWidgets('the home screen no longer duplicates the tracking entry', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
+    expect(
+      find.text(l10n.trackRequest),
+      findsNothing,
+      reason: 'tracking lives on the report tab, offering it twice split it',
+    );
+    expect(find.text(l10n.reportNow), findsOneWidget);
+  });
 }
