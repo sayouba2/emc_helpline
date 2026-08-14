@@ -111,6 +111,8 @@ class _Step3EvidenceScreenState extends State<StepEvidenceScreen> {
         TextField(
           controller: _urlController,
           keyboardType: TextInputType.url,
+          // Une URL se lit de gauche à droite, y compris en arabe.
+          textDirection: TextDirection.ltr,
           autocorrect: false,
           onChanged: (val) => provider.updateReport(evidenceUrl: val),
           decoration: InputDecoration(

@@ -3,8 +3,12 @@
 Application mobile Flutter de signalement des violences numériques visant les
 enfants, les jeunes et les femmes au Maroc, en partenariat avec le CMRPI.
 
-Interface en **français, arabe et anglais**, avec mise en page droite-à-gauche
-pour l'arabe. Au lancement, le logo apparaît en fondu puis laisse la place à
+Interface en **français, arabe et anglais**. En arabe, **toute l'interface est
+mise en miroir**, pas seulement le texte : ordre des onglets, flèches, coins des
+bulles, marges. C'est ce que prescrivent Android, iOS et le W3C, et ce qu'attend
+un lecteur arabophone. Les seules exceptions sont les contenus qui se lisent de
+gauche à droite dans toutes les langues — numéros de téléphone, URL, numéro de
+référence — forcés en LTR. `test/rtl_test.dart` verrouille les deux règles. Au lancement, le logo apparaît en fondu puis laisse la place à
 l'application ; le splash natif Android affiche le même logo, donc la transition
 est invisible.
 

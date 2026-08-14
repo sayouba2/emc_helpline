@@ -212,10 +212,13 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                   final isBot = msg.isBot;
                   final text = msg.text ?? l10n.chatbotGreeting;
 
+                  // Directionnel : en arabe, les bulles du bot passent à
+                  // droite et celles de l'utilisateur à gauche, comme dans
+                  // n'importe quelle messagerie.
                   return Align(
                     alignment: isBot
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight,
+                        ? AlignmentDirectional.centerStart
+                        : AlignmentDirectional.centerEnd,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       constraints: BoxConstraints(
@@ -224,11 +227,13 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: isBot ? Colors.white : AppColors.primaryOrange,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(18),
-                          topRight: const Radius.circular(18),
-                          bottomLeft: Radius.circular(isBot ? 4 : 18),
-                          bottomRight: Radius.circular(isBot ? 18 : 4),
+                        // Le coin coupé désigne l'émetteur : il doit suivre
+                        // le côté où la bulle est posée.
+                        borderRadius: BorderRadiusDirectional.only(
+                          topStart: const Radius.circular(18),
+                          topEnd: const Radius.circular(18),
+                          bottomStart: Radius.circular(isBot ? 4 : 18),
+                          bottomEnd: Radius.circular(isBot ? 18 : 4),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -263,7 +268,7 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
                   final isFormAction = q == l10n.chatbotBackToForm;
 
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsetsDirectional.only(end: 8),
                     child: ActionChip(
                       backgroundColor: isFormAction
                           ? AppColors.primaryOrange.withValues(alpha: 0.15)

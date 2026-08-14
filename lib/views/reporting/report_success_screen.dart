@@ -93,6 +93,8 @@ class ReportSuccessScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   SelectableText(
+                    // Le code se lit caractère par caractère : il reste LTR.
+                    textDirection: TextDirection.ltr,
                     referenceCode,
                     style: const TextStyle(
                       fontSize: 23,

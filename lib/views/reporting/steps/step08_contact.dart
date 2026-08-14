@@ -189,6 +189,8 @@ class _Step3ContactScreenState extends State<StepContactScreen> {
           hint: l10n.fieldPhoneHint,
           icon: FontAwesomeIcons.phone,
           keyboardType: TextInputType.phone,
+          // Un numéro se lit de gauche à droite, y compris en arabe.
+          textDirection: TextDirection.ltr,
           errorText: Validators.phone(report.contactPhone)?.text(l10n),
           onChanged: (val) => provider.updateReport(contactPhone: val),
         ),
@@ -232,6 +234,7 @@ class _Step3ContactScreenState extends State<StepContactScreen> {
     required dynamic icon,
     Color? iconColor,
     TextInputType? keyboardType,
+    TextDirection? textDirection,
     String? errorText,
     required ValueChanged<String> onChanged,
   }) {
@@ -244,6 +247,7 @@ class _Step3ContactScreenState extends State<StepContactScreen> {
           controller: controller,
           onChanged: onChanged,
           keyboardType: keyboardType,
+          textDirection: textDirection,
           autocorrect: false,
           decoration: InputDecoration(
             hintText: hint,

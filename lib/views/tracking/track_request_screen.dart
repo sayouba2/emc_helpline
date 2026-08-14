@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
+// intl exporte son propre TextDirection, qui masquerait celui de Flutter.
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -191,6 +192,8 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: SelectableText(
+                  // Le code se lit caractère par caractère : il reste LTR.
+                  textDirection: TextDirection.ltr,
                   report.referenceCode ?? '',
                   style: const TextStyle(
                     fontSize: 16,
