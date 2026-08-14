@@ -151,6 +151,27 @@ numérotés d'après les indices de `ReportProvider` (`step00_who` … `step10_s
 d'origine gardaient ~15 écrans vivants à chaque frame, ce qui suffisait à
 étrangler un émulateur.
 
+## Textes légaux
+
+L'écran Paramètres — accessible par l'engrenage de l'en-tête — donne accès à la
+politique de confidentialité, aux conditions d'utilisation et à une note « Mes
+données ».
+
+> Ces textes sont des **brouillons**. Les passages qui relèvent du juridique
+> portent un marqueur `⚠️ À COMPLÉTER PAR LE CMRPI` : responsable de traitement,
+> délégué à la protection des données, déclaration CNDP au titre de la loi
+> 09-08, durée de conservation, exercice des droits, traitement des données d'un
+> mineur, limites de responsabilité. `LegalDocumentScreen` détecte ce marqueur
+> et affiche un bandeau d'avertissement en tête du document, pour qu'un
+> paragraphe non validé ne passe jamais pour une clause approuvée.
+>
+> Les passages **sans** marqueur décrivent le comportement réel de
+> l'application et sont vérifiables dans le code.
+>
+> Une politique de confidentialité est **obligatoire** pour publier sur Google
+> Play dès lors que l'application collecte des données personnelles, et cette
+> application relève en plus de la Families Policy.
+
 ## Traductions
 
 Le français est la langue source. Pour modifier un texte, éditer

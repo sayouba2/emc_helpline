@@ -6,6 +6,8 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
+import '../settings/settings_screen.dart';
+import 'language_picker.dart';
 
 /// The header: EMC logo, app title, language picker, CMRPI logo.
 ///
@@ -51,7 +53,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     // couvrir toute la largeur, seuls les logos s'en écartent.
     final sideInset = MediaQuery.paddingOf(context);
     final leadingWidth = (width * 0.24).clamp(72.0, 104.0) + sideInset.left;
-    final partnerWidth = (width * 0.21).clamp(60.0, 92.0);
+    final partnerWidth = (width * 0.17).clamp(52.0, 76.0);
     final logoHeight = (height - 24).clamp(32.0, 56.0);
 
     return AppBar(
@@ -109,7 +111,7 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
               button: true,
               label: l10n.changeLanguage,
               child: InkWell(
-                onTap: () => _showLanguageDialog(context, reportProvider, l10n),
+                onTap: () => showLanguagePicker(context),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -156,6 +158,28 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
+        // Le tooltip d'IconButton pose un `tooltip` sémantique, pas un `label` :
+        // sans ce Semantics, un lecteur d'écran n'a rien pour nommer le bouton.
+        Semantics(
+          button: true,
+          label: l10n.settingsTitle,
+          child: IconButton(
+            // Pas de visualDensity.compact ici : elle ramenait la cible sous
+            // les 48dp exigés.
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: EdgeInsets.zero,
+            tooltip: l10n.settingsTitle,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
+            icon: IconUtils.buildIcon(
+              FontAwesomeIcons.gear,
+              color: AppColors.primaryBlue,
+              size: 18,
+            ),
+          ),
+        ),
         // CMRPI Partner Logo (Occupe TOUT l'espace de droite sans aucune obstruction)
         Padding(
           padding: EdgeInsetsDirectional.only(
@@ -178,103 +202,6 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ],
-    );
-  }
-
-  void _showLanguageDialog(
-    BuildContext context,
-    ReportProvider provider,
-    AppLocalizations l10n,
-  ) {
-    final languageCode = Localizations.localeOf(context).languageCode;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.chooseLanguage,
-                style: AppTextStyles.cardTitle.copyWith(
-                  fontSize: 18,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildLangTile(
-                context,
-                provider: provider,
-                code: 'fr',
-                flag: '🇫🇷',
-                label: l10n.languageFrench,
-                selectedCode: languageCode,
-              ),
-              _buildLangTile(
-                context,
-                provider: provider,
-                code: 'ar',
-                flag: '🇲🇦',
-                label: l10n.languageArabic,
-                selectedCode: languageCode,
-              ),
-              _buildLangTile(
-                context,
-                provider: provider,
-                code: 'en',
-                flag: '🇬🇧',
-                label: l10n.languageEnglish,
-                selectedCode: languageCode,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLangTile(
-    BuildContext context, {
-    required ReportProvider provider,
-    required String code,
-    required String flag,
-    required String label,
-    required String selectedCode,
-  }) {
-    final isSelected = selectedCode == code;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.whatsappBg : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Text(flag, style: const TextStyle(fontSize: 24)),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
-          ),
-        ),
-        trailing: isSelected
-            ? IconUtils.buildIcon(
-                FontAwesomeIcons.circleCheck,
-                color: AppColors.primaryBlue,
-                size: 18,
-              )
-            : null,
-        onTap: () {
-          provider.setLocale(Locale(code));
-          Navigator.pop(context);
-        },
-      ),
     );
   }
 }
