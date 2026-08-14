@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:emc_helpline/core/storage/settings_store.dart';
 import 'package:emc_helpline/l10n/app_localizations.dart';
 import 'package:emc_helpline/main.dart';
+import 'package:emc_helpline/views/chatbot/emc_chatbot_screen.dart';
 import 'package:emc_helpline/views/splash_screen.dart';
 
 void main() {
@@ -79,5 +80,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text(l10n.heroTitle), findsOneWidget);
+  });
+
+  testWidgets('the chatbot header carries only the assistant identity', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.localeLanguageCode': 'fr',
+      'settings.hasSeenOnboarding': true,
+    });
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('fr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: EmcChatbotScreen(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('fr'));
+    expect(find.text(l10n.chatbotTitle), findsOneWidget);
+    expect(find.text(l10n.chatbotBetaBadge), findsOneWidget);
+
+    // The age qualifier and the partnership banner used to sit here; the header
+    // is the assistant's identity and nothing else.
+    expect(l10n.chatbotTitle.contains('12'), isFalse);
+    expect(find.byType(Image), findsNothing);
   });
 }

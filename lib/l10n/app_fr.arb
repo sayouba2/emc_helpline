@@ -8,7 +8,6 @@
   "navReport": "Signaler",
   "navResources": "Ressources",
   "navContact": "Contact",
-  "cmrpiPartner": "En partenariat avec le CMRPI (Centre Marocain de Recherches Polyvalentes et d'Innovation)",
   "chooseLanguage": "Choisir la langue",
   "languageFrench": "Français",
   "languageArabic": "العربية",
@@ -114,7 +113,6 @@
   "badgeYes": "OUI",
   "badgeNo": "NON",
   "badgeUnsure": "?",
-  "assistanceRequestedBadge": "AIDE DEMANDÉE",
   "assistanceTypeQuestion": "De quel type d'aide as-tu besoin ?",
   "assistanceTypeSubtitle": "Choisis l'aide qui correspond le mieux à ta situation.",
   "assistanceTypeLegal": "Aide juridique",
@@ -170,14 +168,13 @@
   "keepReference": "Conserve ce numéro précieusement. Il te permettra de suivre l'avancement de ton dossier lors de tes prochains échanges avec l'équipe.",
   "seeAdvice": "Voir les conseils",
   "contactEmcHelpline": "Contacter EMC Helpline",
-  "chatbotTitle": "Chatbot EMC (+12 ans)",
-  "chatbotStatus": "Assistant virtuel • En ligne",
+  "chatbotTitle": "Assistant EMC",
+  "chatbotStatus": "En ligne",
   "chatbotGreeting": "Bonjour ! Je suis le Chatbot EMC Helpline 🤖.\nJe suis là pour t'écouter, t'aider et te guider en toute confidentialité.\nComment puis-je t'aider aujourd'hui ?",
   "chatbotQuestionBlock": "Comment bloquer un harceleur ?",
   "chatbotQuestionPhoto": "On a partagé une photo de moi sans mon accord",
   "chatbotQuestionPrivacy": "Un inconnu me demande des informations privées",
   "chatbotBackToForm": "Poursuivre mon formulaire de signalement",
-  "chatbotBackToFormShort": "Formulaire →",
   "chatbotAnswerBlock": "🛡️ Pour bloquer un utilisateur :\n1. Ne lui réponds plus.\n2. Fais des captures d'écran des messages comme preuve.\n3. Clique sur les 3 petits points de son profil et choisis « Bloquer et Signaler ».\n\nSouhaites-tu poursuivre ton dossier de signalement officiel sur EMC Helpline ?",
   "chatbotAnswerPhoto": "⚠️ Si une photo privée circule :\n1. Ne t'inquiète pas, tu n'es pas responsable.\n2. Ne supprime pas les preuves.\n3. Remplis notre formulaire de signalement EMC Helpline pour qu'un spécialiste intervienne rapidement.",
   "chatbotAnswerContact": "📞 Tu peux contacter nos conseillers humains gratuitement par :\n• WhatsApp : +212 624 405 889\n• Police : 19 | Gendarmerie : 177\n\nTu peux aussi ouvrir l'onglet Contact en bas !",
@@ -345,5 +342,9 @@
         "type": "int"
       }
     }
+  },
+  "chatbotBetaBadge": "BÊTA",
+  "@chatbotBetaBadge": {
+    "description": "Badge next to the assistant name while it is a simulation"
   }
 }

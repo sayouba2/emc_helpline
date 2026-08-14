@@ -176,11 +176,8 @@ class HomeScreen extends StatelessWidget {
             // up what was reported and about which platform. "Suivre ma
             // demande" above needs the reference code, which only the author
             // has.
-            // CMRPI & EMC Helpline Prominent Institutional Footer
-            AnimatedEntrance(
-              delay: const Duration(milliseconds: 520),
-              child: _buildPartnerFooter(l10n),
-            ),
+            // Le bandeau de partenariat vivait ici ; les deux logos sont
+            // déjà dans l'en-tête, présents sur tous les écrans.
           ],
         ),
       ),
@@ -430,62 +427,6 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPartnerFooter(AppLocalizations l10n) {
-    return GlassContainer(
-      padding: const EdgeInsets.all(16),
-      borderColor: AppColors.primaryBlue.withValues(alpha: 0.35),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // EMC Logo
-              Flexible(
-                child: Image.asset(
-                  'assets/images/emc.png',
-                  height: 36,
-                  fit: BoxFit.contain,
-                  errorBuilder: (c, e, s) => const SizedBox(),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  '×',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryBlue,
-                  ),
-                ),
-              ),
-              // CMRPI Logo
-              Flexible(
-                child: Image.asset(
-                  'assets/images/cmrpi.png',
-                  height: 36,
-                  fit: BoxFit.contain,
-                  errorBuilder: (c, e, s) => const SizedBox(),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            l10n.cmrpiPartner,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              height: 1.3,
             ),
           ),
         ],

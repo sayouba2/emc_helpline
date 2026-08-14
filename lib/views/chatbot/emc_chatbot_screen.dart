@@ -104,39 +104,90 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
+        titleSpacing: 0,
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.primaryOrange.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: IconUtils.buildIcon(
-                FontAwesomeIcons.robot,
-                color: AppColors.primaryOrange,
-                size: 18,
-              ),
+            // Avatar avec la pastille verte : le statut se lit d'un coup d'œil
+            // avant même la ligne de texte.
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryBlue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconUtils.buildIcon(
+                    FontAwesomeIcons.robot,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                PositionedDirectional(
+                  bottom: 0,
+                  end: 0,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppColors.whatsappGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    l10n.chatbotTitle,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.chatbotTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Les réponses sont scriptées : le badge le dit plutôt
+                      // que de laisser croire à un vrai conseiller.
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.whatsappGreen),
+                        ),
+                        child: Text(
+                          l10n.chatbotBetaBadge,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.whatsappGreen,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   Text(
                     l10n.chatbotStatus,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppColors.whatsappGreen,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -144,53 +195,12 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
             ),
           ],
         ),
-        actions: [
-          // Option pour revenir au formulaire de signalement
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.chatbotBackToFormShort,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-                color: AppColors.primaryOrange,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         top: false,
         bottom: false,
         child: Column(
           children: [
-            // Partner Header Banner
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: AppColors.whatsappBg,
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/cmrpi.png',
-                    height: 20,
-                    width: 20,
-                    errorBuilder: (c, e, s) => const SizedBox(),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.cmrpiPartner,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             // Messages List
             Expanded(
               child: ListView.builder(
