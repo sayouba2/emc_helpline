@@ -22,7 +22,9 @@ android {
         applicationId = "com.emchelpline.emc_helpline"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // firebase_auth requires 23; Flutter's default is lower. Left explicit
+        // rather than inherited, so a Flutter upgrade cannot silently lower it.
+        minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

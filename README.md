@@ -83,8 +83,17 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 | Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
 
 Le backend a commencé : règles fermées, `submitReport` avec idempotence et
-génération du numéro de référence, testés contre l'émulateur. Le plan complet et
-l'état d'avancement sont dans [`docs/backend-plan.md`](docs/backend-plan.md).
+génération du numéro de référence, et le client branché dessus. Le plan complet
+et l'état d'avancement sont dans [`docs/backend-plan.md`](docs/backend-plan.md).
+
+Sans projet Firebase joignable, un build **debug** retombe sur la simulation
+locale et le dit dans les logs ; un build **release** ne le fait jamais — il
+échoue franchement, parce qu'une simulation en production distribuerait un
+numéro de référence pour un signalement parti nulle part.
+
+⚠️ **Les captures d'écran ne partent pas encore** : elles attendent l'étape 4
+(URL de téléversement signées). Un signalement dont c'est la seule preuve est
+refusé par le serveur. À faire avant toute mise en production.
 
 ```bash
 npm install && npm install --prefix functions && npm run test:emulator

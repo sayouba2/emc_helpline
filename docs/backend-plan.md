@@ -263,7 +263,7 @@ replier sur `network`.
 
 ## 9. Où on en est
 
-**Étapes 1 et 2 faites**, dans le dépôt, testées contre l'émulateur.
+**Étapes 1, 2 et 3 faites**, dans le dépôt, testées.
 
 ```
 firestore.rules  storage.rules      tout fermé au client
@@ -271,6 +271,11 @@ firebase.json    .firebaserc        ⚠️ l'ID de projet est un espace réserv�
 functions/src/   config, schema, referenceCode, rateLimit, logging, submitReport
 functions/test/  code de référence, schéma, transaction, limitation de débit
 test/rules/      vérifie que le client ne peut rien lire ni écrire
+
+lib/core/backend/firebase_backend.dart   démarrage, App Check, auth anonyme,
+                                          ReportSubmitter, mappage d'erreurs
+lib/core/backend/report_payload.dart     ReportModel → contrat de transport
+test/backend_contract_test.dart          vérifie l'accord des deux côtés
 ```
 
 ### Lancer
@@ -300,22 +305,47 @@ Rien de tout cela ne peut être fait depuis le dépôt :
    **Pas sur `reports`** tant que la durée de conservation n'est pas arrêtée.
 6. `firebase deploy --only firestore:rules,storage:rules,functions`.
 
-### Étape 3 — brancher le client
+### Étape 3 — le client, branché
 
-Le seul point de contact est le `ReportSubmitter` de
-[`lib/models/submission_outcome.dart`](../lib/models/submission_outcome.dart).
-Il reçoit `(report, idempotencyKey)`, appelle `submitReport`, rend le
-`referenceCode` ou lève une `SubmissionException` selon le tableau du §8.
-Aucun autre fichier Flutter ne change.
+`main()` appelle `initializeBackend()` avant la première frame et passe le
+`ReportSubmitter` obtenu à `ReportProvider`. Aucun écran ne change : le wizard
+appelait déjà `submitReport()`, et l'écran d'erreur réagissait déjà à
+`submissionError`.
 
-Deux points à ne pas rater :
+**Ce que fait le repli, et ce qu'il ne fait pas.** Si Firebase ne démarre pas :
 
-- **`MIN_DESCRIPTION_LENGTH` doit rester égal à
-  `Validators.minDescriptionLength`** (120). S'ils divergent, le client laisse
-  passer un signalement que le serveur refuse, et l'utilisateur voit un échec
-  qu'il ne peut pas corriger.
-- Les noms de membres d'enum voyagent tels quels. Renommer un membre Dart est un
-  changement de contrat.
+| Build | Comportement |
+|---|---|
+| debug | simulation locale, avec un avertissement dans les logs — le frontend reste utilisable sans projet configuré |
+| release | un submitter qui échoue systématiquement |
+
+En release, **jamais la simulation**. Elle distribuerait un numéro de référence
+pour un signalement parti nulle part, et l'enfant repartirait en croyant que de
+l'aide arrive. Un échec franc l'amène sur l'écran d'erreur, avec le réessai et
+la ligne directe de l'équipe.
+
+**Le contrat est tenu par des tests, pas par la vigilance.**
+`test/backend_contract_test.dart` lit `functions/src/schema.ts` et
+`functions/src/config.ts` et compare aux enums Dart et à
+`Validators.minDescriptionLength`. Renommer un membre d'enum d'un seul côté, ou
+changer 120 d'un seul côté, fait échouer la suite Flutter.
+
+### ⚠️ Ce qui manque avant de viser la production
+
+**Les captures d'écran ne peuvent pas encore être envoyées.**
+`ReportModel.evidenceFilePaths` contient des chemins sur le téléphone ; le
+serveur n'accepte que des chemins d'objet délivrés par
+`requestEvidenceUploadUrl`, qui est l'étape 4. Le client envoie donc
+`evidencePaths: []`.
+
+Conséquence concrète : **un signalement dont la seule preuve est une capture est
+refusé par le serveur**, et l'utilisateur voit un échec qu'il ne peut pas
+corriger. `needsEvidenceUpload()` identifie exactement ces signalements — la
+fonction existe pour que le trou soit visible dans le code plutôt que découvert
+en production.
+
+L'étape 4 doit donc précéder toute mise en production. Un lien ou un récit d'au
+moins 120 caractères passent, eux, dès maintenant.
 
 ---
 

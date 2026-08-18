@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'core/backend/firebase_backend.dart';
 import 'core/constants/app_colors.dart';
 import 'core/storage/settings_store.dart';
+import 'models/submission_outcome.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/report_provider.dart';
 import 'views/splash_screen.dart';
@@ -15,18 +17,29 @@ Future<void> main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(EMCHelplineApp(settings: await SettingsStore.open()));
+  // Before the first frame: the wizard needs to know where a report goes the
+  // moment it can be filled in. In debug this may come back `null`, which runs
+  // the app on its local simulation — see `initializeBackend`.
+  final submitter = await initializeBackend();
+
+  runApp(
+    EMCHelplineApp(settings: await SettingsStore.open(), submitter: submitter),
+  );
 }
 
 class EMCHelplineApp extends StatelessWidget {
-  const EMCHelplineApp({super.key, required this.settings});
+  const EMCHelplineApp({super.key, required this.settings, this.submitter});
 
   final SettingsStore settings;
+
+  /// How a report leaves the device. `null` uses the built-in simulation, which
+  /// is what the widget tests run on — they must not touch the network.
+  final ReportSubmitter? submitter;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ReportProvider(settings),
+      create: (_) => ReportProvider(settings, submitter: submitter),
       child: Consumer<ReportProvider>(
         builder: (context, reportProvider, _) {
           return MaterialApp(
