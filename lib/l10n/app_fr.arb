@@ -403,5 +403,31 @@
   "legalDraftNotice": "Ce texte est un brouillon. Les passages marqués doivent être validés par le CMRPI et un juriste avant toute publication.",
   "@legalDraftNotice": {
     "description": "Shown at the top of a legal document while it still contains placeholders"
-  }
+  },
+  "submissionErrorTitle": "Ton signalement n'est pas parti",
+  "@submissionErrorTitle": {
+    "description": "Title of the screen shown when sending a report failed"
+  },
+  "submissionErrorNetwork": "Ton téléphone n'est pas connecté à internet. Vérifie le wifi ou les données mobiles, puis réessaie.",
+  "submissionErrorServer": "Nos serveurs n'ont pas pu enregistrer ton signalement. Ce n'est pas de ta faute : réessaie dans un moment.",
+  "submissionErrorTimeout": "La réponse n'est pas arrivée à temps. Ton signalement est peut-être déjà enregistré : réessaie, il ne sera pas compté deux fois.",
+  "@submissionErrorTimeout": {
+    "description": "A timeout may hide a success. The idempotency key makes the retry safe, and the wording says so."
+  },
+  "submissionErrorUnknown": "Une erreur inattendue s'est produite pendant l'envoi.",
+  "submissionErrorAnswersKept": "Tes réponses sont conservées. Rien de ce que tu as écrit n'a été perdu.",
+  "submissionErrorRetry": "Réessayer",
+  "submissionErrorReview": "Revoir mon signalement",
+  "submissionErrorPersistTitle": "Ça ne passe toujours pas ?",
+  "@submissionErrorPersistTitle": {
+    "description": "Heading of the fallback card, shown only after repeated failures"
+  },
+  "submissionErrorPersistBody": "Tu peux joindre l'équipe directement, elle prendra ton signalement autrement. Et si tu es en danger maintenant, appelle la Police (19) sans attendre.",
+  "submissionErrorContactTeam": "Contacter l'équipe",
+  "submissionErrorCallPolice": "Appeler la Police (19)",
+  "reportLandingResume": "Reprendre l'envoi",
+  "@reportLandingResume": {
+    "description": "Landing card offered when a completed report failed to send"
+  },
+  "reportLandingResumeSubtitle": "Ton dernier signalement n'est pas parti. Tes réponses sont toujours là."
 }

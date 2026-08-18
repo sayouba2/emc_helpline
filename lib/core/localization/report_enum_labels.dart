@@ -1,6 +1,7 @@
 import '../../l10n/app_localizations.dart';
 import '../utils/validators.dart';
 import '../../models/report_enums.dart';
+import '../../models/submission_outcome.dart';
 
 /// Localised display names for the report enums.
 ///
@@ -97,5 +98,16 @@ extension ValidationMessageLabel on ValidationMessage {
     ValidationMessage.missingPhone => l10n.validationPhone,
     ValidationMessage.invalidPhone => l10n.validationInvalidPhone,
     ValidationMessage.invalidUrl => l10n.validationInvalidUrl,
+  };
+}
+
+extension SubmissionFailureLabel on SubmissionFailure {
+  /// What the user is told went wrong. Each one ends on what to do next, since
+  /// the screen it lands on has a retry button right underneath.
+  String text(AppLocalizations l10n) => switch (this) {
+    SubmissionFailure.network => l10n.submissionErrorNetwork,
+    SubmissionFailure.server => l10n.submissionErrorServer,
+    SubmissionFailure.timeout => l10n.submissionErrorTimeout,
+    SubmissionFailure.unknown => l10n.submissionErrorUnknown,
   };
 }

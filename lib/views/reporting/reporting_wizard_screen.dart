@@ -12,6 +12,7 @@ import '../components/stepper_widget.dart';
 import 'report_landing_screen.dart';
 import 'report_success_screen.dart';
 import 'sending_screen.dart';
+import 'submission_error_screen.dart';
 import 'steps/step00_who.dart';
 import 'steps/step01_age.dart';
 import 'steps/step02_gender.dart';
@@ -41,6 +42,14 @@ class ReportingWizardScreen extends StatelessWidget {
 
     if (!reportProvider.isWizardOpen) return const ReportLandingScreen();
     if (reportProvider.isSubmitting) return const SendingScreen();
+
+    // A failed send replaces the form rather than dropping a snackbar over it:
+    // the user has to decide what to do next, and the answers are held until
+    // they do.
+    final submissionError = reportProvider.submissionError;
+    if (submissionError != null) {
+      return SubmissionErrorScreen(failure: submissionError);
+    }
 
     final submittedRefCode = reportProvider.submittedRefCode;
     if (submittedRefCode != null) {

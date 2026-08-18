@@ -267,5 +267,19 @@
   "termsLiabilityTitle": "Liability",
   "termsLiabilityBody": "⚠️ TO BE COMPLETED BY CMRPI — app publisher, limitation of liability, governing law and competent jurisdiction.",
   "aboutBody": "EMC Helpline is developed in partnership with CMRPI (Moroccan Center for Multidisciplinary Research & Innovation).",
-  "legalDraftNotice": "This text is a draft. The marked passages must be approved by CMRPI and a lawyer before release."
+  "legalDraftNotice": "This text is a draft. The marked passages must be approved by CMRPI and a lawyer before release.",
+  "submissionErrorTitle": "Your report did not go through",
+  "submissionErrorNetwork": "Your phone is not connected to the internet. Check your wifi or mobile data, then try again.",
+  "submissionErrorServer": "Our servers could not record your report. This is not your fault — try again in a moment.",
+  "submissionErrorTimeout": "No answer came back in time. Your report may already be recorded: try again, it will not be counted twice.",
+  "submissionErrorUnknown": "Something unexpected went wrong while sending.",
+  "submissionErrorAnswersKept": "Your answers are kept. Nothing you wrote has been lost.",
+  "submissionErrorRetry": "Try again",
+  "submissionErrorReview": "Review my report",
+  "submissionErrorPersistTitle": "Still not going through?",
+  "submissionErrorPersistBody": "You can reach the team directly and they will take your report another way. And if you are in danger right now, call the Police (19) without waiting.",
+  "submissionErrorContactTeam": "Contact the team",
+  "submissionErrorCallPolice": "Call the Police (19)",
+  "reportLandingResume": "Resume sending",
+  "reportLandingResumeSubtitle": "Your last report did not go through. Your answers are still there."
 }

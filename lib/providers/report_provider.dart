@@ -4,18 +4,25 @@ import '../core/storage/settings_store.dart';
 import '../core/utils/validators.dart';
 import '../models/report_enums.dart';
 import '../models/report_model.dart';
+import '../models/submission_outcome.dart';
 
 class ReportProvider with ChangeNotifier {
   ReportProvider(
     this._settings, {
     this.submissionLatency = const Duration(milliseconds: 1600),
+    this.submitter,
   }) : _locale = _settings.readLocale();
 
   final SettingsStore _settings;
 
-  /// Stands in for the round trip to the server, so the sending animation has
-  /// something to cover. Replace it with the real call — the UI already reacts
-  /// to [isSubmitting] and needs no change. Tests pass [Duration.zero].
+  /// How the report actually leaves the device. `null` uses the local
+  /// simulation below — the backend passes its own implementation here, and
+  /// tests pass one that throws.
+  final ReportSubmitter? submitter;
+
+  /// How long the simulated send takes, so the sending animation has something
+  /// to cover. Unused once a real [ReportSubmitter] is injected. Tests pass
+  /// [Duration.zero].
   final Duration submissionLatency;
 
   /// Wizard sub-step indices, in the same order as the step list built by
@@ -39,6 +46,13 @@ class ReportProvider with ChangeNotifier {
   String? _submittedRefCode;
   bool _isSubmitting = false;
   bool _isWizardOpen = false;
+  SubmissionFailure? _submissionError;
+  int _failedAttempts = 0;
+
+  /// Identifies the report across retries — see [SubmissionAttempt]. Created on
+  /// the first attempt and kept until that report is filed or abandoned, so a
+  /// retry after a timeout cannot open a second case.
+  String? _idempotencyKey;
 
   ReportModel _currentReport = const ReportModel();
   final List<ReportModel> _history = [];
@@ -62,6 +76,24 @@ class ReportProvider with ChangeNotifier {
 
   /// True while the report is on its way. The wizard shows a sending screen.
   bool get isSubmitting => _isSubmitting;
+
+  /// Why the last attempt failed, or `null` when nothing has failed. The wizard
+  /// shows the error screen while this is set.
+  SubmissionFailure? get submissionError => _submissionError;
+
+  /// How many attempts in a row have failed. After the second, the error screen
+  /// stops suggesting that retrying will help and offers the direct line
+  /// instead — a child whose report is stuck should not be left pressing a
+  /// button.
+  int get failedAttempts => _failedAttempts;
+
+  /// A complete report that failed to send and has not been abandoned.
+  ///
+  /// The landing screen offers to resume it, because [startNewReport] wipes the
+  /// answers: without this, navigating away from the error screen and tapping
+  /// "Faire un signalement" would silently discard everything the user wrote.
+  bool get hasUnsentReport =>
+      _submissionError != null && _idempotencyKey != null;
 
   /// Whether the report tab shows the form or its landing screen.
   ///
@@ -240,7 +272,33 @@ class ReportProvider with ChangeNotifier {
     _wizardStep = stepWho;
     _currentTab = 1;
     _submittedRefCode = null;
+    _clearSubmissionState();
     notifyListeners();
+  }
+
+  /// Reopens the summary of a report whose send failed, answers intact.
+  void resumeUnsentReport() {
+    _isWizardOpen = true;
+    _currentTab = 1;
+    _wizardStep = stepSummary;
+    _submissionError = null;
+    notifyListeners();
+  }
+
+  /// Leaves the error screen for the summary, so the user can check or change
+  /// an answer before trying again. The idempotency key survives: it is still
+  /// the same report.
+  void dismissSubmissionError() {
+    if (_submissionError == null) return;
+    _submissionError = null;
+    _wizardStep = stepSummary;
+    notifyListeners();
+  }
+
+  void _clearSubmissionState() {
+    _submissionError = null;
+    _failedAttempts = 0;
+    _idempotencyKey = null;
   }
 
   /// The enum-typed arguments can only be set, never cleared. The free-text
@@ -279,27 +337,67 @@ class ReportProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sends the report, or records why it could not be sent.
+  ///
+  /// Never throws: a failure becomes [submissionError], which the wizard turns
+  /// into the error screen. Calling it again is the retry — the answers are
+  /// untouched and the attempt carries the same [_idempotencyKey].
   Future<String?> submitReport() async {
     if (!isReportComplete || _isSubmitting) return null;
 
     _isSubmitting = true;
+    _submissionError = null;
+    _idempotencyKey ??= _newIdempotencyKey();
     notifyListeners();
 
+    try {
+      final send = submitter ?? _simulateSubmission;
+      final code = await send((
+        report: _currentReport,
+        idempotencyKey: _idempotencyKey!,
+      ));
+
+      _currentReport = _currentReport.copyWith(
+        referenceCode: code,
+        createdAt: DateTime.now(),
+      );
+      _history.insert(0, _currentReport);
+      _submittedRefCode = code;
+      _clearSubmissionState();
+      return code;
+    } on SubmissionException catch (error) {
+      _submissionError = error.failure;
+      _failedAttempts++;
+      return null;
+    } catch (_) {
+      // A transport that throws something else is a bug, but the user still
+      // gets a screen they can act on rather than a frozen animation.
+      _submissionError = SubmissionFailure.unknown;
+      _failedAttempts++;
+      return null;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  /// Stands in for the server until the backend exists. It always succeeds —
+  /// the failure paths are exercised by injecting a [ReportSubmitter].
+  Future<String> _simulateSubmission(SubmissionAttempt attempt) async {
     await Future<void>.delayed(submissionLatency);
-
     final randNum = Random().nextInt(900000) + 100000;
-    final code = "REF-EMC-2026-$randNum";
+    return 'REF-EMC-2026-$randNum';
+  }
 
-    _currentReport = _currentReport.copyWith(
-      referenceCode: code,
-      createdAt: DateTime.now(),
-    );
-
-    _history.insert(0, _currentReport);
-    _submittedRefCode = code;
-    _isSubmitting = false;
-    notifyListeners();
-    return code;
+  /// Unique enough to deduplicate retries of one report; the server is what
+  /// enforces it, this only has to stay stable across attempts.
+  String _newIdempotencyKey() {
+    final random = Random();
+    final suffix = List.generate(
+      4,
+      (_) => random.nextInt(0x10000).toRadixString(16).padLeft(4, '0'),
+    ).join();
+    return '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}-$suffix';
   }
 
   /// Adds screenshots to the evidence, ignoring the ones already attached so a

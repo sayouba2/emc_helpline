@@ -22,7 +22,9 @@ class ReportLandingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ReportProvider>(context, listen: false);
+    // Listening, not just reading: the resume card below appears and vanishes
+    // with the provider's state.
+    final provider = Provider.of<ReportProvider>(context);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -44,12 +46,26 @@ class ReportLandingScreen extends StatelessWidget {
               style: AppTextStyles.screenSubtitle,
             ),
             const SizedBox(height: 32),
+            // Only when a finished report failed to send. It comes first and
+            // stays orange because "Faire un signalement" just below wipes the
+            // answers — the recovery has to be the more obvious of the two.
+            if (provider.hasUnsentReport) ...[
+              _ActionCard(
+                icon: FontAwesomeIcons.rotateRight,
+                title: l10n.reportLandingResume,
+                subtitle: l10n.reportLandingResumeSubtitle,
+                accent: AppColors.primaryOrange,
+                isPrimary: true,
+                onTap: provider.resumeUnsentReport,
+              ),
+              const SizedBox(height: 16),
+            ],
             _ActionCard(
               icon: FontAwesomeIcons.fileShield,
               title: l10n.reportLandingNew,
               subtitle: l10n.reportLandingNewSubtitle,
               accent: AppColors.primaryOrange,
-              isPrimary: true,
+              isPrimary: !provider.hasUnsentReport,
               onTap: provider.startNewReport,
             ),
             const SizedBox(height: 16),

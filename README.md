@@ -77,10 +77,44 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 
 | À remplacer | Où |
 |---|---|
-| Envoi du signalement | `ReportProvider.submitReport()` — le délai simulé `submissionLatency` devient l'appel réseau, l'écran d'envoi animé réagit déjà à `isSubmitting` |
+| Envoi du signalement | injecter un `ReportSubmitter` dans `ReportProvider` — voir « Envoi et échec » ci-dessous |
 | Suivi d'une demande | `ReportProvider.findByReference()` — lit l'historique de session, deviendra une requête serveur |
-| Numéro de référence | généré avec `Random()` côté client, devra venir du serveur |
+| Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
 | Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
+
+### Envoi et échec
+
+`ReportProvider` ne sait pas comment un signalement part. Il appelle un
+[`ReportSubmitter`](lib/models/submission_outcome.dart) — une fonction qui reçoit
+le rapport et rend le numéro de référence, ou lève une `SubmissionException`.
+Sans implémentation injectée, une simulation locale prend le relais. Le backend
+n'a donc qu'un seul point à brancher, et les tests injectent des pannes plutôt
+que de faire semblant.
+
+**Un échec ne peut pas passer inaperçu.** `submitReport()` ne lève jamais : il
+enregistre un `SubmissionFailure`, et le wizard remplace le formulaire par
+[`SubmissionErrorScreen`](lib/views/reporting/submission_error_screen.dart).
+Écrire « ton signalement n'est pas parti » importe plus qu'ailleurs : sans cet
+écran, un enfant conclurait soit que l'app est cassée, soit — bien pire — que
+son signalement est arrivé.
+
+**Réessayer ne coûte rien et ne duplique rien.** Les réponses restent en place,
+et l'écran le dit avant de proposer le bouton : la crainte de refaire onze
+étapes est ce qui dissuade de réessayer. Chaque tentative porte la même clé
+d'idempotence, créée une fois par signalement. Un envoi qui expire alors que le
+serveur avait déjà enregistré ne peut donc pas ouvrir un second dossier — un
+doublon ici, c'est une deuxième personne qui passe du temps sur un incident déjà
+traité. **Le serveur devra faire respecter cette clé** ; le client ne fait que la
+transmettre inchangée.
+
+Après deux échecs consécutifs, l'écran cesse de suggérer que réessayer suffira
+et propose la ligne directe de l'équipe ainsi que la Police (19). Un signalement
+qui ne part pas n'est pas qu'une panne technique : c'est que personne n'est au
+courant.
+
+Enfin, un signalement complet dont l'envoi a échoué reste récupérable depuis
+l'écran de choix (« Reprendre l'envoi »). Sans cela, quitter l'écran d'erreur
+puis toucher « Faire un signalement » effacerait tout en silence.
 
 ## Démarrer
 

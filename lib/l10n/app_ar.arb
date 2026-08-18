@@ -267,5 +267,19 @@
   "termsLiabilityTitle": "المسؤولية",
   "termsLiabilityBody": "⚠️ ليُستكمل من طرف CMRPI — ناشر التطبيق، وحدود المسؤولية، والقانون الواجب التطبيق والمحكمة المختصة.",
   "aboutBody": "تم تطوير خط المساعدة EMC بشراكة مع المركز المغربي للأبحاث المتعددة التخصصات والابتكار (CMRPI).",
-  "legalDraftNotice": "هذا النص مسودة. يجب اعتماد المقاطع المعلَّمة من طرف CMRPI ومستشار قانوني قبل أي نشر."
+  "legalDraftNotice": "هذا النص مسودة. يجب اعتماد المقاطع المعلَّمة من طرف CMRPI ومستشار قانوني قبل أي نشر.",
+  "submissionErrorTitle": "لم يُرسَل بلاغك",
+  "submissionErrorNetwork": "هاتفك غير متصل بالإنترنت. تحقق من الواي فاي أو بيانات الهاتف ثم أعد المحاولة.",
+  "submissionErrorServer": "لم تتمكن خوادمنا من تسجيل بلاغك. الخطأ ليس منك: أعد المحاولة بعد قليل.",
+  "submissionErrorTimeout": "لم يصل الرد في الوقت المناسب. قد يكون بلاغك مسجلاً بالفعل: أعد المحاولة، ولن يُحتسب مرتين.",
+  "submissionErrorUnknown": "حدث خطأ غير متوقع أثناء الإرسال.",
+  "submissionErrorAnswersKept": "إجاباتك محفوظة. لم يضع أي شيء مما كتبته.",
+  "submissionErrorRetry": "إعادة المحاولة",
+  "submissionErrorReview": "مراجعة بلاغي",
+  "submissionErrorPersistTitle": "ما زال الإرسال متعذراً؟",
+  "submissionErrorPersistBody": "يمكنك الاتصال بالفريق مباشرة وسيتلقى بلاغك بطريقة أخرى. وإذا كنت في خطر الآن، اتصل بالشرطة (19) دون انتظار.",
+  "submissionErrorContactTeam": "الاتصال بالفريق",
+  "submissionErrorCallPolice": "الاتصال بالشرطة (19)",
+  "reportLandingResume": "استئناف الإرسال",
+  "reportLandingResumeSubtitle": "لم يُرسَل بلاغك الأخير. إجاباتك ما زالت محفوظة."
 }
