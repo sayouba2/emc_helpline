@@ -9,6 +9,7 @@ import '../../providers/report_provider.dart';
 import '../chatbot/emc_chatbot_screen.dart';
 import '../components/glass_container.dart';
 import '../components/scrollable_page.dart';
+import 'notification_offer_card.dart';
 
 class ReportSuccessScreen extends StatelessWidget {
   final String referenceCode;
@@ -132,6 +133,10 @@ class ReportSuccessScreen extends StatelessWidget {
                 ],
               ),
             ),
+            // Offered here because this is the only moment the app knows
+            // the reference number — it is never written to the device.
+            const SizedBox(height: 16),
+            NotificationOfferCard(referenceCode: referenceCode),
             if (reportProvider.currentReport.ageGroup?.isChatbotEligible ??
                 false) ...[
               const SizedBox(height: 16),

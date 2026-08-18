@@ -29,6 +29,19 @@ export const MAX_PHONE_DIGITS = 15;
  */
 export const IDEMPOTENCY_TTL_DAYS = 30;
 
+/**
+ * How long a case is kept, counted from its last activity.
+ *
+ * Thirty days, as decided by CMRPI. It is a **sliding** window: filing a report
+ * sets it, and every status change pushes it out again. A fixed thirty days
+ * from creation would delete a case while someone was still working on it,
+ * which is the one failure mode a retention policy must not have.
+ *
+ * A case that nobody touches for thirty days disappears — the report, its
+ * screenshots, and the reference number's ability to find anything.
+ */
+export const REPORT_RETENTION_DAYS = 30;
+
 /** Rate limits, per anonymous device UID. See docs/backend-plan.md §5. */
 export const RATE_LIMITS = {
   submitReportHourly: { limit: 5, windowSeconds: 60 * 60 },
@@ -36,6 +49,9 @@ export const RATE_LIMITS = {
   uploadUrlHourly: { limit: 20, windowSeconds: 60 * 60 },
   trackReportHourly: { limit: 10, windowSeconds: 60 * 60 },
 } as const;
+
+/** Who may reach the team console. Carried as a custom claim on the account. */
+export const AGENT_ROLE = "agent";
 
 /** Evidence lives under this prefix and nowhere else. */
 export const EVIDENCE_PREFIX = "evidence";
@@ -65,6 +81,8 @@ export const COLLECTIONS = {
   /** Doc id is the SHA-256 of the reference payload — see referenceCode.ts. */
   referenceIndex: "referenceIndex",
   rateLimits: "rateLimits",
+  /** Every agent action on a case. Never deleted with the case. */
+  auditLog: "auditLog",
 } as const;
 
 /** Every state a case can be in. `trackReport` returns one of these verbatim. */

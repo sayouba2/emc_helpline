@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/backend/case_notifications.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../l10n/app_localizations.dart';
+import '../../providers/report_provider.dart';
 import '../components/language_picker.dart';
 import '../components/scrollable_page.dart';
 import 'legal_document_screen.dart';
@@ -51,6 +54,10 @@ class SettingsScreen extends StatelessWidget {
                 trailing: language,
                 onTap: () => showLanguagePicker(context),
               ),
+              const SizedBox(height: 24),
+
+              _SectionLabel(text: l10n.notifySettingsTitle),
+              const _NotificationSwitch(),
               const SizedBox(height: 24),
 
               _SectionLabel(text: l10n.settingsData),
@@ -175,6 +182,89 @@ class _SectionLabel extends StatelessWidget {
           fontWeight: FontWeight.w800,
           letterSpacing: 0.8,
           color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Turns every notification off on this device.
+///
+/// One way only, and that is deliberate. Turning them *on* needs a reference
+/// number, which the app never keeps — so it can only be done from the screen
+/// where the number is. Turning them off needs nothing: discarding the FCM
+/// token drops every topic this device was subscribed to, without the app ever
+/// having written down which ones they were.
+class _NotificationSwitch extends StatefulWidget {
+  const _NotificationSwitch();
+
+  @override
+  State<_NotificationSwitch> createState() => _NotificationSwitchState();
+}
+
+class _NotificationSwitchState extends State<_NotificationSwitch> {
+  bool _busy = false;
+
+  Future<void> _turnOff(ReportProvider provider) async {
+    setState(() => _busy = true);
+    try {
+      await CaseNotifications().disableAll();
+    } catch (_) {
+      // Firebase may not be configured at all in a debug build. The preference
+      // still flips: what the user asked for is recorded either way.
+    }
+    if (!mounted) return;
+    await provider.setNotificationsEnabled(false);
+    if (!mounted) return;
+    setState(() => _busy = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final provider = Provider.of<ReportProvider>(context);
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconUtils.buildIcon(
+                  FontAwesomeIcons.bellSlash,
+                  color: AppColors.primaryBlue,
+                  size: 17,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    l10n.notifySettingsSubtitle,
+                    style: AppTextStyles.cardTitle.copyWith(fontSize: 14),
+                  ),
+                ),
+                Switch(
+                  value: provider.notificationsEnabled,
+                  onChanged: _busy || !provider.notificationsEnabled
+                      ? null
+                      : (_) => _turnOff(provider),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              provider.notificationsEnabled
+                  ? l10n.notifySettingsBody
+                  : l10n.notifyDisabled,
+              style: AppTextStyles.cardSubtitle.copyWith(
+                fontSize: 12.5,
+                height: 1.35,
+              ),
+            ),
+          ],
         ),
       ),
     );

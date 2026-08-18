@@ -10,6 +10,7 @@ import 'package:emc_helpline/core/utils/validators.dart';
 import 'package:emc_helpline/models/report_enums.dart';
 import 'package:emc_helpline/models/report_model.dart';
 import 'package:emc_helpline/models/submission_outcome.dart';
+import 'package:emc_helpline/models/tracking_outcome.dart';
 
 const _complete = ReportModel(
   whoFor: WhoFor.self,
@@ -134,6 +135,24 @@ void main() {
         );
       },
     );
+
+    // The console can only set a status the app knows how to display; a fifth
+    // one added server-side would leave users reading "statut mis à jour" and
+    // nothing else.
+    test('knows every status the console can set', () {
+      final config = File('functions/src/config.ts').readAsStringSync();
+      final block = RegExp(
+        r'REPORT_STATUSES = \[(.*?)\] as const;',
+        dotAll: true,
+      ).firstMatch(config);
+
+      expect(block, isNotNull);
+      final declared = RegExp(
+        '"([^"]+)"',
+      ).allMatches(block!.group(1)!).map((m) => m.group(1)!).toList();
+
+      expect(declared, ReportStatus.values.map((v) => v.name).toList());
+    });
 
     test(
       'the description length the server enforces is the one we enforce',

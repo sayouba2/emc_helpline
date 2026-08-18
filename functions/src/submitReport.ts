@@ -7,6 +7,7 @@ import {
   IDEMPOTENCY_TTL_DAYS,
   RATE_LIMITS,
   REGION,
+  REPORT_RETENTION_DAYS,
 } from "./config.js";
 import { verifyEvidence } from "./evidence.js";
 import { issuePaths, logEvent, logProblem } from "./logging.js";
@@ -101,6 +102,9 @@ export async function submitReportCore(
     const idempotencyExpiry = Timestamp.fromMillis(
       now.getTime() + IDEMPOTENCY_TTL_DAYS * 24 * 60 * 60 * 1000,
     );
+    const retentionExpiry = Timestamp.fromMillis(
+      now.getTime() + REPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+    );
 
     // The three writes are one transaction on purpose. A report without its
     // index entry is a case nobody can look up; an index entry without its
@@ -110,12 +114,16 @@ export async function submitReportCore(
       ...report,
       status: "received",
       createdAt,
-      // No `expiresAt`: the retention period is a decision for CMRPI, and a TTL
-      // policy invented here would quietly start deleting evidence.
+      // Swept by a Firestore TTL policy. Pushed out again on every status
+      // change — see `setReportStatus`.
+      expiresAt: retentionExpiry,
     });
     tx.set(db.collection(COLLECTIONS.referenceIndex).doc(hash), {
       reportId: reportRef.id,
       createdAt,
+      // Kept in step with the report, so the index cannot outlive what it
+      // points at and turn every lookup into a dangling entry.
+      expiresAt: retentionExpiry,
     });
     tx.set(idempotencyRef, {
       reportId: reportRef.id,

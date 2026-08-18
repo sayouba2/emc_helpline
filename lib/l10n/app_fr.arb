@@ -449,5 +449,21 @@
   "@trackRequestUnavailable": {
     "description": "The lookup failed. Says nothing about whether the case exists — that distinction matters here."
   },
-  "trackRequestRetry": "Réessayer"
+  "trackRequestRetry": "Réessayer",
+  "notifyOfferTitle": "Être prévenu",
+  "@notifyOfferTitle": {
+    "description": "Offer shown on the success screen, after the reference number"
+  },
+  "notifyOfferBody": "L'application peut te prévenir quand ton dossier avance, pour que tu n'aies pas à revenir vérifier.",
+  "notifyWarning": "Avant d'accepter : si quelqu'un d'autre se sert de ton téléphone, il verra apparaître un message d'EMC Helpline. Le message ne dira rien de ton signalement, mais il sera visible.",
+  "@notifyWarning": {
+    "description": "The shared-phone risk, stated plainly. This app is used by children whose phone is often shared with the person they are reporting."
+  },
+  "notifyEnable": "M'avertir",
+  "notifyEnabled": "Tu seras prévenu. Le message restera vague : il faudra ouvrir l'application avec ton numéro pour en savoir plus.",
+  "notifyRefused": "Ton téléphone a refusé les notifications. Tu peux les autoriser dans ses réglages, puis réessayer.",
+  "notifySettingsTitle": "Notifications",
+  "notifySettingsSubtitle": "Tout désactiver sur cet appareil",
+  "notifySettingsBody": "Quand tu désactives, cet appareil cesse de recevoir toute notification, pour tous tes dossiers. Tu pourras toujours suivre un dossier avec son numéro de référence.",
+  "notifyDisabled": "Les notifications sont désactivées sur cet appareil."
 }

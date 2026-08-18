@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// so leaving a readable trail on the device is a safety risk, not a feature.
 class SettingsStore {
   static const String _localeKey = 'settings.localeLanguageCode';
+  static const String _notificationsKey = 'settings.notificationsEnabled';
 
   const SettingsStore(this._prefs);
 
@@ -29,5 +30,16 @@ class SettingsStore {
     } else {
       await _prefs.setString(_localeKey, locale.languageCode);
     }
+  }
+
+  /// Whether the user asked to be told when a case moves.
+  ///
+  /// A preference, not a record: it says nothing about which case, or that
+  /// there is one. Off by default — a notification is the one thing this app
+  /// does that shows up on a lock screen somebody else might be reading.
+  bool readNotificationsEnabled() => _prefs.getBool(_notificationsKey) ?? false;
+
+  Future<void> writeNotificationsEnabled(bool enabled) async {
+    await _prefs.setBool(_notificationsKey, enabled);
   }
 }

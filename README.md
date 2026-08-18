@@ -98,6 +98,16 @@ Les captures d'écran passent par une URL signée délivrée pour un objet, un t
 et quelques minutes ; le bucket n'est jamais ouvert en écriture. Un réessai
 renvoie le signalement, pas les captures.
 
+Un dossier est conservé **30 jours après sa dernière activité** : le dépôt lance
+le compte, chaque changement de statut le relance. Sa suppression emporte les
+captures. L'équipe travaille dans une console web séparée (`console/`), où
+chaque ouverture de dossier est journalisée avec l'adresse de l'agent.
+
+Les notifications sont **désactivées par défaut** et ne s'activent que depuis
+l'écran qui affiche le numéro de référence. Le message n'apprend rien à qui lit
+l'écran verrouillé, et aucun appareil n'est enregistré en face d'un dossier —
+voir [`docs/backend-plan.md`](docs/backend-plan.md) §12.
+
 ```bash
 npm install && npm install --prefix functions && npm run test:emulator
 ```

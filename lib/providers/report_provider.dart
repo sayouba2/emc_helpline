@@ -13,7 +13,8 @@ class ReportProvider with ChangeNotifier {
     this.submissionLatency = const Duration(milliseconds: 1600),
     this.submitter,
     this.lookup,
-  }) : _locale = _settings.readLocale();
+  }) : _locale = _settings.readLocale(),
+       _notificationsEnabled = _settings.readNotificationsEnabled();
 
   final SettingsStore _settings;
 
@@ -46,6 +47,7 @@ class ReportProvider with ChangeNotifier {
   static const int stepUrgency = 9;
   static const int stepSummary = 10;
 
+  bool _notificationsEnabled = false;
   int _currentTab = 0;
   int _wizardStep = 0;
   Locale? _locale;
@@ -64,6 +66,10 @@ class ReportProvider with ChangeNotifier {
   final List<ReportModel> _history = [];
 
   int get currentTab => _currentTab;
+
+  /// Whether this device asked to be told when a case moves. A preference, not
+  /// a record — it says nothing about which case, or that there is one.
+  bool get notificationsEnabled => _notificationsEnabled;
   int get wizardStep => _wizardStep;
 
   /// The language the user explicitly picked, or `null` to follow the device.
@@ -230,6 +236,12 @@ class ReportProvider with ChangeNotifier {
   void setTab(int tabIndex) {
     _currentTab = tabIndex;
     notifyListeners();
+  }
+
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    _notificationsEnabled = enabled;
+    notifyListeners();
+    await _settings.writeNotificationsEnabled(enabled);
   }
 
   void setLocale(Locale locale) {

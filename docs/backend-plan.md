@@ -69,7 +69,7 @@ UID ne vit que dans les compteurs, avec un TTL court.
 
 ```
 reports/{reportId}
-  status           string   received | in_review | contacted | closed
+  status           string   received | inReview | contacted | closed
   whoFor, ageGroup, gender, incidentType, platform,
   assistanceNeeded, assistanceType, urgencyLevel   string (valeurs d'enum Dart)
   description      string?
@@ -78,10 +78,17 @@ reports/{reportId}
   pseudo           string?  seulement si accompagnement demandé
   contactPhone     string?  idem
   createdAt        timestamp
+  expiresAt        timestamp  ← politique TTL Firestore, 30 jours glissants
 
 referenceIndex/{sha256}
   reportId         string
   createdAt        timestamp
+  expiresAt        timestamp  ← tenu en phase avec le dossier
+
+auditLog/{auto}
+  action           string   read | status | delete
+  reportId, agentUid, agentEmail, from, to, at
+  (aucun contenu de signalement ; survit au dossier)
 
 idempotency/{key}
   reportId         string
@@ -112,9 +119,18 @@ recherche par code impossible, ce qui est tout l'objet.
 Corollaire à assumer : **un code perdu est un dossier perdu**. C'est déjà ce que
 dit l'écran de suivi, et c'est le prix de l'anonymat.
 
-`reports` ne porte pas d'`expiresAt` : la durée de conservation est une décision
-du CMRPI, et une politique TTL inventée ici se mettrait à supprimer des preuves
-en silence.
+**La conservation est de 30 jours glissants**, décidée par le CMRPI. Le dépôt
+la fixe, et **chaque changement de statut la repousse**. Trente jours fixes
+depuis la création supprimeraient un dossier pendant qu'on l'instruit, ce qui est
+le seul comportement qu'une politique de conservation ne doit pas avoir. La
+console affiche le compte à rebours, en rouge sous sept jours.
+
+**Le TTL Firestore ne connaît pas Cloud Storage.** Sans le déclencheur
+`onReportDeleted`, la politique supprimerait le dossier et laisserait les
+captures — des photographies de l'agression d'un enfant — dans le bucket, pour
+toujours, détachées de l'enregistrement qui expliquait leur présence. La version
+silencieuse de cette panne est la dangereuse : depuis Firestore, tout a l'air
+conforme.
 
 ---
 
@@ -282,7 +298,7 @@ longtemps et sort du périmètre pensé pour ces données.
 4. `requestEvidenceUploadUrl` + téléversement client.
 5. `trackReport` + limitation de débit.
 6. Politiques TTL, une fois la durée de conservation arrêtée.
-7. Console équipe. **← prochaine**
+7. Console équipe.
 
 Aux étapes 2 et 3, l'application est déjà utilisable de bout en bout, sans
 preuves ni suivi. C'est le premier jalon qui vaut d'être testé en vrai.
@@ -311,7 +327,7 @@ replier sur `network`.
 
 ## 9. Où on en est
 
-**Étapes 1 à 5 faites**, dans le dépôt, testées.
+**Étapes 1 à 6 faites**, dans le dépôt, testées.
 
 ```
 firestore.rules  storage.rules      tout fermé au client
@@ -325,8 +341,13 @@ lib/core/backend/firebase_backend.dart   démarrage, App Check, auth anonyme,
 lib/core/backend/report_payload.dart     ReportModel → contrat de transport
 lib/core/backend/evidence_uploader.dart  téléversement par URL signée
 lib/models/tracking_outcome.dart         les quatre issues d'une recherche
+lib/core/backend/case_notifications.dart abonnement FCM par sujet
 test/backend_contract_test.dart          vérifie l'accord des deux côtés
 test/evidence_uploader_test.dart         transferts, cache de réessai, échecs
+test/notifications_test.dart             sujet, permission, avertissement
+
+console/                                 console équipe (Firebase Hosting)
+functions/scripts/grant-agent.ts         donne ou retire l'accès console
 ```
 
 ### Lancer
@@ -524,3 +545,91 @@ casse donc pas les applications déjà installées.
 - **Notifications** — FCM, pour prévenir d'un changement de statut sans que
   l'utilisateur ait à revenir vérifier. Utile précisément parce que le suivi est
   la seule chose qu'il puisse faire en attendant.
+
+---
+
+## 12. Étape 6 — la console, la conservation, les notifications
+
+### La console
+
+Une page statique sur Firebase Hosting (`console/`), sans framework. Copier
+`config.example.js` en `config.js` et y mettre la config web du projet.
+
+**Les agents ne touchent pas Firestore non plus.** Les règles restent à `false`
+pour tout le monde, et la console passe par des fonctions appelables. Ce n'est
+pas de la cohérence pour la cohérence : c'est ce qui rend le journal d'audit
+inévitable. Avec un accès direct par règles, « qui a ouvert quel dossier »
+dépendrait de la discipline de qui écrit le client.
+
+**La file ne contient ni récit, ni preuves, ni coordonnées.** Ouvrir un dossier
+est un acte distinct, journalisé avec l'adresse de l'agent, et l'écran le dit.
+Faire défiler une liste ne doit pas revenir à lire vingt récits d'enfants.
+
+Les captures s'affichent via des URL signées valables quinze minutes : la
+console montre les preuves, elle ne les publie pas.
+
+**L'accès se donne en ligne de commande**, jamais depuis la console :
+
+```bash
+npm --prefix functions run grant-agent -- grant agent@cmrpi.ma
+npm --prefix functions run grant-agent -- list
+npm --prefix functions run grant-agent -- revoke agent@cmrpi.ma
+```
+
+Un compte qui peut promouvoir des comptes est un compte qui vaut la peine d'être
+volé. Le script refuse une adresse non vérifiée — `requireAgent` la refuserait
+aussi, et un compte qui *paraît* autorisé sans l'être est pire qu'un refus
+franc. La révocation invalide les jetons de rafraîchissement, sinon le retrait
+d'accès attendrait l'expiration du jeton, jusqu'à une heure.
+
+### Les notifications
+
+**Le point de conception, avant la technique :** une notification est la seule
+chose que cette application fasse **sans qu'on la lui demande**, sur un écran
+verrouillé, devant qui tient le téléphone. Le public visé partage souvent son
+appareil, parfois avec la personne qu'il signale.
+
+Trois règles en découlent, et elles sont testées :
+
+1. **Désactivé tant que ce n'est pas explicitement accepté.** Aucune demande de
+   permission au lancement. L'écran qui propose affiche l'avertissement
+   **au-dessus** du bouton, pas en petits caractères en dessous : celui qui
+   décide doit l'avoir lu, pas seulement avoir pu le lire.
+2. **Le message ne dit rien.** Ni statut, ni numéro, ni même le mot
+   « signalement ». Qui lit l'écran verrouillé apprend qu'une application a
+   envoyé un message. Le reste demande d'ouvrir l'app avec un numéro qu'il n'a
+   pas.
+3. **Aucun appareil n'est enregistré en face d'un dossier.** L'abonnement se
+   fait à un sujet FCM dérivé du hachage de la référence — jamais du code en
+   clair. Le serveur n'apprend pas quels appareils écoutent et ne stocke aucun
+   jeton à côté d'un signalement. Le lien entre ce téléphone et ce dossier
+   n'existe que sur ce téléphone.
+
+Le serveur publie vers les trois sujets de langue (`case_{hash}_{fr|ar|en}`)
+parce qu'il ignore lequel l'appareil a choisi — et refuse délibérément de
+l'apprendre. Deux envois sur trois n'atteignent personne, ce qui ne coûte rien
+et ne stocke rien.
+
+**Activer demande un numéro de référence, donc ne peut se faire que là où il est
+affiché** — l'application ne le garde jamais. **Désactiver ne demande rien** :
+jeter le jeton FCM annule d'un coup tous les sujets auxquels l'appareil était
+abonné, sans que l'application ait eu à noter lesquels. C'est ce qui permet à
+l'interrupteur des Paramètres d'exister sans qu'une liste des dossiers suivis
+traîne sur un téléphone partagé.
+
+### Ce qui reste à faire en console
+
+Complète la liste du §9 :
+
+- **Politique TTL Firestore** sur `reports.expiresAt`, `referenceIndex.expiresAt`,
+  `idempotency.expiresAt`, `rateLimits.expiresAt`.
+- **Règle de cycle de vie Cloud Storage** sur `evidence/`, ~35 jours. Elle
+  rattrape ce que `onReportDeleted` ne voit pas : un téléversement dont le
+  signalement n'a jamais été envoyé est orphelin dès sa naissance, et aucun
+  document ne sera jamais supprimé pour déclencher son nettoyage.
+- **Notifications** : activer Cloud Messaging. Sur iOS, il faut en plus une clé
+  APNs — sans elle les notifications ne fonctionnent que sur Android.
+- **Comptes agents** : les créer dans Authentication, faire vérifier l'adresse,
+  puis `grant-agent`.
+- **Hosting** : `firebase deploy --only hosting` après avoir écrit
+  `console/config.js`.

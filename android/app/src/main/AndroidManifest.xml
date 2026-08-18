@@ -27,6 +27,13 @@
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <!-- Le canal doit exister avant la première notification, sinon
+             Android en crée un par défaut dont l'utilisateur ne contrôle
+             rien. Le libellé reste neutre : il apparaît dans les réglages
+             Android, visibles par qui prend le téléphone. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="emc_updates" />
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

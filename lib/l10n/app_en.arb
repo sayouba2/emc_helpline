@@ -289,5 +289,15 @@
   "trackStatusUnknown": "Status updated — contact the team for details.",
   "trackRequestSearching": "Searching…",
   "trackRequestUnavailable": "We cannot check your case right now. Check your connection, then try again. Your case has not disappeared.",
-  "trackRequestRetry": "Try again"
+  "trackRequestRetry": "Try again",
+  "notifyOfferTitle": "Get told",
+  "notifyOfferBody": "The app can let you know when your case moves, so you do not have to keep coming back to check.",
+  "notifyWarning": "Before you agree: if someone else uses your phone, they will see a message from EMC Helpline appear. It will say nothing about your report, but it will be visible.",
+  "notifyEnable": "Let me know",
+  "notifyEnabled": "You will be told. The message stays vague — you will need to open the app with your number to learn more.",
+  "notifyRefused": "Your phone refused notifications. You can allow them in its settings, then try again.",
+  "notifySettingsTitle": "Notifications",
+  "notifySettingsSubtitle": "Turn everything off on this device",
+  "notifySettingsBody": "Turning this off stops this device receiving any notification, for all your cases. You can still track a case with its reference number.",
+  "notifyDisabled": "Notifications are off on this device."
 }
