@@ -1,6 +1,6 @@
-import 'dart:math';
 import 'package:flutter/widgets.dart';
 import '../core/storage/settings_store.dart';
+import '../core/utils/reference_code.dart';
 import '../core/utils/validators.dart';
 import '../models/report_enums.dart';
 import '../models/report_model.dart';
@@ -385,20 +385,14 @@ class ReportProvider with ChangeNotifier {
   /// the failure paths are exercised by injecting a [ReportSubmitter].
   Future<String> _simulateSubmission(SubmissionAttempt attempt) async {
     await Future<void>.delayed(submissionLatency);
-    final randNum = Random().nextInt(900000) + 100000;
-    return 'REF-EMC-2026-$randNum';
+    return ReferenceCode.generate();
   }
 
   /// Unique enough to deduplicate retries of one report; the server is what
   /// enforces it, this only has to stay stable across attempts.
-  String _newIdempotencyKey() {
-    final random = Random();
-    final suffix = List.generate(
-      4,
-      (_) => random.nextInt(0x10000).toRadixString(16).padLeft(4, '0'),
-    ).join();
-    return '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}-$suffix';
-  }
+  String _newIdempotencyKey() =>
+      '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}'
+      '-${ReferenceCode.generate()}';
 
   /// Adds screenshots to the evidence, ignoring the ones already attached so a
   /// second pass through the picker cannot duplicate them.
@@ -422,11 +416,17 @@ class ReportProvider with ChangeNotifier {
   ///
   /// Backed by this session's history for now; it becomes a server lookup once
   /// the backend exists.
+  /// The comparison goes through [ReferenceCode.payloadOf] on both sides, so
+  /// what the user typed is matched by what it means, not by how it looks:
+  /// lower case, missing dashes and an `O` typed for a `0` all still find the
+  /// case.
   ReportModel? findByReference(String code) {
-    final needle = code.trim().toUpperCase();
-    if (needle.isEmpty) return null;
+    final needle = ReferenceCode.payloadOf(code);
+    if (needle == null) return null;
     for (final report in _history) {
-      if (report.referenceCode?.toUpperCase() == needle) return report;
+      if (ReferenceCode.payloadOf(report.referenceCode) == needle) {
+        return report;
+      }
     }
     return null;
   }

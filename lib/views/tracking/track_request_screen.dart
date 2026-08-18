@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/localization/report_enum_labels.dart';
 import '../../core/utils/icon_utils.dart';
+import '../../core/utils/reference_code.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/report_model.dart';
 import '../../providers/report_provider.dart';
@@ -32,6 +33,11 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
   ReportModel? _result;
   bool _searched = false;
 
+  /// The code cannot be one at all — too short, or carrying characters the
+  /// alphabet does not use. Told apart from "no such case" so a typo reads as a
+  /// typo, and so a malformed code never costs a lookup.
+  bool _isMalformed = false;
+
   @override
   void dispose() {
     _codeController.dispose();
@@ -41,9 +47,11 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
   void _search() {
     final provider = Provider.of<ReportProvider>(context, listen: false);
     FocusScope.of(context).unfocus();
+    final typed = _codeController.text;
     setState(() {
       _searched = true;
-      _result = provider.findByReference(_codeController.text);
+      _isMalformed = !ReferenceCode.isWellFormed(typed);
+      _result = _isMalformed ? null : provider.findByReference(typed);
     });
   }
 
@@ -93,7 +101,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 onChanged: (_) => setState(() => _searched = false),
                 onSubmitted: (_) => _search(),
                 decoration: InputDecoration(
-                  hintText: 'REF-EMC-2026-123456',
+                  hintText: ReferenceCode.example,
                   prefixIcon: const Padding(
                     padding: EdgeInsets.all(14.0),
                     child: FaIcon(
@@ -159,7 +167,11 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 if (_result != null)
                   _buildResultCard(context, l10n, _result!)
                 else
-                  _buildNotFoundCard(l10n),
+                  _buildNoticeCard(
+                    _isMalformed
+                        ? l10n.trackRequestMalformed
+                        : l10n.trackRequestNotFound,
+                  ),
               ],
             ],
           ),
@@ -227,7 +239,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
     );
   }
 
-  Widget _buildNotFoundCard(AppLocalizations l10n) {
+  Widget _buildNoticeCard(String message) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -248,7 +260,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              l10n.trackRequestNotFound,
+              message,
               style: const TextStyle(
                 fontSize: 12.5,
                 height: 1.4,

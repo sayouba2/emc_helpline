@@ -89,7 +89,7 @@ void main() {
   testWidgets('a reference code keeps its left-to-right reading', (
     tester,
   ) async {
-    const code = 'REF-EMC-2026-123456';
+    const code = 'EMC-4K7P-W9XM-2QTR';
     await tester.pumpWidget(
       const Directionality(
         textDirection: TextDirection.rtl,

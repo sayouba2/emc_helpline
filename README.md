@@ -82,6 +82,28 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 | Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
 | Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
 
+Le plan de construction du backend est dans
+[`docs/backend-plan.md`](docs/backend-plan.md).
+
+### Le numéro de référence
+
+C'est un jeton porteur : sans compte, quiconque le connaît ouvre le dossier. Il
+doit donc être indevinable. `REF-EMC-2026-123456` ne l'était pas — six chiffres,
+900 000 possibilités, énumérables en une après-midi.
+[`ReferenceCode`](lib/core/utils/reference_code.dart) produit désormais
+`EMC-4K7P-W9XM-2QTR` : base32 de Crockford, douze caractères, environ 10^18.
+
+L'alphabet écarte `I`, `L`, `O` et `U` — les trois premiers parce qu'ils se
+relisent comme `1`, `1` et `0` au téléphone. `ReferenceCode.payloadOf()` pardonne
+ce qui reste : minuscules, tirets absents, espaces, préfixe oublié, et le `O`
+tapé pour un zéro. Deux codes se comparent par leur charge utile, jamais comme
+des chaînes.
+
+L'écran de suivi distingue « ce numéro n'a pas le bon format » de « aucun
+dossier » : une faute de frappe se lit comme une faute de frappe, et un code
+impossible ne coûtera pas d'appel serveur — ni de budget de limitation de débit,
+qui sera la seule défense derrière l'entropie du code.
+
 ### Envoi et échec
 
 `ReportProvider` ne sait pas comment un signalement part. Il appelle un

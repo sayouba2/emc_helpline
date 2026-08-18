@@ -429,5 +429,9 @@
   "@reportLandingResume": {
     "description": "Landing card offered when a completed report failed to send"
   },
-  "reportLandingResumeSubtitle": "Ton dernier signalement n'est pas parti. Tes réponses sont toujours là."
+  "reportLandingResumeSubtitle": "Ton dernier signalement n'est pas parti. Tes réponses sont toujours là.",
+  "trackRequestMalformed": "Ce numéro n'a pas le bon format. Il ressemble à EMC-4K7P-W9XM-2QTR. Recopie-le tel qu'il t'a été donné.",
+  "@trackRequestMalformed": {
+    "description": "Shown when the typed code cannot be a reference code at all — told apart from a code that is valid but unknown"
+  }
 }

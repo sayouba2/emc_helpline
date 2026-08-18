@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:emc_helpline/core/storage/settings_store.dart';
+import 'package:emc_helpline/core/utils/reference_code.dart';
 import 'package:emc_helpline/core/utils/validators.dart';
 import 'package:emc_helpline/models/report_enums.dart';
 import 'package:emc_helpline/providers/report_provider.dart';
@@ -464,13 +465,24 @@ void main() {
         reason: 'the code is typed by hand, so case must not matter',
       );
       expect(provider.findByReference('  $code  '), isNotNull);
+
+      // Dictated over the phone or copied by hand, the dashes and the
+      // look-alike characters are the first things to go.
+      final payload = ReferenceCode.payloadOf(code)!;
+      expect(provider.findByReference(payload), isNotNull);
+      expect(
+        provider.findByReference(payload.replaceAll('0', 'O')),
+        isNotNull,
+        reason: 'nobody types a zero when they heard "oh"',
+      );
+      expect(provider.findByReference(payload.replaceAll('1', 'l')), isNotNull);
     });
 
     test('returns null for an unknown or empty code', () async {
       final provider = _completeProvider();
       await provider.submitReport();
 
-      expect(provider.findByReference('REF-EMC-2026-000000'), isNull);
+      expect(provider.findByReference('EMC-0000-0000-0000'), isNull);
       expect(provider.findByReference(''), isNull);
       expect(provider.findByReference('   '), isNull);
     });

@@ -281,5 +281,6 @@
   "submissionErrorContactTeam": "الاتصال بالفريق",
   "submissionErrorCallPolice": "الاتصال بالشرطة (19)",
   "reportLandingResume": "استئناف الإرسال",
-  "reportLandingResumeSubtitle": "لم يُرسَل بلاغك الأخير. إجاباتك ما زالت محفوظة."
+  "reportLandingResumeSubtitle": "لم يُرسَل بلاغك الأخير. إجاباتك ما زالت محفوظة.",
+  "trackRequestMalformed": "هذا الرقم ليس بالصيغة الصحيحة. يشبه EMC-4K7P-W9XM-2QTR. أعد نسخه كما سُلّم إليك."
 }

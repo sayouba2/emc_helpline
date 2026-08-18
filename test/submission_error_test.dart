@@ -29,7 +29,7 @@ class _FlakySubmitter {
   Future<String> call(SubmissionAttempt attempt) async {
     attempts.add(attempt);
     if (attempts.length <= failures) throw SubmissionException(failure);
-    return 'REF-EMC-2026-424242';
+    return 'EMC-4242-4242-4242';
   }
 }
 
@@ -122,7 +122,7 @@ void main() {
       await provider.submitReport();
       final code = await provider.submitReport();
 
-      expect(code, 'REF-EMC-2026-424242');
+      expect(code, 'EMC-4242-4242-4242');
       expect(provider.submissionError, isNull);
       expect(provider.failedAttempts, 0);
       expect(provider.history, hasLength(1));
