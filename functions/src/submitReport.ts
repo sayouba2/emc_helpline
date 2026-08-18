@@ -1,5 +1,6 @@
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 import {
   COLLECTIONS,
@@ -7,6 +8,7 @@ import {
   RATE_LIMITS,
   REGION,
 } from "./config.js";
+import { verifyEvidence } from "./evidence.js";
 import { issuePaths, logEvent, logProblem } from "./logging.js";
 import {
   formatReferenceCode,
@@ -165,6 +167,18 @@ export const submitReport = onCall(
     if (problems.length > 0) {
       logProblem({ event: "submit_rejected_incomplete", reasons: problems });
       throw new HttpsError("invalid-argument", "incomplete report");
+    }
+
+    // Before the transaction, not inside it: this reads the bucket, and a
+    // transaction that retries would read it again for nothing.
+    const evidenceProblems = await verifyEvidence(
+      parsed.data.idempotencyKey,
+      parsed.data.report.evidencePaths,
+      getStorage().bucket(),
+    );
+    if (evidenceProblems.length > 0) {
+      logProblem({ event: "submit_rejected_evidence", reasons: evidenceProblems });
+      throw new HttpsError("invalid-argument", "unusable evidence");
     }
 
     const db = getFirestore();

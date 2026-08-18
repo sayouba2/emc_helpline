@@ -3,6 +3,7 @@ import 'dart:io' show File, SocketException;
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:emc_helpline/core/backend/evidence_uploader.dart';
 import 'package:emc_helpline/core/backend/firebase_backend.dart';
 import 'package:emc_helpline/core/backend/report_payload.dart';
 import 'package:emc_helpline/core/utils/validators.dart';
@@ -204,10 +205,12 @@ void main() {
     });
   });
 
-  group('screenshots cannot be sent yet', () {
+  group('screenshots', () {
     test('local paths are never passed off as storage paths', () {
-      // ReportModel.evidenceFilePaths holds paths on the phone. The server only
-      // accepts paths it issued through requestEvidenceUploadUrl — step 4.
+      // ReportModel.evidenceFilePaths holds paths on the phone; they mean
+      // nothing to the server, which only accepts paths it issued through
+      // requestEvidenceUploadUrl. Sending one would be rejected — and would
+      // also leak the phone's directory layout.
       final payload = reportPayload(
         _complete.copyWith(evidenceFilePaths: const ['/data/user/0/shot.png']),
       );
@@ -215,27 +218,36 @@ void main() {
       expect(payload['evidencePaths'], isEmpty);
     });
 
-    test('flags the reports step 4 has to land before', () {
-      // Screenshots as the only evidence: the server's completeness check
-      // rejects this until uploads exist.
+    test('carries the storage paths the uploader came back with', () {
+      final payload = reportPayload(
+        _complete.copyWith(evidenceFilePaths: const ['/data/user/0/shot.png']),
+        evidencePaths: const ['evidence/abc12345/deadbeef.png'],
+      );
+
+      expect(payload['evidencePaths'], ['evidence/abc12345/deadbeef.png']);
+    });
+
+    test('are recognised as needing an upload', () {
       expect(
         needsEvidenceUpload(
           const ReportModel(evidenceFilePaths: ['/data/user/0/shot.png']),
         ),
         isTrue,
       );
-
-      // A link or a long enough account carries the report on its own.
-      expect(
-        needsEvidenceUpload(
-          const ReportModel(
-            evidenceFilePaths: ['/data/user/0/shot.png'],
-            evidenceUrl: 'https://exemple.ma/post/1',
-          ),
-        ),
-        isFalse,
-      );
       expect(needsEvidenceUpload(_complete), isFalse);
+    });
+
+    test('the size limit is the one the server enforces', () {
+      final config = File('functions/src/config.ts').readAsStringSync();
+      final declared = RegExp(
+        r'MAX_EVIDENCE_BYTES = (\d+) \* 1024 \* 1024',
+      ).firstMatch(config);
+
+      expect(declared, isNotNull);
+      expect(
+        int.parse(declared!.group(1)!) * 1024 * 1024,
+        EvidenceUploader.maxBytes,
+      );
     });
   });
 

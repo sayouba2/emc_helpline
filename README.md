@@ -80,7 +80,7 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 | Envoi du signalement | injecter un `ReportSubmitter` dans `ReportProvider` — voir « Envoi et échec » ci-dessous |
 | Suivi d'une demande | `ReportProvider.findByReference()` — lit l'historique de session, deviendra une requête serveur |
 | Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
-| Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
+| Captures d'écran | téléversées par `EvidenceUploader` avant l'envoi ; le serveur ne voit que des chemins d'objet qu'il a lui-même délivrés |
 
 Le backend a commencé : règles fermées, `submitReport` avec idempotence et
 génération du numéro de référence, et le client branché dessus. Le plan complet
@@ -91,9 +91,9 @@ locale et le dit dans les logs ; un build **release** ne le fait jamais — il
 échoue franchement, parce qu'une simulation en production distribuerait un
 numéro de référence pour un signalement parti nulle part.
 
-⚠️ **Les captures d'écran ne partent pas encore** : elles attendent l'étape 4
-(URL de téléversement signées). Un signalement dont c'est la seule preuve est
-refusé par le serveur. À faire avant toute mise en production.
+Les captures d'écran passent par une URL signée délivrée pour un objet, un type
+et quelques minutes ; le bucket n'est jamais ouvert en écriture. Un réessai
+renvoie le signalement, pas les captures.
 
 ```bash
 npm install && npm install --prefix functions && npm run test:emulator

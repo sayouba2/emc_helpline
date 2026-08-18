@@ -8,7 +8,10 @@ import '../../models/report_model.dart';
 /// anything else, so **renaming a member of `report_enums.dart` is a change of
 /// contract**, not a rename. Nothing here is ever displayed — the labels live
 /// in the ARB files — so a translation cannot affect what is stored.
-Map<String, Object?> reportPayload(ReportModel report) {
+Map<String, Object?> reportPayload(
+  ReportModel report, {
+  List<String> evidencePaths = const [],
+}) {
   final wantsAssistance = report.assistanceNeeded == AssistanceNeed.wanted;
 
   return <String, Object?>{
@@ -20,8 +23,10 @@ Map<String, Object?> reportPayload(ReportModel report) {
     'urgencyLevel': report.urgencyLevel!.name,
     'assistanceNeeded': report.assistanceNeeded!.name,
 
-    // Empty until the upload endpoint exists — see the note below.
-    'evidencePaths': const <String>[],
+    // Paths in Cloud Storage, handed out by `requestEvidenceUploadUrl` and
+    // uploaded before this call. Never `report.evidenceFilePaths`, which are
+    // paths on the phone and mean nothing to the server.
+    'evidencePaths': evidencePaths,
 
     if (_isNotBlank(report.evidenceUrl))
       'evidenceUrl': report.evidenceUrl!.trim(),
@@ -41,20 +46,12 @@ Map<String, Object?> reportPayload(ReportModel report) {
   };
 }
 
-/// True when this report cannot be filed until screenshots can be uploaded.
+/// Whether this report needs screenshots uploaded before it can be filed.
 ///
-/// `ReportModel.evidenceFilePaths` holds paths on the phone's own storage.
-/// The server only accepts object paths handed out by
-/// `requestEvidenceUploadUrl`, which is step 4 of `docs/backend-plan.md` and
-/// does not exist yet — so screenshots cannot be sent, and a report whose only
-/// evidence is a screenshot fails the server's completeness check.
-///
-/// Exposed rather than hidden so the gap is visible in code and in tests
-/// instead of surfacing as an unexplained rejection. **Step 4 has to land
-/// before the client is pointed at production.**
+/// `ReportModel.evidenceFilePaths` holds paths on the phone's own storage; the
+/// server only accepts object paths handed out by `requestEvidenceUploadUrl`.
+/// `EvidenceUploader` turns one into the other before the report is sent.
 bool needsEvidenceUpload(ReportModel report) =>
-    report.evidenceFilePaths.isNotEmpty &&
-    !_isNotBlank(report.evidenceUrl) &&
-    (report.description?.trim().length ?? 0) < 120;
+    report.evidenceFilePaths.isNotEmpty;
 
 bool _isNotBlank(String? value) => value != null && value.trim().isNotEmpty;

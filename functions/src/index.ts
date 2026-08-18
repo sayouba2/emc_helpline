@@ -5,4 +5,5 @@ import { REGION } from "./config.js";
 initializeApp();
 setGlobalOptions({ region: REGION, maxInstances: 10 });
 
+export { requestEvidenceUploadUrl } from "./evidence.js";
 export { submitReport } from "./submitReport.js";

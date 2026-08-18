@@ -33,7 +33,30 @@ export const IDEMPOTENCY_TTL_DAYS = 30;
 export const RATE_LIMITS = {
   submitReportHourly: { limit: 5, windowSeconds: 60 * 60 },
   submitReportDaily: { limit: 20, windowSeconds: 24 * 60 * 60 },
+  uploadUrlHourly: { limit: 20, windowSeconds: 60 * 60 },
 } as const;
+
+/** Evidence lives under this prefix and nowhere else. */
+export const EVIDENCE_PREFIX = "evidence";
+
+/**
+ * How long a signed upload URL stays usable.
+ *
+ * Long enough for several screenshots over a slow mobile connection, short
+ * enough that a URL captured from a log or a proxy is worthless by the time
+ * anyone looks at it.
+ */
+export const UPLOAD_URL_TTL_MINUTES = 15;
+
+/** Phone screenshots. Ten of them is already an unusually thorough report. */
+export const MAX_EVIDENCE_FILES = 10;
+export const MAX_EVIDENCE_BYTES = 8 * 1024 * 1024;
+
+export const ALLOWED_EVIDENCE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
 
 export const COLLECTIONS = {
   reports: "reports",

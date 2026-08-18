@@ -173,16 +173,35 @@ derrière l'entropie du code.
 ### `requestEvidenceUploadUrl`
 
 ```ts
-{ idempotencyKey: string, fileName: string, contentType: string, sizeBytes: number }
+{ idempotencyKey: string, contentType: string, sizeBytes: number }
 { uploadUrl: string, storagePath: string }
 ```
 
-URL signée V4, valable 15 minutes, restreinte à un objet, un type MIME
-(`image/jpeg`, `image/png`, `image/webp`) et une taille maximale. Le client
-téléverse dessus, puis passe `storagePath` dans `submitReport`.
+URL signée V4, valable 15 minutes, restreinte à un objet et à un type MIME
+(`image/jpeg`, `image/png`, `image/webp`). Le client téléverse dessus, puis
+passe `storagePath` dans `submitReport`. Rien n'atterrit dans le bucket que le
+backend n'a pas autorisé, et le bucket n'est jamais ouvert en écriture.
 
-Ainsi rien n'atterrit dans le bucket que le backend n'a pas autorisé, et le
-bucket n'a jamais besoin d'être ouvert en écriture.
+**Le chemin est dérivé, pas stocké.** L'objet va dans
+`evidence/{sha256(idempotencyKey)[0:32]}/{aléatoire}.{ext}`, donc `submitReport`
+recalcule le seul dossier qu'il acceptera au lieu de faire confiance aux chemins
+qu'on lui tend. Sans ce lien, un appelant pourrait faire pointer son signalement
+vers les captures de quelqu'un d'autre : un chemin bien formé n'est pas une
+preuve qu'il a été délivré. La clé est hachée plutôt qu'utilisée telle quelle —
+c'est une valeur du client, sans forme garantie, et un chemin de bucket n'est
+pas l'endroit où la renvoyer en écho.
+
+**`submitReport` revérifie avant d'écrire** : le dossier, l'existence réelle de
+l'objet, sa taille et son type stocké. Une URL signée fixe le type au moment de
+la délivrance ; ce qui a effectivement atterri mérite d'être relu plutôt que
+supposé. La vérification est faite **avant** la transaction, parce qu'elle lit
+le bucket et qu'une transaction qui rejoue le relirait pour rien.
+
+**Déploiement :** générer une URL signée demande au compte de service
+d'exécution le rôle *Créateur de jetons du compte de service*
+(`iam.serviceAccounts.signBlob`) sur lui-même. Sans lui, la fonction échoue à la
+signature. C'est le piège classique, et il ne se voit qu'une fois déployé — les
+émulateurs ne signent pas.
 
 ---
 
@@ -232,7 +251,7 @@ longtemps et sort du périmètre pensé pour ces données.
 3. Brancher le `ReportSubmitter` Flutter dessus, avec le mappage
    d'erreurs (§8). Le frontend ne change nulle part ailleurs.
 4. `requestEvidenceUploadUrl` + téléversement client.
-5. `trackReport` + limitation de débit.
+5. `trackReport` + limitation de débit. **← prochaine**
 6. Politiques TTL, une fois la durée de conservation arrêtée.
 7. Console équipe.
 
@@ -263,7 +282,7 @@ replier sur `network`.
 
 ## 9. Où on en est
 
-**Étapes 1, 2 et 3 faites**, dans le dépôt, testées.
+**Étapes 1 à 4 faites**, dans le dépôt, testées.
 
 ```
 firestore.rules  storage.rules      tout fermé au client
@@ -275,7 +294,9 @@ test/rules/      vérifie que le client ne peut rien lire ni écrire
 lib/core/backend/firebase_backend.dart   démarrage, App Check, auth anonyme,
                                           ReportSubmitter, mappage d'erreurs
 lib/core/backend/report_payload.dart     ReportModel → contrat de transport
+lib/core/backend/evidence_uploader.dart  téléversement par URL signée
 test/backend_contract_test.dart          vérifie l'accord des deux côtés
+test/evidence_uploader_test.dart         transferts, cache de réessai, échecs
 ```
 
 ### Lancer
@@ -303,7 +324,10 @@ Rien de tout cela ne peut être fait depuis le dépôt :
 4. Créer la base Firestore en région `europe-west1`.
 5. Politique TTL sur `idempotency.expiresAt` et `rateLimits.expiresAt`.
    **Pas sur `reports`** tant que la durée de conservation n'est pas arrêtée.
-6. `firebase deploy --only firestore:rules,storage:rules,functions`.
+6. Donner au compte de service d'exécution le rôle *Créateur de jetons du
+   compte de service* sur lui-même, sans quoi `requestEvidenceUploadUrl` ne peut
+   pas signer d'URL. Les émulateurs ne signent pas : ça ne se voit qu'en ligne.
+7. `firebase deploy --only firestore:rules,storage:rules,functions`.
 
 ### Étape 3 — le client, branché
 
@@ -330,22 +354,28 @@ la ligne directe de l'équipe.
 `Validators.minDescriptionLength`. Renommer un membre d'enum d'un seul côté, ou
 changer 120 d'un seul côté, fait échouer la suite Flutter.
 
-### ⚠️ Ce qui manque avant de viser la production
+### Étape 4 — les preuves
 
-**Les captures d'écran ne peuvent pas encore être envoyées.**
-`ReportModel.evidenceFilePaths` contient des chemins sur le téléphone ; le
-serveur n'accepte que des chemins d'objet délivrés par
-`requestEvidenceUploadUrl`, qui est l'étape 4. Le client envoie donc
-`evidencePaths: []`.
+`EvidenceUploader` téléverse les captures avant d'envoyer le signalement, et
+rend les chemins que le serveur acceptera. `ReportModel.evidenceFilePaths` —
+des chemins sur le téléphone — ne quitte jamais l'appareil.
 
-Conséquence concrète : **un signalement dont la seule preuve est une capture est
-refusé par le serveur**, et l'utilisateur voit un échec qu'il ne peut pas
-corriger. `needsEvidenceUpload()` identifie exactement ces signalements — la
-fonction existe pour que le trou soit visible dans le code plutôt que découvert
-en production.
+**Un réessai renvoie le signalement, pas les captures.** Les chemins déjà
+obtenus sont gardés par clé d'idempotence. La situation que tout ceci sert est
+une mauvaise connexion ; repousser les mêmes mégaoctets à chaque tentative en
+serait exactement la mauvaise réponse.
 
-L'étape 4 doit donc précéder toute mise en production. Un lien ou un récit d'au
-moins 120 caractères passent, eux, dès maintenant.
+**Un échec de téléversement n'est jamais un `timeout`.** Ce message-là dit à
+l'utilisateur que son signalement est peut-être déjà enregistré. À ce stade rien
+n'a été déposé, donc ce serait faux — et ça découragerait un réessai qui, lui,
+est propre. Une coupure devient `network` ; un bucket en panne (5xx) devient
+`server`, parce qu'envoyer quelqu'un vérifier son wifi pendant que Cloud Storage
+est tombé le fait chercher au mauvais endroit.
+
+Ce que le client refuse avant même de téléverser : une extension que le serveur
+n'accepte pas — `image_picker` peut rendre un HEIC sur iOS — et un fichier trop
+gros. Inutile de dépenser un transfert et du budget de limitation de débit pour
+quelque chose qui sera rejeté.
 
 ---
 

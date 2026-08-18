@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../firebase_options.dart';
 import '../../models/submission_outcome.dart';
+import 'evidence_uploader.dart';
 import 'report_payload.dart';
 
 /// Must match `REGION` in `functions/src/config.ts`. A callable resolved in the
@@ -54,7 +55,9 @@ Future<ReportSubmitter?> initializeBackend() async {
           : const AppleDeviceCheckProvider(),
     );
 
-    return const _FirebaseReportSubmitter().submit;
+    return _FirebaseReportSubmitter(
+      EvidenceUploader(region: backendRegion),
+    ).submit;
   } catch (error, stackTrace) {
     if (kReleaseMode) {
       debugPrint('Backend unavailable: $error');
@@ -69,11 +72,20 @@ Future<ReportSubmitter?> initializeBackend() async {
 }
 
 class _FirebaseReportSubmitter {
-  const _FirebaseReportSubmitter();
+  const _FirebaseReportSubmitter(this._uploader);
+
+  final EvidenceUploader _uploader;
 
   Future<String> submit(SubmissionAttempt attempt) async {
     try {
       await _ensureSignedIn();
+
+      // Before the report, because the report references what this returns.
+      // Already-uploaded screenshots are not sent again on a retry.
+      final evidencePaths = await _uploader.upload(
+        idempotencyKey: attempt.idempotencyKey,
+        localPaths: attempt.report.evidenceFilePaths,
+      );
 
       final callable = FirebaseFunctions.instanceFor(region: backendRegion)
           .httpsCallable(
@@ -83,11 +95,13 @@ class _FirebaseReportSubmitter {
 
       final result = await callable.call<Object?>({
         'idempotencyKey': attempt.idempotencyKey,
-        'report': reportPayload(attempt.report),
+        'report': reportPayload(attempt.report, evidencePaths: evidencePaths),
       });
 
       final data = result.data;
       final code = data is Map ? data['referenceCode'] : null;
+      _uploader.forget(attempt.idempotencyKey);
+
       if (code is! String || code.isEmpty) {
         // The call succeeded but the answer is not one we can use. Treating it
         // as a failure is right: the report may well have been filed, and the
