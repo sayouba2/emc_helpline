@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// The client has no access to Firestore. None. Every read and every write goes
+// through a Cloud Function.
+//
+// This is deliberately the opposite of the usual Firebase setup, and the reason
+// is that the usual setup does not apply here. Security rules authorise per
+// user — `request.auth.uid` — and this app has no accounts, on purpose: asking
+// a child to register before reporting an adult in their household is exactly
+// what must not happen. With no identity to check, the write rule degrades to
+// `if true`, and the API key is readable in the APK. Anyone could then write
+// into the collection, and the symmetric mistake on a read rule would expose
+// children's reports.
+//
+// Tracking makes it worse: "read this document if you know a string" is not a
+// rule, it is a bearer token with no rate limit. Counting attempts needs a
+// server.
+//
+// If a client ever needs Firestore directly, that is a design change to argue
+// through, not a rule to relax here.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

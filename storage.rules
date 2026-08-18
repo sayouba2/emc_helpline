@@ -1,0 +1,16 @@
+rules_version = '2';
+
+// Same reasoning as firestore.rules: nothing reaches the bucket that the
+// backend did not authorise.
+//
+// Evidence is uploaded through a signed URL issued by
+// `requestEvidenceUploadUrl`, scoped to one object, one MIME type and one size
+// limit, valid for minutes. A signed URL carries its own authorisation and does
+// not go through these rules, so closing them costs the upload path nothing.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

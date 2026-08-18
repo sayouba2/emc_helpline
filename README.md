@@ -82,8 +82,13 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 | Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
 | Captures d'écran | `ReportModel.evidenceFilePaths` contient des chemins locaux, à téléverser |
 
-Le plan de construction du backend est dans
-[`docs/backend-plan.md`](docs/backend-plan.md).
+Le backend a commencé : règles fermées, `submitReport` avec idempotence et
+génération du numéro de référence, testés contre l'émulateur. Le plan complet et
+l'état d'avancement sont dans [`docs/backend-plan.md`](docs/backend-plan.md).
+
+```bash
+npm install && npm install --prefix functions && npm run test:emulator
+```
 
 ### Le numéro de référence
 

@@ -69,7 +69,6 @@ UID ne vit que dans les compteurs, avec un TTL court.
 
 ```
 reports/{reportId}
-  referenceHash    string   SHA-256 du payload du code — jamais le code en clair
   status           string   received | in_review | contacted | closed
   whoFor, ageGroup, gender, incidentType, platform,
   assistanceNeeded, assistanceType, urgencyLevel   string (valeurs d'enum Dart)
@@ -79,7 +78,10 @@ reports/{reportId}
   pseudo           string?  seulement si accompagnement demandé
   contactPhone     string?  idem
   createdAt        timestamp
-  expiresAt        timestamp  ← politique TTL Firestore
+
+referenceIndex/{sha256}
+  reportId         string
+  createdAt        timestamp
 
 idempotency/{key}
   reportId         string
@@ -93,14 +95,26 @@ rateLimits/{scope}_{subject}
   expiresAt        timestamp  ← TTL
 ```
 
-**`referenceHash`, pas `referenceCode`.** Le numéro de référence est un secret
-porteur : il ouvre le dossier. Le stocker en clair signifie qu'une fuite de la
-base — ou un accès console trop large — donne accès à tous les dossiers. On
-stocke son SHA-256 et on cherche dessus ; le code en clair n'existe que dans la
-réponse d'envoi et sur le téléphone de l'utilisateur.
+**Le numéro de référence n'est stocké nulle part en clair.** C'est un secret
+porteur : il ouvre le dossier. Le garder en clair signifie qu'une fuite de la
+base — ou un accès console accordé un peu trop largement — donne accès à tous
+les dossiers d'un coup.
+
+Son SHA-256 sert d'**identifiant de document** dans `referenceIndex`, ce qui
+donne trois choses à la fois : une contrainte d'unicité réelle (deux dossiers ne
+peuvent pas partager un code), un `get` par clé exacte pour le suivi — sans
+index composite —, et la séparation entre le dossier et sa clé d'accès.
+
+Pas de sel : la valeur hachée fait 60 bits aléatoires, il n'y a donc pas de
+dictionnaire contre lequel se défendre, et un sel par enregistrement rendrait la
+recherche par code impossible, ce qui est tout l'objet.
 
 Corollaire à assumer : **un code perdu est un dossier perdu**. C'est déjà ce que
 dit l'écran de suivi, et c'est le prix de l'anonymat.
+
+`reports` ne porte pas d'`expiresAt` : la durée de conservation est une décision
+du CMRPI, et une politique TTL inventée ici se mettrait à supprimer des preuves
+en silence.
 
 ---
 
@@ -133,12 +147,12 @@ La clé d'idempotence vient du client et **est déjà implémentée côté Flutt
 qu'il n'est pas envoyé ou abandonné). C'est le serveur qui la fait respecter ;
 le client ne fait que la transmettre inchangée.
 
-Génération du code : reprendre l'alphabet et le format de
-[`lib/core/utils/reference_code.dart`](../lib/core/utils/reference_code.dart) —
-base32 de Crockford sans `I`, `L`, `O` ni `U`, 12 caractères en trois groupes de
-quatre, préfixe `EMC`. Environ 10^18 possibilités. **`crypto.randomBytes`, pas
-`Math.random`.** Vérifier l'unicité du hash avant d'écrire, et retirer en cas de
-collision.
+Génération du code : [`functions/src/referenceCode.ts`](../functions/src/referenceCode.ts),
+port fidèle de [`lib/core/utils/reference_code.dart`](../lib/core/utils/reference_code.dart).
+Les deux ont la même suite de tests, parce que le client analyse ce que le
+serveur produit. `crypto.randomBytes`, jamais `Math.random` ; l'alphabet fait
+exactement 32 caractères, donc masquer un octet par 31 est uniforme — pas de
+biais de modulo.
 
 ### `trackReport`
 
@@ -244,3 +258,63 @@ Le `ReportSubmitter` doit lever une `SubmissionException` portant un
 `timeout` a son propre texte pour une raison : c'est le seul cas où le
 signalement est peut-être déjà enregistré, et le message le dit. Ne pas le
 replier sur `network`.
+
+---
+
+## 9. Où on en est
+
+**Étapes 1 et 2 faites**, dans le dépôt, testées contre l'émulateur.
+
+```
+firestore.rules  storage.rules      tout fermé au client
+firebase.json    .firebaserc        ⚠️ l'ID de projet est un espace réservé
+functions/src/   config, schema, referenceCode, rateLimit, logging, submitReport
+functions/test/  code de référence, schéma, transaction, limitation de débit
+test/rules/      vérifie que le client ne peut rien lire ni écrire
+```
+
+### Lancer
+
+```bash
+npm install && npm install --prefix functions
+```
+
+```bash
+npm run test:emulator
+```
+
+50 tests. Les tests de logique pure tournent aussi sans émulateur (`npm test`),
+mais le reste est alors ignoré — un test de garde le signale plutôt que de
+laisser croire à un succès complet.
+
+### Ce qui reste à faire à la main, en console
+
+Rien de tout cela ne peut être fait depuis le dépôt :
+
+1. Créer le projet Firebase, puis `firebase use --add` — `.firebaserc` contient
+   un espace réservé.
+2. Activer **Authentication → Anonymous**.
+3. Activer **App Check** (Play Integrity pour Android, DeviceCheck pour iOS) et
+   enregistrer les empreintes de l'application. `submitReport` refuse déjà les
+   requêtes sans jeton valide : tant que ce n'est pas fait, l'appel échoue.
+4. Créer la base Firestore en région `europe-west1`.
+5. Politique TTL sur `idempotency.expiresAt` et `rateLimits.expiresAt`.
+   **Pas sur `reports`** tant que la durée de conservation n'est pas arrêtée.
+6. `firebase deploy --only firestore:rules,storage:rules,functions`.
+
+### Étape 3 — brancher le client
+
+Le seul point de contact est le `ReportSubmitter` de
+[`lib/models/submission_outcome.dart`](../lib/models/submission_outcome.dart).
+Il reçoit `(report, idempotencyKey)`, appelle `submitReport`, rend le
+`referenceCode` ou lève une `SubmissionException` selon le tableau du §8.
+Aucun autre fichier Flutter ne change.
+
+Deux points à ne pas rater :
+
+- **`MIN_DESCRIPTION_LENGTH` doit rester égal à
+  `Validators.minDescriptionLength`** (120). S'ils divergent, le client laisse
+  passer un signalement que le serveur refuse, et l'utilisateur voit un échec
+  qu'il ne peut pas corriger.
+- Les noms de membres d'enum voyagent tels quels. Renommer un membre Dart est un
+  changement de contrat.
