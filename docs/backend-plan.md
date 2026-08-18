@@ -742,6 +742,18 @@ C'est la vraie question, et elle mérite mieux qu'un espoir.
 alertes* : un budget de quelques euros avec alerte par e-mail à 50 % et 100 %.
 Une alerte ne coupe rien, mais elle prévient avant la surprise.
 
+### À qui appartient le compte de facturation
+
+**Au CMRPI, pas à un développeur.** Ce n'est pas une question de confort : le
+compte de facturation détient les données. Celui qui le ferme, le laisse expirer
+ou perd sa carte emporte avec lui les signalements en cours et les preuves qui
+vont avec.
+
+L'organisation qui répond de ces données devant la CNDP et devant les familles
+est aussi celle qui doit tenir l'infrastructure. Un compte personnel convient
+pour la phase de développement, où rien de réel ne transite ; il ne convient pas
+au jour où l'application reçoit son premier vrai signalement.
+
 ### S'il est vraiment impossible d'ouvrir un compte de facturation
 
 L'architecture peut être déplacée : un service Node avec `firebase-admin` sur un
