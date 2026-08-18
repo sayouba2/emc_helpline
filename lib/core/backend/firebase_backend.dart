@@ -80,7 +80,7 @@ Future<Backend> initializeBackend() async {
       FirebaseFunctions.instanceFor(
         region: backendRegion,
       ).useFunctionsEmulator(emulatorHost, 5001);
-      debugPrint('Backend: emulators at $emulatorHost');
+      debugPrint('Backend: émulateurs Firebase sur $emulatorHost.');
       return (
         submitter: _FirebaseReportSubmitter(
           EvidenceUploader(region: backendRegion),
@@ -101,6 +101,15 @@ Future<Backend> initializeBackend() async {
       providerApple: kDebugMode
           ? const AppleDebugProvider()
           : const AppleDeviceCheckProvider(),
+    );
+
+    // Said out loud, because the alternative is a failed send with no clue as
+    // to where it was even trying to go. Forgetting `--dart-define` is the
+    // easiest mistake to make and the hardest to see.
+    debugPrint(
+      'Backend: projet Firebase en ligne '
+      '(${DefaultFirebaseOptions.currentPlatform.projectId}). '
+      'Pour les émulateurs : flutter run --dart-define=USE_EMULATORS=true',
     );
 
     return (
@@ -214,6 +223,13 @@ class _FirebaseReportSubmitter {
     } on SubmissionException {
       rethrow;
     } catch (error) {
+      // The mapped failure is deliberately vague — it is what a child reads.
+      // The real one belongs in the developer's console, or a misconfiguration
+      // looks exactly like a network problem.
+      if (kDebugMode) {
+        final code = error is FirebaseFunctionsException ? error.code : '';
+        debugPrint('Envoi échoué [$code] $error');
+      }
       final failure = failureFor(error);
       // Unmapped errors are left to travel: `ReportProvider.submitReport`
       // records them as `unknown`, which is honest, rather than being guessed
@@ -256,10 +272,12 @@ SubmissionFailure? failureForCode(String rawCode) {
 
     'deadline-exceeded' => SubmissionFailure.timeout,
 
-    // `unauthenticated` means App Check or anonymous auth was refused, and
-    // `invalid-argument` means the client sent something the server rejects.
-    // Both are our bugs. Neither is the child's fault, and neither is
-    // something they can fix, so they are not told they did anything wrong.
+    // `not-found` means the function is not deployed, `unauthenticated` that
+    // App Check or anonymous auth was refused, `invalid-argument` that the
+    // client sent something the server rejects. All three are our bugs.
+    // Neither is the child's fault, and none is something they can fix, so
+    // they are not told they did anything wrong.
+    'not-found' ||
     'unauthenticated' ||
     'permission-denied' ||
     'invalid-argument' ||

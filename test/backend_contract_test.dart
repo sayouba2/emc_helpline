@@ -292,6 +292,7 @@ void main() {
 
     test('our own bugs are never told to the user as their fault', () {
       for (final code in [
+        'not-found', // the function is not deployed
         'unauthenticated', // App Check or anonymous auth refused
         'invalid-argument', // the client sent something the server rejects
         'permission-denied',

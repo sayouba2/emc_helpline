@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Autorise le HTTP en clair, uniquement dans les builds de debug.
+
+  Les émulateurs Firebase parlent en HTTP, et Android bloque le trafic en clair
+  par défaut depuis targetSdk 28. Sans ce fichier, `USE_EMULATORS=true` ne peut
+  pas fonctionner : l'application n'atteint ni l'émulateur d'authentification,
+  ni celui des fonctions, et l'envoi échoue sans explication.
+
+  Ce fichier vit dans src/debug/ : il n'entre dans aucun build de release. Une
+  application publiée reste soumise au blocage par défaut.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -837,6 +837,37 @@ de console.
 Rien n'est écrit dans le vrai projet, et tout disparaît à l'arrêt des
 émulateurs.
 
+### Si l'envoi échoue quand même
+
+L'application dit à quel backend elle parle, dès le démarrage. Dans la console
+de `flutter run` :
+
+```
+Backend: émulateurs Firebase sur 10.0.2.2.
+```
+
+Si c'est plutôt `Backend: projet Firebase en ligne`, le `--dart-define` n'a pas
+été pris : l'application s'adresse au vrai projet, où rien n'est déployé.
+
+En cas d'échec, la console affiche aussi la vraie erreur, à côté du message
+volontairement vague que voit l'utilisateur :
+
+```
+Envoi échoué [not-found] ...
+```
+
+| Code | Ce que ça veut dire |
+|---|---|
+| `not-found` | la fonction n'est pas déployée — mode en ligne sans `firebase deploy` |
+| `unauthenticated` | App Check ou la connexion anonyme a été refusée |
+| `unavailable` | rien au bout : émulateurs éteints, ou mauvaise adresse |
+
+**Le trafic en clair.** Les émulateurs parlent en HTTP, qu'Android bloque par
+défaut depuis `targetSdk` 28. `android/app/src/debug/res/xml/network_security_config.xml`
+lève ce blocage **dans les builds de debug uniquement** — le fichier vit dans
+`src/debug/` et n'entre dans aucun build de release. Sans lui, `USE_EMULATORS`
+ne peut pas fonctionner et l'échec ne dit pas pourquoi.
+
 ### La seule chose qui ne marche pas en local : les captures
 
 Le téléversement passe par une URL signée, et **l'émulateur de Storage ne sait
