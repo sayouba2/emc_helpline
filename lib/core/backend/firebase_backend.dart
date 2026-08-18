@@ -26,6 +26,31 @@ const String backendRegion = 'europe-west1';
 /// rather than opening a second case.
 const Duration _callTimeout = Duration(seconds: 28);
 
+/// Run against the local Firebase emulators instead of the real project.
+///
+///     flutter run --dart-define=USE_EMULATORS=true
+///
+/// This is how the whole workflow can be exercised end to end today: reports
+/// really are written, really get a reference number, and really come back on
+/// the tracking screen — in a database that lives on this machine. No billing
+/// account, no App Check registration, and nothing to clean up afterwards.
+///
+/// A `const` from the environment rather than a runtime flag, so a release
+/// build cannot be talked into pointing at a developer's laptop.
+const bool useEmulators = bool.fromEnvironment('USE_EMULATORS');
+
+/// Where the emulators are, seen from the device.
+///
+/// `10.0.2.2` is how the Android emulator reaches the host machine —
+/// `localhost` there means the emulated phone itself. On a physical device,
+/// pass the machine's address on the local network:
+///
+///     --dart-define=EMULATOR_HOST=192.168.1.24
+const String emulatorHost = String.fromEnvironment(
+  'EMULATOR_HOST',
+  defaultValue: '10.0.2.2',
+);
+
 /// Brings Firebase up and returns the submitter the provider should use.
 ///
 /// Returns `null` only in debug, and only when Firebase could not start — the
@@ -46,6 +71,23 @@ Future<Backend> initializeBackend() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    if (useEmulators) {
+      // Before anything else touches them. The emulators enforce neither App
+      // Check nor the console's provider settings, so this path needs none of
+      // the setup the real project does.
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+      FirebaseFunctions.instanceFor(
+        region: backendRegion,
+      ).useFunctionsEmulator(emulatorHost, 5001);
+      debugPrint('Backend: emulators at $emulatorHost');
+      return (
+        submitter: _FirebaseReportSubmitter(
+          EvidenceUploader(region: backendRegion),
+        ).submit,
+        lookup: lookupReport,
+      );
+    }
 
     await FirebaseAppCheck.instance.activate(
       // Play Integrity cannot attest an app that Play did not install, so it

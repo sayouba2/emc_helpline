@@ -762,3 +762,90 @@ fonctions sont écrites en gestionnaires HTTP simples, donc le portage est
 modeste. En revanche il faudrait un autre stockage d'objets pour les preuves, et
 la clé de compte de service devient un secret à gérer — ce que les Cloud
 Functions évitaient. À ne faire que si Blaze est hors d'atteinte.
+
+---
+
+## 14. Faire tourner le workflow complet en local
+
+Sans compte de facturation, sans App Check, sans rien déployer.
+
+**Un terminal** — les émulateurs :
+
+```bash
+npm --prefix functions run build && npx firebase emulators:start --project demo-emc
+```
+
+L'interface s'ouvre sur `http://127.0.0.1:4000` : on y voit les documents
+Firestore apparaître en direct, et les logs de chaque fonction appelée.
+
+**Un autre terminal** — l'application, pointée dessus :
+
+```bash
+flutter run --dart-define=USE_EMULATORS=true
+```
+
+Sur un téléphone physique plutôt qu'un émulateur Android, ajouter l'adresse de
+la machine sur le réseau local :
+
+```bash
+flutter run --dart-define=USE_EMULATORS=true --dart-define=EMULATOR_HOST=192.168.1.24
+```
+
+Ce qui fonctionne alors de bout en bout : le signalement part vraiment,
+`submitReport` s'exécute vraiment, le document apparaît dans Firestore, le
+numéro de référence revient, et l'écran de suivi le retrouve. Les émulateurs
+n'appliquent pas App Check et acceptent la connexion anonyme sans configuration
+de console.
+
+Rien n'est écrit dans le vrai projet, et tout disparaît à l'arrêt des
+émulateurs.
+
+### La seule chose qui ne marche pas en local : les captures
+
+Le téléversement passe par une URL signée, et **l'émulateur de Storage ne sait
+pas en produire** — la signature demande de vraies identités IAM. Une tentative
+depuis l'application se heurte à `storage.rules`, qui refuse tout, exactement
+comme prévu.
+
+En local, déposer donc un signalement avec **un lien ou un récit d'au moins 120
+caractères**. Le chemin des preuves n'est pas pour autant non testé : les tests
+d'`evidence.test.ts` téléversent réellement dans le bucket émulé et vérifient
+tout ce que `submitReport` exige — dossier, existence, taille, type.
+
+---
+
+## 15. Ce que fait `firebase deploy`
+
+La commande lit `firebase.json` et envoie chaque partie à son service :
+
+| Partie | Destination | Plan requis |
+|---|---|---|
+| `firestore.rules` | règles Firestore | gratuit |
+| `firestore.indexes.json` | index Firestore | gratuit |
+| `storage.rules` | règles Cloud Storage | gratuit |
+| `functions/` | Cloud Functions | **Blaze** |
+| `console/` | Firebase Hosting | gratuit |
+
+Chaque partie se déploie séparément :
+
+```bash
+npx firebase deploy --only firestore:rules
+npx firebase deploy --only functions
+npx firebase deploy --only hosting
+npx firebase deploy --only functions:submitReport
+```
+
+**Les règles se déploient dès maintenant, gratuitement.** C'est même la première
+chose à faire une fois la base créée : la console a écrit ses règles par défaut,
+et `firestore.rules` porte les commentaires qui expliquent pourquoi tout est
+fermé.
+
+Pour les fonctions, `deploy` lance d'abord `npm run build` (déclaré en
+`predeploy`), refuse de continuer si TypeScript ne compile pas, téléverse le
+code, puis remplace chaque fonction. Le remplacement n'est pas atomique entre
+fonctions : pendant une trentaine de secondes, certaines répondent en ancienne
+version et d'autres en nouvelle. Sans importance ici, à savoir le jour où un
+changement touche le contrat entre deux d'entre elles.
+
+`deploy` ne touche ni aux données, ni aux comptes, ni aux politiques TTL, ni aux
+réglages App Check. Tout cela vit dans la console et n'est pas dans le dépôt.

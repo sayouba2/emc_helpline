@@ -172,6 +172,22 @@ flutter pub get
 flutter run
 ```
 
+Sans backend joignable, un build debug tourne sur la simulation locale. Pour
+exercer le vrai parcours — signalement écrit dans Firestore, numéro de référence
+rendu par le serveur, suivi qui le retrouve — lancer les émulateurs et pointer
+l'application dessus :
+
+```bash
+npm --prefix functions run build && npx firebase emulators:start --project demo-emc
+```
+
+```bash
+flutter run --dart-define=USE_EMULATORS=true
+```
+
+Aucun compte de facturation, aucune donnée réelle. Détails et limites dans
+[`docs/backend-plan.md`](docs/backend-plan.md) §14.
+
 `flutter pub get` régénère `lib/l10n/app_localizations*.dart` à partir des
 fichiers ARB ; ces fichiers générés ne sont pas versionnés.
 
