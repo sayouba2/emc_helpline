@@ -25,7 +25,6 @@
   "gendarmerieSubtitle": "Rescue & protection",
   "howItWorks": "How does it work?",
   "howItWorksSubtitle": "All reports are handled anonymously and confidentially by trained experts.",
-  "reportStatusInProgress": "In progress",
   "stepperContext": "Context",
   "stepperProfile": "Profile",
   "stepperIncident": "Incident",
@@ -282,5 +281,13 @@
   "submissionErrorCallPolice": "Call the Police (19)",
   "reportLandingResume": "Resume sending",
   "reportLandingResumeSubtitle": "Your last report did not go through. Your answers are still there.",
-  "trackRequestMalformed": "That number is not in the right format. It looks like EMC-4K7P-W9XM-2QTR. Copy it exactly as you were given it."
+  "trackRequestMalformed": "That number is not in the right format. It looks like EMC-4K7P-W9XM-2QTR. Copy it exactly as you were given it.",
+  "trackStatusReceived": "Received",
+  "trackStatusInReview": "Being reviewed",
+  "trackStatusContacted": "The team has contacted you",
+  "trackStatusClosed": "Case closed",
+  "trackStatusUnknown": "Status updated — contact the team for details.",
+  "trackRequestSearching": "Searching…",
+  "trackRequestUnavailable": "We cannot check your case right now. Check your connection, then try again. Your case has not disappeared.",
+  "trackRequestRetry": "Try again"
 }

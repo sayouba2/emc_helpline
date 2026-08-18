@@ -158,17 +158,25 @@ biais de modulo.
 
 ```ts
 { referenceCode: string }
-{ status: string, createdAt: string, incidentType: string, urgencyLevel: string }
+{ found: boolean, report?: { status, createdAt, incidentType, urgencyLevel } }
 ```
 
-Normaliser l'entrée comme le fait `ReferenceCode.payloadOf` (majuscules, tirets
-retirés, `O`→`0`, `I`/`L`→`1`), hacher, chercher sur `referenceHash`.
+L'entrée est normalisée par `referencePayloadOf` — le même traitement que côté
+Dart — puis hachée, puis cherchée par identifiant de document dans
+`referenceIndex`. Un seul `get`, pas de requête, pas d'index composite.
 
 **Ne renvoie jamais le contenu du signalement** : ni description, ni preuves, ni
-coordonnées. Un code qui fuite doit donner l'état d'avancement, pas le dossier.
+pseudo, ni téléphone. Le code est le seul justificatif qui existe ; qui le lit
+par-dessus une épaule, ou le trouve sur un téléphone partagé — le cas même pour
+lequel cette application existe — apprend où en est un dossier, et rien d'autre.
 
-Limitation de débit stricte — voir §5. C'est la seule défense en profondeur
-derrière l'entropie du code.
+« Introuvable » est une valeur de retour, pas une erreur : c'est le cas normal
+d'une faute de frappe, et le traiter comme une exception mélangerait la faute de
+frappe avec la panne.
+
+Une entrée d'index qui ne pointe sur rien est journalisée et traitée comme
+introuvable. La transaction de `submitReport` rend ce cas impossible — raison
+de plus pour qu'il ne fasse pas tomber la recherche s'il survient quand même.
 
 ### `requestEvidenceUploadUrl`
 
@@ -213,17 +221,38 @@ Elle porte tout le modèle de sécurité du suivi, donc elle n'est pas optionnel
 |---|---|---|
 | `submitReport` | UID anonyme | 5 / heure, 20 / jour |
 | `trackReport` | UID anonyme | 10 / heure |
-| `trackReport` | global | seuil d'alerte, pas de blocage |
 | `requestEvidenceUploadUrl` | UID anonyme | 20 / heure |
 
 Compteurs dans `rateLimits/`, incrémentés en transaction, purgés par TTL.
 
-Sur `trackReport`, répondre **le même délai et le même message** pour un code
-inconnu et un code au-delà de la limite : une différence de comportement
-observable est un oracle qui rend l'énumération plus rapide.
+### Correction : ce qui protège réellement les dossiers
 
-Le frontend écarte déjà les codes mal formés avant d'appeler (`isWellFormed`),
-donc ils ne consomment pas de budget. C'est une commodité, pas une garantie :
+Une version antérieure de ce document recommandait de répondre la même chose
+pour un code inconnu et un code au-delà de la limite, afin de ne pas donner
+d'oracle à qui énumère. **C'était un mauvais conseil pour ce produit**, et le
+code ne le suit pas.
+
+D'abord parce que le coût tombe sur les vrais utilisateurs : un enfant qui
+vérifie son dossier onze fois dans l'heure — ce que fait exactement quelqu'un
+d'inquiet — lirait « aucun dossier ne correspond ». Pour lui, ça veut dire que
+son signalement a disparu.
+
+Ensuite parce que la protection n'a jamais reposé là-dessus. Un UID anonyme
+s'obtient gratuitement et sans limite : qui veut vraiment énumérer réinitialise
+son compteur à chaque requête. La limitation de débit sert contre les
+inondations et l'abus occasionnel, pas contre un attaquant déterminé.
+
+**Ce qui protège les dossiers, ce sont les 60 bits d'entropie du code.** Environ
+10^18 possibilités : même sans aucune limite, l'énumération ne finit pas.
+
+`trackReport` renvoie donc `resource-exhausted`, distinct de « introuvable », et
+journalise chaque recherche en `track_hit` / `track_miss` — sans code, sans
+identifiant. C'est ce sur quoi brancher une alerte : **une série soutenue de
+`track_miss` est à quoi ressemble une énumération**, et c'est le signal que des
+compteurs par appareil ne peuvent pas voir.
+
+Le frontend écarte les codes mal formés avant d'appeler (`isWellFormed`), donc
+ils ne consomment pas de budget. C'est une commodité, pas une garantie :
 **revalider côté serveur.**
 
 ---
@@ -251,9 +280,9 @@ longtemps et sort du périmètre pensé pour ces données.
 3. Brancher le `ReportSubmitter` Flutter dessus, avec le mappage
    d'erreurs (§8). Le frontend ne change nulle part ailleurs.
 4. `requestEvidenceUploadUrl` + téléversement client.
-5. `trackReport` + limitation de débit. **← prochaine**
+5. `trackReport` + limitation de débit.
 6. Politiques TTL, une fois la durée de conservation arrêtée.
-7. Console équipe.
+7. Console équipe. **← prochaine**
 
 Aux étapes 2 et 3, l'application est déjà utilisable de bout en bout, sans
 preuves ni suivi. C'est le premier jalon qui vaut d'être testé en vrai.
@@ -282,7 +311,7 @@ replier sur `network`.
 
 ## 9. Où on en est
 
-**Étapes 1 à 4 faites**, dans le dépôt, testées.
+**Étapes 1 à 5 faites**, dans le dépôt, testées.
 
 ```
 firestore.rules  storage.rules      tout fermé au client
@@ -295,6 +324,7 @@ lib/core/backend/firebase_backend.dart   démarrage, App Check, auth anonyme,
                                           ReportSubmitter, mappage d'erreurs
 lib/core/backend/report_payload.dart     ReportModel → contrat de transport
 lib/core/backend/evidence_uploader.dart  téléversement par URL signée
+lib/models/tracking_outcome.dart         les quatre issues d'une recherche
 test/backend_contract_test.dart          vérifie l'accord des deux côtés
 test/evidence_uploader_test.dart         transferts, cache de réessai, échecs
 ```
@@ -327,7 +357,10 @@ Rien de tout cela ne peut être fait depuis le dépôt :
 6. Donner au compte de service d'exécution le rôle *Créateur de jetons du
    compte de service* sur lui-même, sans quoi `requestEvidenceUploadUrl` ne peut
    pas signer d'URL. Les émulateurs ne signent pas : ça ne se voit qu'en ligne.
-7. `firebase deploy --only firestore:rules,storage:rules,functions`.
+7. Alerte sur le journal : une série soutenue de `track_miss` est à quoi
+   ressemble une énumération, et c'est le signal que les compteurs par appareil
+   ne peuvent pas voir.
+8. `firebase deploy --only firestore:rules,storage:rules,functions`.
 
 ### Étape 3 — le client, branché
 
@@ -456,3 +489,38 @@ quand la machine change de mains.
 
 Les émulateurs Firebase n'appliquent pas App Check, donc `npm run test:emulator`
 et tout le développement local contre émulateur sont indifférents à tout ceci.
+
+---
+
+## 11. Étape 5 — le suivi
+
+`trackReport` est en place, et l'écran de suivi passe par le serveur : un
+signalement se retrouve désormais après avoir fermé l'application, ce qui n'a
+jamais été vrai jusqu'ici.
+
+**Quatre issues, tenues séparées.** C'est le point de conception de cette étape :
+
+| Issue | Ce que voit l'utilisateur |
+|---|---|
+| trouvé | le statut, la date, le type, l'urgence |
+| introuvable | « aucun dossier ne correspond » |
+| mal formé | « ce numéro n'a pas le bon format » — sans appel serveur |
+| indisponible | « impossible de vérifier pour le moment… **ton dossier n'a pas disparu** » |
+
+Les deux dernières lignes existent pour la même raison : un enfant qui a
+signalé quelque chose de grave et qui lit « aucun dossier ne correspond » en
+conclut que son signalement s'est évaporé. Ça ne doit pouvoir arriver que quand
+c'est vrai — jamais parce que le réseau est tombé, ni parce qu'il a mal recopié.
+
+**Un statut inconnu n'est pas deviné.** `enumByName` rend `null` plutôt que de
+lever, et l'écran affiche une phrase neutre. Un backend qui gagne un statut ne
+casse donc pas les applications déjà installées.
+
+### Ce qui reste
+
+- **Étape 6** — console équipe. Sans elle, un dossier reste éternellement
+  `received` : personne ne peut faire passer un statut à `inReview`.
+- **Conservation** — la politique TTL sur `reports` attend une durée du CMRPI.
+- **Notifications** — FCM, pour prévenir d'un changement de statut sans que
+  l'utilisateur ait à revenir vérifier. Utile précisément parce que le suivi est
+  la seule chose qu'il puisse faire en attendant.

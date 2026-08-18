@@ -21,7 +21,10 @@ est invisible.
   MAINTENANT » de l'accueil ouvre le formulaire directement : qui l'utilise a
   déjà décidé.
 - **Suivre ma demande** — l'utilisateur saisit le numéro de référence reçu à
-  l'envoi et consulte l'état de son dossier.
+  l'envoi et consulte l'état de son dossier. La recherche distingue quatre
+  issues : trouvé, introuvable, numéro mal formé, et vérification impossible.
+  Les deux dernières existent pour qu'un enfant ne lise jamais « aucun dossier
+  ne correspond » parce que le réseau est tombé ou qu'il a mal recopié.
 - **Ressources** — les gestes à adopter face à un incident.
 - **Contact** — WhatsApp, téléphone, e-mail et portail web de l'équipe.
 - **Chatbot** (+12 ans) — assistant proposé depuis l'étape « âge » et depuis
@@ -78,7 +81,7 @@ Les points d'accroche sont en place et n'attendent que l'appel réseau :
 | À remplacer | Où |
 |---|---|
 | Envoi du signalement | injecter un `ReportSubmitter` dans `ReportProvider` — voir « Envoi et échec » ci-dessous |
-| Suivi d'une demande | `ReportProvider.findByReference()` — lit l'historique de session, deviendra une requête serveur |
+| Suivi d'une demande | `ReportProvider.lookupReference()` — appelle `trackReport`, qui ne renvoie qu'un statut, jamais le contenu du dossier |
 | Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
 | Captures d'écran | téléversées par `EvidenceUploader` avant l'envoi ; le serveur ne voit que des chemins d'objet qu'il a lui-même délivrés |
 
@@ -262,10 +265,9 @@ partagé, la liste montrerait à la première personne qui l'ouvre ce qui a ét�
 signalé et sur quelle plateforme. Le suivi passe par le numéro de référence,
 que seul l'auteur possède.
 
-**Le contenu des signalements n'est jamais persisté** — ni pseudo, ni
-coordonnées, ni preuves, ni historique. Le suivi d'une demande ne retrouve donc
-un dossier que pendant la session où il a été envoyé ; il s'appuiera sur le
-serveur une fois celui-ci en place. C'est délibéré : l'application vise des
+**Rien du contenu d'un signalement n'est écrit sur l'appareil** — ni pseudo, ni
+coordonnées, ni preuves, ni historique. Le suivi passe par le serveur, qui ne
+renvoie qu'un statut. C'est délibéré : l'application vise des
 enfants qui partagent souvent leur téléphone, parfois avec la personne qu'ils
 signalent. Une trace lisible localement serait un risque, pas une fonctionnalité.
 Un test (`test/settings_store_test.dart`) vérifie qu'aucune donnée de

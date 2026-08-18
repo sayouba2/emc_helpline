@@ -10,7 +10,7 @@ import '../../core/localization/report_enum_labels.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../core/utils/reference_code.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/report_model.dart';
+import '../../models/tracking_outcome.dart';
 import '../../providers/report_provider.dart';
 import '../components/glass_container.dart';
 import '../components/scrollable_page.dart';
@@ -30,13 +30,8 @@ class TrackRequestScreen extends StatefulWidget {
 class _TrackRequestScreenState extends State<TrackRequestScreen> {
   final TextEditingController _codeController = TextEditingController();
 
-  ReportModel? _result;
-  bool _searched = false;
-
-  /// The code cannot be one at all — too short, or carrying characters the
-  /// alphabet does not use. Told apart from "no such case" so a typo reads as a
-  /// typo, and so a malformed code never costs a lookup.
-  bool _isMalformed = false;
+  TrackingOutcome? _outcome;
+  bool _isSearching = false;
 
   @override
   void dispose() {
@@ -44,14 +39,17 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
     super.dispose();
   }
 
-  void _search() {
+  Future<void> _search() async {
     final provider = Provider.of<ReportProvider>(context, listen: false);
     FocusScope.of(context).unfocus();
     final typed = _codeController.text;
+
+    setState(() => _isSearching = true);
+    final outcome = await provider.lookupReference(typed);
+    if (!mounted) return;
     setState(() {
-      _searched = true;
-      _isMalformed = !ReferenceCode.isWellFormed(typed);
-      _result = _isMalformed ? null : provider.findByReference(typed);
+      _isSearching = false;
+      _outcome = outcome;
     });
   }
 
@@ -98,7 +96,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 autocorrect: false,
                 textCapitalization: TextCapitalization.characters,
                 textInputAction: TextInputAction.search,
-                onChanged: (_) => setState(() => _searched = false),
+                onChanged: (_) => setState(() => _outcome = null),
                 onSubmitted: (_) => _search(),
                 decoration: InputDecoration(
                   hintText: ReferenceCode.example,
@@ -143,15 +141,26 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                onPressed: code.isEmpty ? null : _search,
-                icon: const Icon(Icons.search_rounded, size: 18),
+                onPressed: code.isEmpty || _isSearching ? null : _search,
+                icon: _isSearching
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.search_rounded, size: 18),
                 label: Text(
-                  l10n.trackRequestAction,
+                  _isSearching
+                      ? l10n.trackRequestSearching
+                      : l10n.trackRequestAction,
                   style: AppTextStyles.buttonText.copyWith(fontSize: 15),
                 ),
               ),
 
-              if (code.isEmpty && _searched) ...[
+              if (code.isEmpty && _outcome != null) ...[
                 const SizedBox(height: 16),
                 Text(
                   l10n.trackRequestEmptyField,
@@ -162,17 +171,56 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 ),
               ],
 
-              if (_searched && code.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                if (_result != null)
-                  _buildResultCard(context, l10n, _result!)
-                else
+              ...switch (_outcome) {
+                null => const <Widget>[],
+                TrackingFound(:final report) => [
+                  const SizedBox(height: 24),
+                  _buildResultCard(context, l10n, report),
+                ],
+                TrackingMalformed() => [
+                  const SizedBox(height: 24),
+                  _buildNoticeCard(l10n.trackRequestMalformed),
+                ],
+                TrackingNotFound() => [
+                  const SizedBox(height: 24),
+                  _buildNoticeCard(l10n.trackRequestNotFound),
+                ],
+                // Kept apart from "no such case": the report has not gone
+                // anywhere, and a child must not be told otherwise because a
+                // lookup failed.
+                TrackingUnavailable() => [
+                  const SizedBox(height: 24),
                   _buildNoticeCard(
-                    _isMalformed
-                        ? l10n.trackRequestMalformed
-                        : l10n.trackRequestNotFound,
+                    l10n.trackRequestUnavailable,
+                    isProblem: true,
                   ),
-              ],
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(
+                        color: AppColors.primaryBlue,
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: _isSearching ? null : _search,
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      size: 18,
+                      color: AppColors.primaryBlue,
+                    ),
+                    label: Text(
+                      l10n.trackRequestRetry,
+                      style: AppTextStyles.buttonTextOutline.copyWith(
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ),
+                ],
+              },
             ],
           ),
         ),
@@ -183,7 +231,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
   Widget _buildResultCard(
     BuildContext context,
     AppLocalizations l10n,
-    ReportModel report,
+    TrackedReport report,
   ) {
     final locale = Localizations.localeOf(context).toLanguageTag();
     final createdAt = report.createdAt;
@@ -206,7 +254,7 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
                 child: SelectableText(
                   // Le code se lit caractère par caractère : il reste LTR.
                   textDirection: TextDirection.ltr,
-                  report.referenceCode ?? '',
+                  report.referenceCode,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -220,7 +268,12 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
           const SizedBox(height: 14),
           const Divider(height: 1),
           const SizedBox(height: 14),
-          _buildRow(l10n.trackRequestStatus, l10n.reportStatusInProgress),
+          _buildRow(
+            l10n.trackRequestStatus,
+            // A status this build does not know means a newer backend against
+            // an older app. Better a neutral sentence than a guess.
+            report.status?.label(l10n) ?? l10n.trackStatusUnknown,
+          ),
           if (createdAt != null)
             _buildRow(
               l10n.trackRequestFiledOn,
@@ -239,22 +292,26 @@ class _TrackRequestScreenState extends State<TrackRequestScreen> {
     );
   }
 
-  Widget _buildNoticeCard(String message) {
+  Widget _buildNoticeCard(String message, {bool isProblem = false}) {
+    final accent = isProblem
+        ? AppColors.dangerRedStrong
+        : AppColors.primaryOrange;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.emergencyBannerBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primaryOrange.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconUtils.buildIcon(
-            FontAwesomeIcons.circleInfo,
-            color: AppColors.primaryOrange,
+            isProblem
+                ? FontAwesomeIcons.cloudArrowDown
+                : FontAwesomeIcons.circleInfo,
+            color: accent,
             size: 18,
           ),
           const SizedBox(width: 12),

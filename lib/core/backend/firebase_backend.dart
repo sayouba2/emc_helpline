@@ -8,7 +8,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../firebase_options.dart';
+import '../../models/report_enums.dart';
 import '../../models/submission_outcome.dart';
+import '../../models/tracking_outcome.dart';
 import 'evidence_uploader.dart';
 import 'report_payload.dart';
 
@@ -35,7 +37,11 @@ const Duration _callTimeout = Duration(seconds: 28);
 /// a retry and the team's direct line. What must never happen is the
 /// simulation running in production: it hands out a reference number for a
 /// report that went nowhere, and the child walks away believing help is coming.
-Future<ReportSubmitter?> initializeBackend() async {
+/// What `initializeBackend` hands back: how to send a report, and how to look
+/// one up. Both `null` means the app runs on its local simulation.
+typedef Backend = ({ReportSubmitter? submitter, ReportLookup? lookup});
+
+Future<Backend> initializeBackend() async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -55,20 +61,74 @@ Future<ReportSubmitter?> initializeBackend() async {
           : const AppleDeviceCheckProvider(),
     );
 
-    return _FirebaseReportSubmitter(
-      EvidenceUploader(region: backendRegion),
-    ).submit;
+    return (
+      submitter: _FirebaseReportSubmitter(
+        EvidenceUploader(region: backendRegion),
+      ).submit,
+      lookup: lookupReport,
+    );
   } catch (error, stackTrace) {
     if (kReleaseMode) {
       debugPrint('Backend unavailable: $error');
-      return (_) => throw const SubmissionException(SubmissionFailure.server);
+      return (
+        submitter: (_) =>
+            throw const SubmissionException(SubmissionFailure.server),
+        // Throwing here too: the tracking screen says "cannot check right now",
+        // which is true, rather than "no such case", which would tell someone
+        // their report is gone.
+        lookup: (_) =>
+            throw const SubmissionException(SubmissionFailure.server),
+      );
     }
     debugPrint(
       'Firebase did not start, falling back to the local simulation.\n'
       'Reports will NOT be sent anywhere. $error\n$stackTrace',
     );
-    return null;
+    return (submitter: null, lookup: null);
   }
+}
+
+/// Reads a case back by its reference number.
+///
+/// Returns `null` for "no such case" and throws for "could not ask" — the
+/// tracking screen shows those differently, because telling someone their
+/// report does not exist when the network is down would be its own small
+/// catastrophe.
+Future<TrackedReport?> lookupReport(String referenceCode) async {
+  await _ensureSignedIn();
+
+  final callable = FirebaseFunctions.instanceFor(region: backendRegion)
+      .httpsCallable(
+        'trackReport',
+        options: HttpsCallableOptions(timeout: _callTimeout),
+      );
+
+  final result = await callable.call<Object?>({'referenceCode': referenceCode});
+  final data = result.data;
+  if (data is! Map || data['found'] != true) return null;
+
+  final report = data['report'];
+  if (report is! Map) return null;
+
+  final createdAt = report['createdAt'];
+  return TrackedReport(
+    referenceCode: referenceCode,
+    status: enumByName(ReportStatus.values, report['status']),
+    createdAt: createdAt is String ? DateTime.tryParse(createdAt) : null,
+    incidentType: enumByName(IncidentType.values, report['incidentType']),
+    urgencyLevel: enumByName(UrgencyLevel.values, report['urgencyLevel']),
+  );
+}
+
+/// Anonymous sign-in, done before each call rather than once at launch.
+///
+/// It is not a login: there are no accounts, and the UID exists only so the
+/// server can count requests per device. Doing it here keeps launch off the
+/// network and survives a session that expired in the background.
+Future<void> _ensureSignedIn() async {
+  final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return;
+  await auth.signInAnonymously();
 }
 
 class _FirebaseReportSubmitter {
@@ -119,17 +179,6 @@ class _FirebaseReportSubmitter {
       if (failure == null) rethrow;
       throw SubmissionException(failure);
     }
-  }
-
-  /// Anonymous sign-in, done before each call rather than once at launch.
-  ///
-  /// It is not a login: there are no accounts, and the UID exists only so the
-  /// server can count requests per device. Doing it here keeps launch off the
-  /// network and survives a session that expired in the background.
-  Future<void> _ensureSignedIn() async {
-    final auth = FirebaseAuth.instance;
-    if (auth.currentUser != null) return;
-    await auth.signInAnonymously();
   }
 }
 

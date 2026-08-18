@@ -34,6 +34,7 @@ export const RATE_LIMITS = {
   submitReportHourly: { limit: 5, windowSeconds: 60 * 60 },
   submitReportDaily: { limit: 20, windowSeconds: 24 * 60 * 60 },
   uploadUrlHourly: { limit: 20, windowSeconds: 60 * 60 },
+  trackReportHourly: { limit: 10, windowSeconds: 60 * 60 },
 } as const;
 
 /** Evidence lives under this prefix and nowhere else. */
@@ -69,7 +70,7 @@ export const COLLECTIONS = {
 /** Every state a case can be in. `trackReport` returns one of these verbatim. */
 export const REPORT_STATUSES = [
   "received",
-  "in_review",
+  "inReview",
   "contacted",
   "closed",
 ] as const;

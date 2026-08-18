@@ -5,12 +5,14 @@ import '../core/utils/validators.dart';
 import '../models/report_enums.dart';
 import '../models/report_model.dart';
 import '../models/submission_outcome.dart';
+import '../models/tracking_outcome.dart';
 
 class ReportProvider with ChangeNotifier {
   ReportProvider(
     this._settings, {
     this.submissionLatency = const Duration(milliseconds: 1600),
     this.submitter,
+    this.lookup,
   }) : _locale = _settings.readLocale();
 
   final SettingsStore _settings;
@@ -19,6 +21,10 @@ class ReportProvider with ChangeNotifier {
   /// simulation below — the backend passes its own implementation here, and
   /// tests pass one that throws.
   final ReportSubmitter? submitter;
+
+  /// How a case is read back. `null` falls back to this session's history —
+  /// see [lookupReference].
+  final ReportLookup? lookup;
 
   /// How long the simulated send takes, so the sending animation has something
   /// to cover. Unused once a real [ReportSubmitter] is injected. Tests pass
@@ -412,10 +418,43 @@ class ReportProvider with ChangeNotifier {
     );
   }
 
-  /// Looks a report up by the reference code handed to the user.
+  /// Looks a case up by the number handed to its author.
   ///
-  /// Backed by this session's history for now; it becomes a server lookup once
-  /// the backend exists.
+  /// The four outcomes are kept apart deliberately. "No such case" and "could
+  /// not ask" look alike to the code and mean opposite things to the person
+  /// typing: telling a child their report does not exist because the network is
+  /// down would be its own small catastrophe.
+  Future<TrackingOutcome> lookupReference(String code) async {
+    if (!ReferenceCode.isWellFormed(code)) return const TrackingMalformed();
+
+    final lookup = this.lookup;
+    if (lookup == null) {
+      // No backend configured: this session's history is all the simulation
+      // ever had.
+      final local = findByReference(code);
+      return local == null
+          ? const TrackingNotFound()
+          : TrackingFound(
+              TrackedReport(
+                referenceCode: local.referenceCode ?? code,
+                status: ReportStatus.received,
+                createdAt: local.createdAt,
+                incidentType: local.incidentType,
+                urgencyLevel: local.urgencyLevel,
+              ),
+            );
+    }
+
+    try {
+      final found = await lookup(code);
+      return found == null ? const TrackingNotFound() : TrackingFound(found);
+    } catch (_) {
+      return const TrackingUnavailable();
+    }
+  }
+
+  /// This session's reports, matched by reference code.
+  ///
   /// The comparison goes through [ReferenceCode.payloadOf] on both sides, so
   /// what the user typed is matched by what it means, not by how it looks:
   /// lower case, missing dashes and an `O` typed for a `0` all still find the

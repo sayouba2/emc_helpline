@@ -2,6 +2,7 @@ import '../../l10n/app_localizations.dart';
 import '../utils/validators.dart';
 import '../../models/report_enums.dart';
 import '../../models/submission_outcome.dart';
+import '../../models/tracking_outcome.dart';
 
 /// Localised display names for the report enums.
 ///
@@ -109,5 +110,14 @@ extension SubmissionFailureLabel on SubmissionFailure {
     SubmissionFailure.server => l10n.submissionErrorServer,
     SubmissionFailure.timeout => l10n.submissionErrorTimeout,
     SubmissionFailure.unknown => l10n.submissionErrorUnknown,
+  };
+}
+
+extension ReportStatusLabel on ReportStatus {
+  String label(AppLocalizations l10n) => switch (this) {
+    ReportStatus.received => l10n.trackStatusReceived,
+    ReportStatus.inReview => l10n.trackStatusInReview,
+    ReportStatus.contacted => l10n.trackStatusContacted,
+    ReportStatus.closed => l10n.trackStatusClosed,
   };
 }

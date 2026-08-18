@@ -25,7 +25,6 @@
   "gendarmerieSubtitle": "إنقاذ وحماية",
   "howItWorks": "كيف يعمل الخط؟",
   "howItWorksSubtitle": "يتم التعامل مع جميع البلاغات بسرية تامة من قبل أخصائيين معتمدين.",
-  "reportStatusInProgress": "قيد المعالجة",
   "stepperContext": "السياق",
   "stepperProfile": "الملف",
   "stepperIncident": "الحادث",
@@ -282,5 +281,13 @@
   "submissionErrorCallPolice": "الاتصال بالشرطة (19)",
   "reportLandingResume": "استئناف الإرسال",
   "reportLandingResumeSubtitle": "لم يُرسَل بلاغك الأخير. إجاباتك ما زالت محفوظة.",
-  "trackRequestMalformed": "هذا الرقم ليس بالصيغة الصحيحة. يشبه EMC-4K7P-W9XM-2QTR. أعد نسخه كما سُلّم إليك."
+  "trackRequestMalformed": "هذا الرقم ليس بالصيغة الصحيحة. يشبه EMC-4K7P-W9XM-2QTR. أعد نسخه كما سُلّم إليك.",
+  "trackStatusReceived": "تم الاستلام",
+  "trackStatusInReview": "قيد الدراسة",
+  "trackStatusContacted": "تواصل معك الفريق",
+  "trackStatusClosed": "ملف مغلق",
+  "trackStatusUnknown": "تم تحديث الحالة — تواصل مع الفريق للتفاصيل.",
+  "trackRequestSearching": "جارٍ البحث…",
+  "trackRequestUnavailable": "تعذّر التحقق من ملفك حالياً. تحقق من اتصالك ثم أعد المحاولة. ملفك لم يختفِ.",
+  "trackRequestRetry": "إعادة المحاولة"
 }

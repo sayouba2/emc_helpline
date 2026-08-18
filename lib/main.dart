@@ -5,6 +5,7 @@ import 'core/backend/firebase_backend.dart';
 import 'core/constants/app_colors.dart';
 import 'core/storage/settings_store.dart';
 import 'models/submission_outcome.dart';
+import 'models/tracking_outcome.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/report_provider.dart';
 import 'views/splash_screen.dart';
@@ -20,26 +21,38 @@ Future<void> main() async {
   // Before the first frame: the wizard needs to know where a report goes the
   // moment it can be filled in. In debug this may come back `null`, which runs
   // the app on its local simulation — see `initializeBackend`.
-  final submitter = await initializeBackend();
+  final backend = await initializeBackend();
 
   runApp(
-    EMCHelplineApp(settings: await SettingsStore.open(), submitter: submitter),
+    EMCHelplineApp(
+      settings: await SettingsStore.open(),
+      submitter: backend.submitter,
+      lookup: backend.lookup,
+    ),
   );
 }
 
 class EMCHelplineApp extends StatelessWidget {
-  const EMCHelplineApp({super.key, required this.settings, this.submitter});
+  const EMCHelplineApp({
+    super.key,
+    required this.settings,
+    this.submitter,
+    this.lookup,
+  });
 
   final SettingsStore settings;
 
-  /// How a report leaves the device. `null` uses the built-in simulation, which
-  /// is what the widget tests run on — they must not touch the network.
+  /// How a report leaves the device, and how one is read back. `null` uses the
+  /// built-in simulation, which is what the widget tests run on — they must not
+  /// touch the network.
   final ReportSubmitter? submitter;
+  final ReportLookup? lookup;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ReportProvider(settings, submitter: submitter),
+      create: (_) =>
+          ReportProvider(settings, submitter: submitter, lookup: lookup),
       child: Consumer<ReportProvider>(
         builder: (context, reportProvider, _) {
           return MaterialApp(

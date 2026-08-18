@@ -28,7 +28,6 @@
   "gendarmerieSubtitle": "Secours et protection",
   "howItWorks": "Comment ça marche ?",
   "howItWorksSubtitle": "Tous les signalements sont traités anonymement et confidentiellement par des experts.",
-  "reportStatusInProgress": "En cours",
   "stepperContext": "Contexte",
   "stepperProfile": "Profil",
   "stepperIncident": "Incident",
@@ -433,5 +432,22 @@
   "trackRequestMalformed": "Ce numéro n'a pas le bon format. Il ressemble à EMC-4K7P-W9XM-2QTR. Recopie-le tel qu'il t'a été donné.",
   "@trackRequestMalformed": {
     "description": "Shown when the typed code cannot be a reference code at all — told apart from a code that is valid but unknown"
-  }
+  },
+  "trackStatusReceived": "Reçu",
+  "@trackStatusReceived": {
+    "description": "Case status: filed, not yet looked at"
+  },
+  "trackStatusInReview": "En cours d'examen",
+  "trackStatusContacted": "L'équipe t'a contacté",
+  "trackStatusClosed": "Dossier clos",
+  "trackStatusUnknown": "Statut mis à jour — contacte l'équipe pour le détail.",
+  "@trackStatusUnknown": {
+    "description": "Shown when the server sends a status this build does not know"
+  },
+  "trackRequestSearching": "Recherche en cours…",
+  "trackRequestUnavailable": "Impossible de vérifier ton dossier pour le moment. Vérifie ta connexion, puis réessaie. Ton dossier n'a pas disparu.",
+  "@trackRequestUnavailable": {
+    "description": "The lookup failed. Says nothing about whether the case exists — that distinction matters here."
+  },
+  "trackRequestRetry": "Réessayer"
 }
