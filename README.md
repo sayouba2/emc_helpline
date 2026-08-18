@@ -178,7 +178,7 @@ rendu par le serveur, suivi qui le retrouve — lancer les émulateurs et pointe
 l'application dessus :
 
 ```bash
-npm --prefix functions run build && npx firebase emulators:start --project demo-emc
+npm run backend
 ```
 
 ```bash

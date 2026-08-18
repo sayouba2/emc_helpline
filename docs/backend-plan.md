@@ -769,16 +769,53 @@ Functions évitaient. À ne faire que si Blaze est hors d'atteinte.
 
 Sans compte de facturation, sans App Check, sans rien déployer.
 
-**Un terminal** — les émulateurs :
+### Deux mots « émulateur », deux choses différentes
+
+C'est la confusion à lever avant tout le reste :
+
+- **L'émulateur Android** — le faux téléphone que `flutter run` allume. Il fait
+  tourner l'application.
+- **Les émulateurs Firebase** — un faux Firebase qui tourne sur le portable. Ils
+  font tourner le backend : les fonctions, la base, le stockage.
+
+Les deux n'ont rien à voir. Il en faut **deux à la fois** : le faux Firebase
+d'abord, le faux téléphone ensuite.
+
+### Où atterrit un signalement
+
+```
+      MODE LOCAL                            APRÈS DÉPLOIEMENT
+      npm run backend                       npx firebase deploy
+
+  ┌─────────────────┐                    ┌─────────────────┐
+  │   application   │                    │   application   │
+  └────────┬────────┘                    └────────┬────────┘
+           │ USE_EMULATORS=true                   │ (par défaut)
+           ▼                                      ▼
+  ┌─────────────────┐                    ┌─────────────────┐
+  │ Firebase émulé  │                    │ Firebase, chez  │
+  │ sur le portable │                    │     Google      │
+  └─────────────────┘                    └─────────────────┘
+   visible sur                            visible dans la
+   127.0.0.1:4000                         console Firebase
+   disparaît à l'arrêt                    persiste
+   gratuit                                plan Blaze
+```
+
+Un signalement déposé en mode local **est réellement enregistré** — dans la base
+émulée, sur le portable. Il n'apparaît **pas** dans la console Firebase en
+ligne : ce sont deux bases distinctes, et rien ne circule de l'une à l'autre.
+
+**Terminal 1** — le backend :
 
 ```bash
-npm --prefix functions run build && npx firebase emulators:start --project demo-emc
+npm run backend
 ```
 
 L'interface s'ouvre sur `http://127.0.0.1:4000` : on y voit les documents
 Firestore apparaître en direct, et les logs de chaque fonction appelée.
 
-**Un autre terminal** — l'application, pointée dessus :
+**Terminal 2** — l'application, pointée dessus :
 
 ```bash
 flutter run --dart-define=USE_EMULATORS=true

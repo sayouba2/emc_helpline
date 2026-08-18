@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Emulators and tests for the EMC Helpline backend. The app itself is Flutter — see README.md.",
   "scripts": {
+    "backend": "npm --prefix functions run build && firebase emulators:start --project demo-emc",
     "test": "vitest run",
     "test:emulator": "firebase emulators:exec --project demo-emc --only firestore,storage \"vitest run\"",
     "typecheck": "npm --prefix functions run typecheck",
