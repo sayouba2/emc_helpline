@@ -372,7 +372,21 @@ Rien de tout cela ne peut être fait depuis le dépôt :
    un espace réservé.
 2. Activer **Authentication → Anonymous**.
 3. Activer **App Check** — voir §10, ce n'est pas une case à cocher.
-4. Créer la base Firestore en région `europe-west1`.
+4. Créer la base Firestore : **mode production**, région **`europe-west1`**.
+
+   *Mode production*, pas *mode test* : le mode test ouvre la base en lecture et
+   en écriture à quiconque possède la clé d'API — laquelle est dans l'APK —
+   pendant trente jours. `firestore.rules` remplacera de toute façon ce que la
+   console écrit, donc le mode test n'apporte rien et ouvre une fenêtre
+   pendant laquelle des signalements d'enfants seraient lisibles par tous.
+
+   **La région ne se change pas après coup.** Elle doit correspondre à `REGION`
+   dans `functions/src/config.ts`, sinon chaque appel traverse un continent
+   pour rien.
+
+   Un second projet « de test » n'est pas nécessaire : les émulateurs couvrent
+   déjà les tests locaux (`npm run test:emulator`), sans toucher à de vraies
+   données. Il en faudra un le jour où une préproduction sera utile.
 5. Politique TTL sur `idempotency.expiresAt` et `rateLimits.expiresAt`.
    **Pas sur `reports`** tant que la durée de conservation n'est pas arrêtée.
 6. Donner au compte de service d'exécution le rôle *Créateur de jetons du
@@ -435,81 +449,111 @@ quelque chose qui sera rejeté.
 
 ## 10. App Check
 
-`submitReport` est déclaré `enforceAppCheck: true`. Toute requête sans jeton
-valide reçoit `unauthenticated`, **quel que soit l'état de la console** : pour
-une fonction appelable, l'application se décide dans le code, pas dans le
-tableau de bord. Le mode « non appliqué » de la console concerne Firestore et
-Storage, auxquels le client n'a de toute façon pas accès ici.
+### Ce que c'est, en une phrase
 
-Conséquence : tant que la configuration ci-dessous n'est pas faite, l'appel
-échoue. C'est voulu, mais ça se prend en pleine figure au premier essai.
+Un videur à l'entrée du backend : il vérifie que la requête vient bien de
+**votre application**, et pas d'un script écrit par quelqu'un d'autre.
 
-### Le fournisseur : Play Integrity
+### Pourquoi ce projet en a besoin
 
-Sur Android, c'est **Play Integrity**. reCAPTCHA Enterprise y est un repli en
-*preview* pour les appareils sans services Play — inutile ici. Sur iOS, ce sera
-DeviceCheck, ou App Attest sur iOS 14+.
+La clé d'API est lisible dans l'APK — n'importe qui peut l'en extraire en
+quelques minutes, c'est normal et prévu, ce n'est pas un secret. Sans App Check,
+cette clé suffit à appeler `submitReport` en boucle et à noyer l'équipe sous de
+faux signalements, ou à marteler `trackReport` pour deviner des numéros de
+référence.
 
-**Prérequis : l'empreinte SHA-256 de la clé de signature**, dans Paramètres du
-projet → Vos applications → Android → Ajouter une empreinte. Sans elle,
-l'enregistrement du fournisseur ne sert à rien.
+Il n'y a pas de comptes utilisateurs ici : App Check est donc la seule chose qui
+distingue l'application d'un script.
+
+### Le symptôme quand ce n'est pas configuré
+
+`submitReport` est déclaré `enforceAppCheck: true`. Sans jeton valide, la
+fonction renvoie `unauthenticated`, **quel que soit l'état de la console** :
+pour une fonction appelable, l'application se décide dans le code. Le mode
+« non appliqué » du tableau de bord ne concerne que Firestore et Storage.
+
+Concrètement, dans l'app : l'envoi d'un signalement tombe sur l'écran d'erreur
+avec « Nos serveurs n'ont pas pu enregistrer ton signalement ». Rien n'est
+cassé — c'est le videur qui fait son travail.
+
+### Marche à suivre, une fois
+
+**1. Empreinte SHA-256 de la clé de signature.**
 
 ```bash
 cd android && ./gradlew signingReport
 ```
 
-Noter que `android/app/build.gradle.kts` signe encore les builds *release* avec
-la clé de *debug*. Le jour où une vraie clé de release est créée, son SHA-256
-devra être ajouté aussi — sinon l'app publiée échoue à l'attestation alors que
-tout marchait en test.
+Copier la ligne `SHA-256` de la variante `debug`. Console → ⚙️ Paramètres du
+projet → *Vos applications* → l'app Android → **Ajouter une empreinte**.
 
-### Le piège : Play Integrity ne marche pas en développement
+Sans ça, Play Integrity n'a rien à quoi rattacher l'application.
 
-L'attestation demande à Google Play de confirmer que l'app est une installation
-authentique, depuis Play. Sur un émulateur, ou sur un APK installé par
-`flutter run`, il n'y a rien à confirmer : le verdict échoue, et il *doit*
+**2. Enregistrer Play Integrity.**
+
+Console → **App Check** → l'app Android → le `+` en face de **Play Integrity** →
+Enregistrer. Ignorer reCAPTCHA Enterprise : c'est un repli en *preview* pour les
+appareils sans services Play.
+
+**3. Obtenir un jeton de débogage.**
+
+C'est l'étape qui manque toujours, alors voici pourquoi elle existe.
+
+Play Integrity demande à Google Play de confirmer que l'application est une
+installation authentique **venant de Play**. Sur un émulateur, ou sur un APK posé
+par `flutter run`, il n'y a rien à confirmer : le verdict échoue, et il *doit*
 échouer — c'est exactement ce contre quoi App Check protège.
 
-Play Integrity ne devient donc réel qu'une fois l'application déposée sur une
-piste de test interne du Play Console. D'ici là, développer avec le
-**fournisseur de débogage** :
+En développement, on utilise donc un **fournisseur de débogage**, déjà en place
+dans [`firebase_backend.dart`](../lib/core/backend/firebase_backend.dart) :
 
 ```dart
-await FirebaseAppCheck.instance.activate(
-  // Le fournisseur de débogage n'existe que dans les builds de debug. En
-  // release, Play Integrity, sans condition ni repli — un repli serait
-  // précisément la porte que App Check ferme.
-  androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-  appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.deviceCheck,
-);
+providerAndroid: kDebugMode
+    ? const AndroidDebugProvider()
+    : const AndroidPlayIntegrityProvider(),
 ```
 
-Au premier lancement, l'app imprime un jeton de débogage dans les logs :
+Lancer l'app une fois, puis lire le jeton dans les logs :
 
 ```bash
-flutter run 2>&1 | grep -i "Enter this debug secret"
+adb logcat -d | grep -i "debug secret"
 ```
 
-Ce jeton se colle dans la console : App Check → l'application → menu ⋮ →
-**Gérer les jetons de débogage**. Il reste valide jusqu'à révocation.
+Depuis Android Studio, c'est la fenêtre **Logcat** avec `debug secret` dans le
+filtre. La ligne ressemble à :
 
-**Un jeton de débogage contourne l'attestation.** Il vaut pour n'importe quel
-appareil qui le possède, donc il ne se met ni dans le dépôt, ni dans un canal
-d'équipe, ni dans une capture d'écran. Un par machine de développement, révoqué
-quand la machine change de mains.
+```
+DebugAppCheckProvider: Enter this debug secret into the allow list in
+the Firebase Console for your project: 1a2b3c4d-....
+```
 
-### Ordre praticable
+**4. Enregistrer ce jeton.**
 
-1. Enregistrer Play Integrity dans la console (l'empreinte SHA-256 d'abord).
-2. Développer avec le fournisseur de débogage — c'est ce qui débloque l'étape 3.
-3. Déposer une build sur la piste de test interne du Play Console.
-4. Vérifier dans App Check → Métriques que les requêtes vérifiées montent avant
-   de compter dessus. Les métriques distinguent les requêtes vérifiées, non
-   vérifiées et venant d'un jeton de débogage.
-5. Révoquer les jetons de débogage avant la mise en production.
+Console → App Check → l'app Android → menu **⋮** → *Gérer les jetons de
+débogage* → Ajouter. Relancer l'application : l'envoi passe.
 
-Les émulateurs Firebase n'appliquent pas App Check, donc `npm run test:emulator`
-et tout le développement local contre émulateur sont indifférents à tout ceci.
+### Ce qu'il ne faut pas faire avec un jeton de débogage
+
+Il **contourne** l'attestation, et vaut pour n'importe quel appareil qui le
+possède. Il ne va donc ni dans le dépôt, ni dans un canal d'équipe, ni dans une
+capture d'écran. Un par machine de développement, révoqué quand la machine
+change de mains, et tous révoqués avant la mise en production.
+
+### Plus tard
+
+- Le jour où une vraie clé de signature de *release* est créée, ajouter son
+  SHA-256 aussi. `android/app/build.gradle.kts` signe encore les builds release
+  avec la clé de debug ; sinon l'application publiée échoue à l'attestation
+  alors que tout marchait en test.
+- Play Integrity ne devient réel qu'une fois une build déposée sur une piste de
+  test interne du Play Console.
+- Vérifier dans **App Check → Métriques** que les requêtes vérifiées montent
+  avant de compter dessus. Le tableau distingue vérifiées, non vérifiées, et
+  celles venues d'un jeton de débogage.
+- Sur iOS : DeviceCheck, ou App Attest sur iOS 14+.
+
+Les émulateurs Firebase n'appliquent pas App Check : `npm run test:emulator` et
+tout le développement local contre émulateur sont indifférents à tout ceci.
 
 ---
 
