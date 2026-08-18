@@ -379,6 +379,7 @@ Rien de tout cela ne peut être fait depuis le dépôt :
    pendant trente jours. `firestore.rules` remplacera de toute façon ce que la
    console écrit, donc le mode test n'apporte rien et ouvre une fenêtre
    pendant laquelle des signalements d'enfants seraient lisibles par tous.
+   Le mode ne change rien à la facturation — voir §13.
 
    **La région ne se change pas après coup.** Elle doit correspondre à `REGION`
    dans `functions/src/config.ts`, sinon chaque appel traverse un continent
@@ -677,3 +678,75 @@ Complète la liste du §9 :
   puis `grant-agent`.
 - **Hosting** : `firebase deploy --only hosting` après avoir écrit
   `console/config.js`.
+
+---
+
+## 13. Facturation
+
+### Le mode de la base n'a rien à voir avec la facturation
+
+« Mode test » et « mode production » ne choisissent **qu'un fichier de règles de
+départ** :
+
+| Mode | Règles écrites par la console |
+|---|---|
+| test | `allow read, write: if true;` pendant 30 jours |
+| production | `allow read, write: if false;` |
+
+Ni l'un ni l'autre ne coûte quoi que ce soit, et `firestore.rules` remplace les
+deux au premier déploiement. Choisir « test » pour éviter la facturation ne
+marche pas : le mur arrive au même endroit, un cran plus loin.
+
+### Ce qui exige vraiment le plan Blaze
+
+**Les Cloud Functions.** Elles ne se déploient pas sur le plan gratuit, quelle
+que soit la base. Or tout le backend en est fait : `submitReport`, `trackReport`,
+`requestEvidenceUploadUrl`, la console. Cloud Storage aussi, sur les projets
+récents.
+
+Firestore seul fonctionne sur le plan gratuit. **La base peut donc être créée
+aujourd'hui, en mode production, sans carte** — et tout le développement local se
+fait contre les émulateurs, qui ne coûtent rien et ne demandent rien. Blaze
+n'est nécessaire qu'au moment de déployer.
+
+### Ce que Blaze coûte pour cette application
+
+Blaze est du paiement à l'usage **avec les quotas gratuits du plan gratuit
+inclus**. Ce n'est pas un abonnement : en dessous des seuils, la facture est de
+zéro.
+
+Les ordres de grandeur (à revérifier sur la page tarifaire, ils bougent) : ~2
+millions d'invocations de fonction par mois, ~50 000 lectures et ~20 000
+écritures Firestore par jour, quelques Go de stockage. Une ligne d'assistance
+qui traite quelques centaines de signalements par mois n'en atteint aucun.
+
+Les 30 $ sont selon toute vraisemblance une **empreinte de vérification de
+carte**, pas un prélèvement : Google autorise un montant puis le relâche sous
+quelques jours. À vérifier sur l'écran, qui doit parler d'autorisation
+temporaire. Les nouveaux comptes Google Cloud reçoivent en général un crédit
+d'essai qui couvre largement cette phase.
+
+### Ce qui empêche la facture de s'emballer
+
+C'est la vraie question, et elle mérite mieux qu'un espoir.
+
+- **`maxInstances: 10`** dans `index.ts` : les fonctions ne peuvent pas se
+  démultiplier indéfiniment sous une charge anormale.
+- **Mémoire à 256 Mio, délais courts** : une invocation coûte le minimum.
+- **Limitation de débit** par appareil sur les trois points d'entrée publics.
+- **App Check**, qui prend ici un second sens : sans lui, un script bouclant sur
+  `submitReport` génère des invocations facturables autant qu'il génère de faux
+  signalements. C'est un argument de coût autant que de sécurité.
+
+À faire en plus, dans la console Google Cloud → *Facturation* → *Budgets et
+alertes* : un budget de quelques euros avec alerte par e-mail à 50 % et 100 %.
+Une alerte ne coupe rien, mais elle prévient avant la surprise.
+
+### S'il est vraiment impossible d'ouvrir un compte de facturation
+
+L'architecture peut être déplacée : un service Node avec `firebase-admin` sur un
+hébergeur à offre gratuite, parlant à Firestore resté sur le plan gratuit. Les
+fonctions sont écrites en gestionnaires HTTP simples, donc le portage est
+modeste. En revanche il faudrait un autre stockage d'objets pour les preuves, et
+la clé de compte de service devient un secret à gérer — ce que les Cloud
+Functions évitaient. À ne faire que si Blaze est hors d'atteinte.
