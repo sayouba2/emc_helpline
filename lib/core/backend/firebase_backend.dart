@@ -72,10 +72,30 @@ Future<Backend> initializeBackend() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
+    // Before any callable, **including against the emulators**.
+    //
+    // The Android Functions SDK fetches an auth token and an App Check token in
+    // parallel, and counts "no provider installed" as a failed task — the call
+    // then dies on the phone with `1 out of 2 underlying tasks failed`, before
+    // a single byte leaves it. Skipping this on the emulator path looked
+    // harmless, since the emulators verify no token; but the token still has to
+    // *exist*.
+    const attestLocally = kDebugMode || useEmulators;
+    await FirebaseAppCheck.instance.activate(
+      // Play Integrity cannot attest an app that Play did not install, so it
+      // fails by construction on an emulator or a `flutter run` build. Debug
+      // builds use the debug provider and register their token in the console;
+      // release builds get Play Integrity with no fallback, because a fallback
+      // is the door App Check exists to close.
+      providerAndroid: attestLocally
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: attestLocally
+          ? const AppleDebugProvider()
+          : const AppleDeviceCheckProvider(),
+    );
+
     if (useEmulators) {
-      // Before anything else touches them. The emulators enforce neither App
-      // Check nor the console's provider settings, so this path needs none of
-      // the setup the real project does.
       await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
       FirebaseFunctions.instanceFor(
         region: backendRegion,
@@ -88,20 +108,6 @@ Future<Backend> initializeBackend() async {
         lookup: lookupReport,
       );
     }
-
-    await FirebaseAppCheck.instance.activate(
-      // Play Integrity cannot attest an app that Play did not install, so it
-      // fails by construction on an emulator or a `flutter run` build. Debug
-      // builds use the debug provider and register their token in the console;
-      // release builds get Play Integrity with no fallback, because a fallback
-      // is the door App Check exists to close.
-      providerAndroid: kDebugMode
-          ? const AndroidDebugProvider()
-          : const AndroidPlayIntegrityProvider(),
-      providerApple: kDebugMode
-          ? const AppleDebugProvider()
-          : const AppleDeviceCheckProvider(),
-    );
 
     // Said out loud, because the alternative is a failed send with no clue as
     // to where it was even trying to go. Forgetting `--dart-define` is the

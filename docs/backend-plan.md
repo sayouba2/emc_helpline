@@ -862,6 +862,14 @@ Envoi échoué [not-found] ...
 | `unauthenticated` | App Check ou la connexion anonyme a été refusée |
 | `unavailable` | rien au bout : émulateurs éteints, ou mauvaise adresse |
 
+**App Check, même contre les émulateurs.** Le SDK Android des Functions
+récupère un jeton d'authentification et un jeton App Check *en parallèle*, et
+compte « aucun fournisseur installé » comme une tâche échouée. L'appel meurt
+alors sur le téléphone — `1 out of 2 underlying tasks failed` — avant qu'un
+seul octet ne parte, et le terminal du backend ne montre évidemment rien.
+`FirebaseAppCheck.activate()` est donc appelé **avant** l'aiguillage vers les
+émulateurs : ceux-ci ne vérifient aucun jeton, mais il faut qu'il en existe un.
+
 **Le trafic en clair.** Les émulateurs parlent en HTTP, qu'Android bloque par
 défaut depuis `targetSdk` 28. `android/app/src/debug/res/xml/network_security_config.xml`
 lève ce blocage **dans les builds de debug uniquement** — le fichier vit dans
