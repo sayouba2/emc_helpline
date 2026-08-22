@@ -106,6 +106,13 @@ le compte, chaque changement de statut le relance. Sa suppression emporte les
 captures. L'équipe travaille dans une console web séparée (`console/`), où
 chaque ouverture de dossier est journalisée avec l'adresse de l'agent.
 
+```bash
+npm run backend    # terminal 1
+npm run console    # terminal 2 : config + compte agent local
+```
+
+Puis http://127.0.0.1:5000 — voir [`docs/backend-plan.md`](docs/backend-plan.md) §17.
+
 Les notifications sont **désactivées par défaut** et ne s'activent que depuis
 l'écran qui affiche le numéro de référence. Le message n'apprend rien à qui lit
 l'écran verrouillé, et aucun appareil n'est enregistré en face d'un dossier —

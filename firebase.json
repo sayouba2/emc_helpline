@@ -67,7 +67,7 @@
     "ignore": [
       "**/.*",
       "**/node_modules/**",
-      "config.example.js"
+      "**/config.example.js"
     ],
     "headers": [
       {

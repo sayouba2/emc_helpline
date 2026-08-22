@@ -997,3 +997,57 @@ FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 \
 npx vitest run functions/test/workflow.test.ts
 ```
+
+---
+
+## 17. Ouvrir la console en local
+
+Trois commandes, une fois pour toutes.
+
+```bash
+npm run backend          # terminal 1, laissé ouvert
+npm run console          # terminal 2 : config + compte agent
+```
+
+`npm run console` enchaîne deux choses :
+
+- **`console:config`** écrit `console/config.js` à partir de
+  `lib/firebase_options.dart`. Les deux doivent désigner le même projet — la
+  console lit ce que l'application dépose — et recopier ces valeurs à la main,
+  c'est se garantir une divergence au prochain `flutterfire configure`. Une
+  console qui pointe vers un projet vide ressemble à une console cassée.
+- **`console:agent`** crée `agent@cmrpi.ma` / `console-locale` dans l'émulateur,
+  marque l'adresse vérifiée et pose le claim `role: agent`.
+
+Puis **http://127.0.0.1:5000** — l'émulateur d'hébergement annonce son port à
+son démarrage s'il a dû en prendre un autre.
+
+La console détecte qu'elle est servie depuis `localhost` et se branche
+elle-même sur les émulateurs d'authentification et de fonctions. Le test porte
+sur l'hôte plutôt que sur un drapeau : une console déployée n'est jamais servie
+depuis localhost, elle ne peut donc pas basculer par accident. Un badge
+« émulateurs » apparaît à côté de l'adresse connectée.
+
+### Le compte agent en production
+
+Rien de ce qui précède ne s'applique au vrai projet. Là-bas :
+
+1. Créer le compte dans Authentication, faire vérifier l'adresse.
+2. `npm --prefix functions run grant-agent -- grant adresse@cmrpi.ma`
+
+`grant-agent` refuse une adresse non vérifiée, parce que `requireAgent` la
+refuserait aussi et qu'un compte qui *paraît* autorisé sans l'être est pire
+qu'un refus franc. La révocation invalide les jetons de rafraîchissement, sinon
+le retrait d'accès attendrait l'expiration du jeton — jusqu'à une heure.
+
+### Ce que les tests couvrent
+
+`functions/test/consoleWorkflow.test.ts` appelle les fonctions de la console par
+HTTP avec un vrai jeton d'agent. Il vérifie ce qu'aucune autre suite ne
+couvre : **`requireAgent`**. Ces fonctions sont les seules à lire le contenu
+d'un signalement, et la seule chose qui en tient la porte est un claim sur un
+compte — une suite appelant les fonctions cœur en direct sauterait précisément
+ce contrôle.
+
+Il vérifie aussi que la file ne laisse fuir ni récit, ni pseudo, ni téléphone,
+et que faire avancer un dossier repousse bien son expiration.

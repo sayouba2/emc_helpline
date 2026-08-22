@@ -6,12 +6,14 @@
 // de qui écrit le code client.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 import {
+  connectAuthEmulator,
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
+  connectFunctionsEmulator,
   getFunctions,
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-functions.js";
@@ -21,6 +23,18 @@ import { firebaseConfig, REGION } from "./config.js";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const functions = getFunctions(app, REGION);
+
+// Servie depuis la machine locale, la console s'adresse aux émulateurs. Le
+// test porte sur l'hôte plutôt que sur un drapeau : une console déployée n'est
+// jamais servie depuis localhost, donc elle ne peut pas basculer par accident.
+const LOCAL = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+if (LOCAL) {
+  connectAuthEmulator(auth, `http://${location.hostname}:9099`, {
+    disableWarnings: true,
+  });
+  connectFunctionsEmulator(functions, location.hostname, 5001);
+  document.title = "EMC Helpline — Console (local)";
+}
 
 const call = (name) => httpsCallable(functions, name);
 const $ = (id) => document.getElementById(id);
@@ -95,6 +109,13 @@ onAuthStateChanged(auth, async (user) => {
   $("signin").hidden = true;
   $("queue").hidden = false;
   $("who").innerHTML = "";
+  if (LOCAL) {
+    const badge = document.createElement("span");
+    badge.className = "tag received";
+    badge.textContent = "émulateurs";
+    badge.title = "Cette console lit la base locale, pas le vrai projet.";
+    $("who").append(badge, document.createTextNode(" "));
+  }
   const label = document.createElement("span");
   label.textContent = user.email + " ";
   const out = document.createElement("button");
