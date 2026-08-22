@@ -50,6 +50,11 @@ const EXTENSIONS: Record<string, string> = {
   "image/webp": "webp",
 };
 
+/** L'inverse, pour retrouver le type d'un objet depuis son nom. */
+const EXTENSION_TYPES: Record<string, string> = Object.fromEntries(
+  Object.entries(EXTENSIONS).map(([type, extension]) => [extension, type]),
+);
+
 /** An object name nobody can guess, inside the submission's folder. */
 export function newEvidencePath(
   idempotencyKey: string,
@@ -128,6 +133,61 @@ export async function verifyEvidence(
   );
 
   return problems;
+}
+
+/**
+ * A URL the console can put in an `<img>` to show one screenshot.
+ *
+ * Deployed: a signed read URL, valid fifteen minutes. The console shows the
+ * evidence, it does not publish it.
+ *
+ * In the emulator: signing needs a service account the suite does not have, so
+ * `getSignedUrl` throws `SigningError` — which surfaced as a bare `INTERNAL`
+ * the moment an agent opened any case carrying a screenshot. The emulator
+ * assigns each object a download token instead, which serves it over plain
+ * HTTP with no Authorization header — the only shape an `<img>` can use.
+ */
+export async function evidenceReadUrl(
+  bucket: Bucket,
+  path: string,
+): Promise<string> {
+  const file = bucket.file(path);
+
+  if (!IN_EMULATOR) {
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + UPLOAD_URL_TTL_MINUTES * 60 * 1000,
+    });
+    return url;
+  }
+
+  const [metadata] = await file.getMetadata();
+  let token = metadata.metadata?.firebaseStorageDownloadTokens as
+    | string
+    | undefined;
+
+  // Le type est aussi remis d'aplomb : l'émulateur enregistre tout en
+  // application/octet-stream, quel que soit celui déclaré à l'envoi. Les
+  // navigateurs devinent, mais une console qui sert ses images avec le bon
+  // type est une console qui se comporte comme celle déployée.
+  const extension = file.name.slice(file.name.lastIndexOf(".") + 1);
+  const declared = EXTENSION_TYPES[extension];
+  const wrongType = declared && metadata.contentType !== declared;
+
+  if (!token || wrongType) {
+    token ??= randomBytes(16).toString("hex");
+    await file.setMetadata({
+      ...(wrongType ? { contentType: declared } : {}),
+      metadata: { firebaseStorageDownloadTokens: token },
+    });
+  }
+
+  const host = process.env.FIREBASE_STORAGE_EMULATOR_HOST ?? "127.0.0.1:9199";
+  return (
+    `http://${host}/v0/b/${bucket.name}/o/${encodeURIComponent(path)}` +
+    `?alt=media&token=${token}`
+  );
 }
 
 /**

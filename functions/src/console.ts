@@ -14,6 +14,9 @@ import {
   REPORT_RETENTION_DAYS,
   REPORT_STATUSES,
 } from "./config.js";
+import { getStorage } from "firebase-admin/storage";
+
+import { evidenceReadUrl } from "./evidence.js";
 import { logEvent } from "./logging.js";
 import { referenceHash, referencePayloadOf } from "./referenceCode.js";
 import { notifyStatusChange } from "./notifications.js";
@@ -200,27 +203,26 @@ export const getReport = onCall(
 
     const data = doc.data()!;
     const evidencePaths = (data.evidencePaths ?? []) as string[];
-    const bucket = (await import("firebase-admin/storage")).getStorage().bucket();
 
     // Short-lived read URLs rather than a public bucket: the console shows the
-    // screenshots, it does not publish them.
+    // screenshots, it does not publish them. `evidenceReadUrl` knows how to
+    // produce one both deployed and against the emulator, which cannot sign —
+    // sans quoi ouvrir un dossier portant une capture répondait `INTERNAL`.
+    const bucket = getStorage().bucket();
     const evidenceUrls = await Promise.all(
-      evidencePaths.map(async (path) => {
-        const [url] = await bucket.file(path).getSignedUrl({
-          version: "v4",
-          action: "read",
-          expires: Date.now() + 15 * 60 * 1000,
-        });
-        return url;
-      }),
+      evidencePaths.map((path) => evidenceReadUrl(bucket, path)),
     );
+
+    // `evidencePaths` est retiré, pas mis à `undefined` : la sérialisation en
+    // ferait un `null`, donc une clé présente et vide. La console a besoin
+    // d'URL, pas de savoir où les objets sont rangés.
+    const { evidencePaths: _stored, ...rest } = data;
 
     return {
       id: doc.id,
-      ...data,
+      ...rest,
       createdAt: data.createdAt?.toDate().toISOString() ?? null,
       expiresAt: data.expiresAt?.toDate().toISOString() ?? null,
-      evidencePaths: undefined,
       evidenceUrls,
     };
   },

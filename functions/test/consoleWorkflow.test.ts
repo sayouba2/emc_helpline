@@ -214,6 +214,71 @@ describe.skipIf(!ready)("la console, avec un compte agent", () => {
     expect(refused.error?.status).toBe("INVALID_ARGUMENT");
   });
 
+  it("ouvre un dossier portant une capture, et l'image s'affiche", async () => {
+    // Ouvrir un tel dossier répondait `INTERNAL` : getSignedUrl a besoin d'un
+    // compte de service que la suite d'émulateurs n'a pas. Le test suit l'URL
+    // jusqu'au bout — une URL rendue n'est pas une image affichable.
+    const anonymous = await anonymousToken();
+    const agent = await agentToken();
+    const idempotencyKey = uniqueKey();
+
+    const issued = await call(
+      "requestEvidenceUploadUrl",
+      { idempotencyKey, contentType: "image/png", sizeBytes: 8 },
+      anonymous,
+    );
+    const upload = issued.result as {
+      uploadUrl: string;
+      storagePath: string;
+      method: string;
+      headers: Record<string, string>;
+    };
+    await fetch(upload.uploadUrl, {
+      method: upload.method,
+      headers: { "Content-Type": "image/png", ...upload.headers },
+      body: Buffer.from("89504e470d0a1a0a", "hex"),
+    });
+    await call(
+      "submitReport",
+      {
+        idempotencyKey,
+        report: { ...report, evidencePaths: [upload.storagePath] },
+      },
+      anonymous,
+    );
+
+    const listed = await call("listReports", {}, agent);
+    const target = listed.result.reports.find(
+      (r: { evidenceCount: number }) => r.evidenceCount > 0,
+    );
+    expect(target, "aucun dossier avec preuve dans la file").toBeDefined();
+
+    const opened = await call("getReport", { reportId: target.id }, agent);
+    expect(opened.error, JSON.stringify(opened.error)).toBeUndefined();
+    expect(opened.result.evidenceUrls).toHaveLength(target.evidenceCount);
+
+    // Sans en-tête d'autorisation : c'est la seule forme qu'un <img> sait
+    // utiliser.
+    const image = await fetch(opened.result.evidenceUrls[0]);
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toMatch(/^image\//);
+  });
+
+  it("ne renvoie jamais le chemin de stockage lui-même", async () => {
+    // Le chemin nomme le dossier d'une soumission. La console a besoin d'une
+    // URL, pas de savoir où l'objet est rangé.
+    const agent = await agentToken();
+    const listed = await call("listReports", {}, agent);
+    const target = listed.result.reports.find(
+      (r: { evidenceCount: number }) => r.evidenceCount > 0,
+    );
+    if (!target) return;
+
+    const opened = await call("getReport", { reportId: target.id }, agent);
+
+    expect(opened.result.evidencePaths).toBeUndefined();
+  });
+
   it("fait avancer un dossier, et le suivi le voit", async () => {
     const anonymous = await anonymousToken();
     const agent = await agentToken();

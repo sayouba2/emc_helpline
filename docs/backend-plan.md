@@ -971,9 +971,19 @@ C'est la même erreur que `10.0.2.2` deux sections plus haut, sous une autre
 forme, et elle mérite d'être énoncée en règle : **une URL n'est utile qu'à
 l'adresse de celui qui va l'appeler.**
 
+**La lecture a le même problème que l'envoi.** `getReport` demande une URL
+signée par capture pour que la console les affiche ; l'émulateur ne sait pas
+signer là non plus, et ouvrir un dossier portant une capture répondait un
+`INTERNAL` nu. `evidenceReadUrl()` centralise les deux cas : URL signée de
+quinze minutes en production, jeton de téléchargement de l'émulateur en local —
+la seule forme qu'un `<img>` sait utiliser, puisqu'il ne peut pas envoyer
+d'en-tête d'autorisation.
+
 Une autre conséquence à connaître : **l'émulateur enregistre tout en
 `application/octet-stream`**, quel que soit le type déclaré. La vérification du
-type MIME est donc sautée en local — sinon elle rejetterait chaque capture. Le
+type MIME est donc sautée en local — sinon elle rejetterait chaque capture — et
+`evidenceReadUrl` remet le type d'aplomb au passage, pour qu'une console locale
+serve ses images comme le ferait celle déployée. Le
 contrôle qui compte, lui, tourne partout : le chemin doit appartenir au dossier
 que la clé d'idempotence dérive.
 
