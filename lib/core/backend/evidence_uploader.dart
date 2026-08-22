@@ -12,7 +12,15 @@ import '../../models/submission_outcome.dart';
 /// The bucket is closed to clients, so nothing is written directly: the
 /// function hands out one signed URL per object, bound to a content type and
 /// valid for minutes, and the upload goes there.
-typedef SignedUpload = ({String uploadUrl, String storagePath});
+typedef SignedUpload = ({
+  String uploadUrl,
+  String storagePath,
+
+  /// `PUT` against a signed Cloud Storage URL; `POST` against the emulator's
+  /// own endpoint, which is the only upload path that works locally.
+  String method,
+  Map<String, String> headers,
+});
 
 /// Asks the backend for one signed URL. Injectable so the uploader can be
 /// driven in tests without a Firebase project — the transfer logic below is
@@ -111,15 +119,16 @@ class EvidenceUploader {
       sizeBytes: bytes.length,
     );
 
-    final response = await _client
-        .put(
-          Uri.parse(signed.uploadUrl),
-          // Signed into the URL. Cloud Storage refuses the write if this header
-          // does not match what the function declared.
-          headers: {'Content-Type': contentType},
-          body: bytes,
-        )
-        .timeout(_perFileTimeout);
+    final request = http.Request(signed.method, Uri.parse(signed.uploadUrl))
+      // Signed into the URL. Cloud Storage refuses the write if this header
+      // does not match what the function declared.
+      ..headers['Content-Type'] = contentType
+      ..headers.addAll(signed.headers)
+      ..bodyBytes = bytes;
+
+    final response = await http.Response.fromStream(
+      await _client.send(request).timeout(_perFileTimeout),
+    );
 
     if (response.statusCode >= 500) {
       // Cloud Storage itself is unwell. Telling the user to check their wifi
@@ -152,12 +161,31 @@ class EvidenceUploader {
       });
 
       final data = result.data;
-      final uploadUrl = data is Map ? data['uploadUrl'] : null;
-      final storagePath = data is Map ? data['storagePath'] : null;
+      if (data is! Map) {
+        throw const SubmissionException(SubmissionFailure.server);
+      }
+
+      final uploadUrl = data['uploadUrl'];
+      final storagePath = data['storagePath'];
       if (uploadUrl is! String || storagePath is! String) {
         throw const SubmissionException(SubmissionFailure.server);
       }
-      return (uploadUrl: uploadUrl, storagePath: storagePath);
+
+      final method = data['method'];
+      final headers = data['headers'];
+      return (
+        uploadUrl: uploadUrl,
+        storagePath: storagePath,
+        // `PUT` is what a signed Cloud Storage URL expects; the emulator wants
+        // `POST`. Defaulting keeps an older backend working.
+        method: method is String ? method : 'PUT',
+        headers: headers is Map
+            ? {
+                for (final entry in headers.entries)
+                  entry.key.toString(): entry.value.toString(),
+              }
+            : const <String, String>{},
+      );
     };
   }
 

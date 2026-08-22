@@ -946,17 +946,24 @@ lève ce blocage **dans les builds de debug uniquement** — le fichier vit dans
 `src/debug/` et n'entre dans aucun build de release. Sans lui, `USE_EMULATORS`
 ne peut pas fonctionner et l'échec ne dit pas pourquoi.
 
-### La seule chose qui ne marche pas en local : les captures
+### Les captures, en local
 
-Le téléversement passe par une URL signée, et **l'émulateur de Storage ne sait
-pas en produire** — la signature demande de vraies identités IAM. Une tentative
-depuis l'application se heurte à `storage.rules`, qui refuse tout, exactement
-comme prévu.
+Signer une URL demande un vrai compte de service — un `client_email` et une clé
+privée — que la suite d'émulateurs n'a pas. `getSignedUrl` y échoue sur
+`Cannot sign data without client_email`, et **cela se voyait comme une panne
+intermittente** : un signalement avec un lien passait, un signalement avec une
+capture échouait, sans que rien ne dise pourquoi.
 
-En local, déposer donc un signalement avec **un lien ou un récit d'au moins 120
-caractères**. Le chemin des preuves n'est pas pour autant non testé : les tests
-d'`evidence.test.ts` téléversent réellement dans le bucket émulé et vérifient
-tout ce que `submitReport` exige — dossier, existence, taille, type.
+`requestEvidenceUploadUrl` renvoie donc, dans l'émulateur, l'adresse de son
+propre point d'envoi et le jeton d'administration `owner` qu'il accepte. Ce
+jeton ne vaut rien ailleurs, et cette branche ne peut pas s'exécuter en
+production : elle dépend de `FUNCTIONS_EMULATOR`, que rien n'y pose.
+
+Une conséquence à connaître : **l'émulateur enregistre tout en
+`application/octet-stream`**, quel que soit le type déclaré. La vérification du
+type MIME est donc sautée en local — sinon elle rejetterait chaque capture. Le
+contrôle qui compte, lui, tourne partout : le chemin doit appartenir au dossier
+que la clé d'idempotence dérive.
 
 ---
 

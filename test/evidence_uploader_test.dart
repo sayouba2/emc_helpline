@@ -14,6 +14,13 @@ const String _key = '18f2c3a4b5c6d7e8-EMC4K7PW9XM2QTR';
 
 /// Records what the backend was asked for, and hands back a signed URL.
 class _FakeBackend {
+  _FakeBackend({this.method = 'PUT', this.headers = const {}});
+
+  /// Le backend décide du verbe et des en-têtes : `PUT` vers une URL signée en
+  /// production, `POST` avec un jeton admin vers l'émulateur.
+  final String method;
+  final Map<String, String> headers;
+
   final List<({String contentType, int sizeBytes})> requests = [];
   int _next = 0;
 
@@ -27,6 +34,8 @@ class _FakeBackend {
     return (
       uploadUrl: 'https://storage.example/signed/$n',
       storagePath: 'evidence/abc12345/object$n.png',
+      method: method,
+      headers: headers,
     );
   }
 }
@@ -120,6 +129,35 @@ void main() {
 
       expect(second, first);
       expect(transfers, 1);
+    });
+
+    test('suit le verbe et les en-têtes que le backend choisit', () async {
+      // En production, PUT vers une URL signée. Contre l'émulateur, POST avec
+      // le jeton admin — parce que l'émulateur ne sait pas signer d'URL, et
+      // qu'un signalement portant une capture échouait donc toujours en local.
+      final backend = _FakeBackend(
+        method: 'POST',
+        headers: const {'Authorization': 'Bearer owner'},
+      );
+      String? seenMethod;
+      String? seenAuth;
+      final uploader = EvidenceUploader(
+        region: 'europe-west1',
+        requestUploadUrl: backend.call,
+        client: MockClient((request) async {
+          seenMethod = request.method;
+          seenAuth = request.headers['Authorization'];
+          return http.Response('', 200);
+        }),
+      );
+
+      await uploader.upload(
+        idempotencyKey: _key,
+        localPaths: [_writeFile('a.png')],
+      );
+
+      expect(seenMethod, 'POST');
+      expect(seenAuth, 'Bearer owner');
     });
 
     test('a new submission uploads again', () async {

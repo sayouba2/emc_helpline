@@ -195,8 +195,8 @@ npm run backend
 flutter run --dart-define=USE_EMULATORS=true
 ```
 
-Aucun compte de facturation, aucune donnée réelle. Détails et limites dans
-[`docs/backend-plan.md`](docs/backend-plan.md) §14.
+Aucun compte de facturation, aucune donnée réelle — captures d'écran comprises.
+Détails dans [`docs/backend-plan.md`](docs/backend-plan.md) §14.
 
 `flutter pub get` régénère `lib/l10n/app_localizations*.dart` à partir des
 fichiers ARB ; ces fichiers générés ne sont pas versionnés.

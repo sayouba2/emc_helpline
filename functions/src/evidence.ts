@@ -15,6 +15,9 @@ import {
   UPLOAD_URL_TTL_MINUTES,
 } from "./config.js";
 import { logProblem } from "./logging.js";
+
+/** Set by the emulator suite, and by nothing in production. */
+const IN_EMULATOR = process.env.FUNCTIONS_EMULATOR === "true";
 import { consumeRateLimit } from "./rateLimit.js";
 
 /**
@@ -111,11 +114,15 @@ export async function verifyEvidence(
       const size = Number(metadata.size ?? 0);
       if (size > MAX_EVIDENCE_BYTES) problems.push(`path_${index}_too_large`);
 
-      const type = metadata.contentType ?? "";
-      if (!ALLOWED_EVIDENCE_TYPES.includes(type as never)) {
-        // A signed URL binds the Content-Type the client declared, but what
-        // ends up in the bucket is worth re-reading rather than assumed.
-        problems.push(`path_${index}_wrong_type`);
+      // The Storage emulator records every upload as application/octet-stream,
+      // whatever the client declares — so this check cannot run locally without
+      // rejecting every screenshot. Deployed, a signed URL binds the type at
+      // issue time and this re-reads what actually landed.
+      if (!IN_EMULATOR) {
+        const type = metadata.contentType ?? "";
+        if (!ALLOWED_EVIDENCE_TYPES.includes(type as never)) {
+          problems.push(`path_${index}_wrong_type`);
+        }
       }
     }),
   );
@@ -131,9 +138,17 @@ export async function verifyEvidence(
  * single content type and a few minutes. Nothing reaches the bucket that this
  * function did not authorise.
  */
+export type SignedUpload = {
+  uploadUrl: string;
+  storagePath: string;
+  /** `PUT` for a signed URL, `POST` for the emulator's own endpoint. */
+  method: "PUT" | "POST";
+  headers: Record<string, string>;
+};
+
 export const requestEvidenceUploadUrl = onCall(
   { region: REGION, enforceAppCheck: ENFORCE_APP_CHECK, memory: "256MiB", timeoutSeconds: 30 },
-  async (request): Promise<{ uploadUrl: string; storagePath: string }> => {
+  async (request): Promise<SignedUpload> => {
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError("unauthenticated", "anonymous sign-in required");
@@ -156,20 +171,39 @@ export const requestEvidenceUploadUrl = onCall(
     }
 
     const { idempotencyKey, contentType } = parsed.data;
+    const bucket = getStorage().bucket();
     const storagePath = newEvidencePath(idempotencyKey, contentType);
 
-    const [uploadUrl] = await getStorage()
-      .bucket()
-      .file(storagePath)
-      .getSignedUrl({
-        version: "v4",
-        action: "write",
-        expires: Date.now() + UPLOAD_URL_TTL_MINUTES * 60 * 1000,
-        // Signed into the URL: an upload declaring anything else is refused by
-        // Cloud Storage before a byte is written.
-        contentType,
-      });
+    if (IN_EMULATOR) {
+      // Signing needs a real service account — a `client_email` and a private
+      // key — which the emulator suite has neither of. `getSignedUrl` there
+      // fails with `Cannot sign data without client_email`, so every report
+      // carrying a screenshot died locally while one with a link went through.
+      //
+      // The emulator exposes its own upload endpoint, and accepts the
+      // well-known admin token `owner`. That token means nothing outside the
+      // emulator and is worth nothing to anyone: this branch cannot run in
+      // production, where `FUNCTIONS_EMULATOR` is unset.
+      const host = process.env.FIREBASE_STORAGE_EMULATOR_HOST ?? "127.0.0.1:9199";
+      return {
+        uploadUrl:
+          `http://${host}/v0/b/${bucket.name}/o` +
+          `?name=${encodeURIComponent(storagePath)}&uploadType=media`,
+        storagePath,
+        method: "POST",
+        headers: { Authorization: "Bearer owner" },
+      };
+    }
 
-    return { uploadUrl, storagePath };
+    const [uploadUrl] = await bucket.file(storagePath).getSignedUrl({
+      version: "v4",
+      action: "write",
+      expires: Date.now() + UPLOAD_URL_TTL_MINUTES * 60 * 1000,
+      // Signed into the URL: an upload declaring anything else is refused by
+      // Cloud Storage before a byte is written.
+      contentType,
+    });
+
+    return { uploadUrl, storagePath, method: "PUT", headers: {} };
   },
 );

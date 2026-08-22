@@ -131,6 +131,78 @@ describe.skipIf(!ready)("le parcours complet, par HTTP", () => {
     );
   });
 
+  it("dépose un signalement dont la seule preuve est une capture", async () => {
+    // Le cas qui échouait en local, et qui ressemblait à une panne aléatoire :
+    // un signalement avec lien passait, un signalement avec capture non.
+    // L'émulateur de Storage ne sait pas signer d'URL, faute de compte de
+    // service — `Cannot sign data without client_email`.
+    const idToken = await signInAnonymously();
+    const idempotencyKey = uniqueKey();
+
+    const issued = await callFunction(
+      "requestEvidenceUploadUrl",
+      { idempotencyKey, contentType: "image/png", sizeBytes: 8 },
+      idToken,
+    );
+    expect(issued.error, JSON.stringify(issued.error)).toBeUndefined();
+
+    const upload = issued.result as {
+      uploadUrl: string;
+      storagePath: string;
+      method: string;
+      headers: Record<string, string>;
+    };
+
+    const written = await fetch(upload.uploadUrl, {
+      method: upload.method,
+      headers: { "Content-Type": "image/png", ...upload.headers },
+      body: Buffer.from("89504e470d0a1a0a", "hex"),
+    });
+    expect(written.status).toBe(200);
+
+    const sent = await callFunction(
+      "submitReport",
+      {
+        idempotencyKey,
+        report: report({ description: undefined, evidencePaths: [upload.storagePath] }),
+      },
+      idToken,
+    );
+
+    expect(sent.error, JSON.stringify(sent.error)).toBeUndefined();
+    expect((sent.result as { referenceCode: string }).referenceCode).toMatch(
+      /^EMC(-[0-9A-Z]{4}){3}$/,
+    );
+  });
+
+  it("refuse une capture délivrée pour une autre soumission", async () => {
+    // Le contrôle qui compte : un chemin bien formé n'est pas une preuve qu'il
+    // a été délivré pour ce signalement-là.
+    const idToken = await signInAnonymously();
+    const issued = await callFunction(
+      "requestEvidenceUploadUrl",
+      { idempotencyKey: uniqueKey(), contentType: "image/png", sizeBytes: 8 },
+      idToken,
+    );
+    const other = issued.result as { uploadUrl: string; storagePath: string; method: string; headers: Record<string, string> };
+    await fetch(other.uploadUrl, {
+      method: other.method,
+      headers: { "Content-Type": "image/png", ...other.headers },
+      body: Buffer.from("89504e470d0a1a0a", "hex"),
+    });
+
+    const sent = await callFunction(
+      "submitReport",
+      {
+        idempotencyKey: uniqueKey(),
+        report: report({ evidencePaths: [other.storagePath] }),
+      },
+      idToken,
+    );
+
+    expect((sent.error as { status?: string })?.status).toBe("INVALID_ARGUMENT");
+  });
+
   it("refuse un appel sans authentification", async () => {
     // C'est ce que reçoit un script qui appellerait l'endpoint directement.
     const response = await fetch(
