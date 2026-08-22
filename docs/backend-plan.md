@@ -1057,6 +1057,15 @@ npm run backend          # terminal 1, laissé ouvert
 npm run console          # terminal 2 : config + compte agent
 ```
 
+**Les émulateurs conservent leurs données** entre deux démarrages, dans
+`.emulator-data` (ignoré par git). Sans cela ils repartent vides à chaque
+lancement : le compte agent disparaît — la connexion répond « adresse ou mot de
+passe incorrect » alors que rien n'a changé — et les signalements de test avec.
+
+Une réserve : l'export se fait **en quittant**, donc quitter par `Ctrl-C`. Un
+`kill` brutal n'exporte rien, et il faut alors relancer `npm run console:agent`,
+qui est idempotent.
+
 `npm run console` enchaîne deux choses :
 
 - **`console:config`** écrit `console/config.js` à partir de

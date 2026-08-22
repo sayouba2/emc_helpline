@@ -58,3 +58,6 @@ ui-debug.log
 
 # Console : config Firebase propre à chaque déploiement
 console/config.js
+
+# Données des émulateurs, conservées entre deux démarrages (npm run backend)
+.emulator-data/

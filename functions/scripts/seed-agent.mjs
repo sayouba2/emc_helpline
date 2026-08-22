@@ -4,6 +4,12 @@
  *
  *   npm run console:agent
  *
+ * Le script est idempotent : il recrée le compte s'il a disparu, remet le mot
+ * de passe et repose le claim. À relancer si `npm run backend` a été tué sans
+ * exporter ses données — l'émulateur d'authentification les perd alors, et la
+ * connexion répond « adresse ou mot de passe incorrect » sans que rien n'ait
+ * changé.
+ *
  * Rien de tout ceci ne s'applique au vrai projet : le script refuse de démarrer
  * si l'émulateur d'authentification n'est pas joignable, et le SDK admin, une
  * fois `FIREBASE_AUTH_EMULATOR_HOST` posé, ne parle qu'à lui.
