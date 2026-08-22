@@ -821,6 +821,16 @@ Firestore apparaître en direct, et les logs de chaque fonction appelée.
 flutter run --dart-define=USE_EMULATORS=true
 ```
 
+**Il faut un vrai émulateur Android (AVD)**, ou un téléphone physique.
+`10.0.2.2` n'est pas une convention générale : c'est l'émulateur d'AVD qui
+réécrit cette adresse vers le loopback de la machine hôte. Les extensions
+d'aperçu mobile qui affichent l'application sans AVD dessous ne font pas cette
+traduction, et le portable reste inatteignable — l'envoi échoue alors sans que
+rien ne le dise, puisque le backend ne voit jamais la requête.
+
+Sur un téléphone physique, passer l'adresse de la machine sur le réseau local
+avec `--dart-define=EMULATOR_HOST=192.168.1.24`.
+
 **Depuis Android Studio**, le `--dart-define` ne s'ajoute pas tout seul : la
 configuration « main.dart » du menu déroulant ne passe aucun argument et
 s'adresse au vrai projet Firebase, où rien n'est déployé. Choisir
