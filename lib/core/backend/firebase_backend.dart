@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../../firebase_options.dart';
 import '../../models/report_enums.dart';
@@ -72,35 +73,18 @@ Future<Backend> initializeBackend() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Before any callable, **including against the emulators**.
-    //
-    // The Android Functions SDK fetches an auth token and an App Check token in
-    // parallel, and counts "no provider installed" as a failed task — the call
-    // then dies on the phone with `1 out of 2 underlying tasks failed`, before
-    // a single byte leaves it. Skipping this on the emulator path looked
-    // harmless, since the emulators verify no token; but the token still has to
-    // *exist*.
-    const attestLocally = kDebugMode || useEmulators;
-    await FirebaseAppCheck.instance.activate(
-      // Play Integrity cannot attest an app that Play did not install, so it
-      // fails by construction on an emulator or a `flutter run` build. Debug
-      // builds use the debug provider and register their token in the console;
-      // release builds get Play Integrity with no fallback, because a fallback
-      // is the door App Check exists to close.
-      providerAndroid: attestLocally
-          ? const AndroidDebugProvider()
-          : const AndroidPlayIntegrityProvider(),
-      providerApple: attestLocally
-          ? const AppleDebugProvider()
-          : const AppleDeviceCheckProvider(),
-    );
-
     if (useEmulators) {
+      // No App Check on this path. The debug provider does not mint a token by
+      // itself: it exchanges a local secret with Google's App Check service,
+      // which refuses a secret nobody registered in the console. Activating it
+      // here would swap "no provider" for "provider that fails", and the
+      // callable dies either way. The emulators verify no token at all.
       await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
       FirebaseFunctions.instanceFor(
         region: backendRegion,
       ).useFunctionsEmulator(emulatorHost, 5001);
       debugPrint('Backend: émulateurs Firebase sur $emulatorHost.');
+      await _reportBackendHealth();
       return (
         submitter: _FirebaseReportSubmitter(
           EvidenceUploader(region: backendRegion),
@@ -108,6 +92,20 @@ Future<Backend> initializeBackend() async {
         lookup: lookupReport,
       );
     }
+
+    await FirebaseAppCheck.instance.activate(
+      // Play Integrity cannot attest an app that Play did not install, so it
+      // fails by construction on an emulator or a `flutter run` build. Debug
+      // builds use the debug provider and register their token in the console;
+      // release builds get Play Integrity with no fallback, because a fallback
+      // is the door App Check exists to close.
+      providerAndroid: kDebugMode
+          ? const AndroidDebugProvider()
+          : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode
+          ? const AppleDebugProvider()
+          : const AppleDeviceCheckProvider(),
+    );
 
     // Said out loud, because the alternative is a failed send with no clue as
     // to where it was even trying to go. Forgetting `--dart-define` is the
@@ -142,6 +140,58 @@ Future<Backend> initializeBackend() async {
       'Reports will NOT be sent anywhere. $error\n$stackTrace',
     );
     return (submitter: null, lookup: null);
+  }
+}
+
+/// Checks each link of the local chain separately, and says which one is broken.
+///
+/// A callable failure is uninformative by construction: the SDK gathers an auth
+/// token and an App Check token, then makes the call, and reports the lot as
+/// `1 out of 2 underlying tasks failed` without saying which. Testing the three
+/// pieces on their own turns that into an answer.
+///
+/// Only runs against the emulators, and only in debug.
+Future<void> _reportBackendHealth() async {
+  if (!kDebugMode) return;
+
+  try {
+    final credential = await FirebaseAuth.instance.signInAnonymously();
+    debugPrint('Diag 1/3 auth anonyme : OK, uid=${credential.user?.uid}');
+    final token = await credential.user?.getIdToken();
+    debugPrint(
+      'Diag 2/3 jeton d\'identité : ${token == null ? "NUL" : "OK (${token.length} car.)"}',
+    );
+  } catch (error) {
+    debugPrint('Diag 1-2/3 auth : ÉCHEC — $error');
+    debugPrint(
+      "  → l'émulateur d'authentification est-il démarré sur "
+      '$emulatorHost:9099 ?',
+    );
+  }
+
+  // Straight HTTP, no Firebase SDK in the way. Separates "the phone cannot
+  // reach the emulator" from "the SDK cannot assemble its tokens".
+  try {
+    final response = await http
+        .post(
+          Uri.parse(
+            'http://$emulatorHost:5001/'
+            '${DefaultFirebaseOptions.currentPlatform.projectId}/'
+            '$backendRegion/trackReport',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: '{"data":{"referenceCode":"EMC-0000-0000-0000"}}',
+        )
+        .timeout(const Duration(seconds: 8));
+    debugPrint(
+      'Diag 3/3 émulateur de fonctions joignable : HTTP ${response.statusCode}',
+    );
+  } catch (error) {
+    debugPrint('Diag 3/3 émulateur de fonctions : INJOIGNABLE — $error');
+    debugPrint(
+      '  → `npm run backend` tourne-t-il, et $emulatorHost est-il la '
+      'bonne adresse depuis ce téléphone ?',
+    );
   }
 }
 
