@@ -42,9 +42,14 @@ const bool useEmulators = bool.fromEnvironment('USE_EMULATORS');
 
 /// Where the emulators are, seen from the device.
 ///
-/// `10.0.2.2` is how the Android emulator reaches the host machine —
-/// `localhost` there means the emulated phone itself. On a physical device,
-/// pass the machine's address on the local network:
+/// `10.0.2.2` is a **property of the Android emulator (AVD)**, not a general
+/// convention: that emulator rewrites the address to the host's loopback.
+/// `localhost` there would mean the emulated phone itself.
+///
+/// Anything else — a physical device, or one of the phone-preview extensions
+/// that render a Flutter app without an AVD underneath — does not perform that
+/// rewrite, and the host is simply unreachable. Pass the machine's address on
+/// the local network instead:
 ///
 ///     --dart-define=EMULATOR_HOST=192.168.1.24
 const String emulatorHost = String.fromEnvironment(
@@ -193,10 +198,15 @@ Future<void> _reportBackendHealth() async {
     );
   } catch (error) {
     debugPrint('Diag 3/3 émulateur de fonctions : INJOIGNABLE — $error');
-    debugPrint(
-      '  → `npm run backend` tourne-t-il, et $emulatorHost est-il la '
-      'bonne adresse depuis ce téléphone ?',
-    );
+    debugPrint('  → `npm run backend` tourne-t-il ?');
+    if (emulatorHost == '10.0.2.2') {
+      debugPrint(
+        "  → 10.0.2.2 n'est traduit vers la machine hôte que par l'émulateur "
+        "Android d'AVD. Sur un téléphone physique, ou dans un aperçu mobile "
+        "qui n'a pas d'AVD dessous, passer "
+        '--dart-define=EMULATOR_HOST=<IP de la machine>.',
+      );
+    }
   }
 }
 
