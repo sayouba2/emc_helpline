@@ -821,6 +821,15 @@ Firestore apparaître en direct, et les logs de chaque fonction appelée.
 flutter run --dart-define=USE_EMULATORS=true
 ```
 
+**Depuis Android Studio**, le `--dart-define` ne s'ajoute pas tout seul : la
+configuration « main.dart » du menu déroulant ne passe aucun argument et
+s'adresse au vrai projet Firebase, où rien n'est déployé. Choisir
+**« main.dart (émulateurs) »**, versionnée dans `.idea/runConfigurations/`.
+
+C'est le piège le plus coûteux de cette étape, parce qu'il ne ressemble pas à
+une erreur de configuration : l'application démarre normalement et n'échoue
+qu'à l'envoi.
+
 Sur un téléphone physique plutôt qu'un émulateur Android, ajouter l'adresse de
 la machine sur le réseau local :
 
@@ -849,12 +858,28 @@ Backend: émulateurs Firebase sur 10.0.2.2.
 Si c'est plutôt `Backend: projet Firebase en ligne`, le `--dart-define` n'a pas
 été pris : l'application s'adresse au vrai projet, où rien n'est déployé.
 
-En cas d'échec, la console affiche aussi la vraie erreur, à côté du message
-volontairement vague que voit l'utilisateur :
+Au lancement, trois lignes de diagnostic testent chaque maillon séparément —
+connexion anonyme, jeton d'identité, et un POST HTTP brut vers l'émulateur sans
+SDK au milieu :
 
 ```
-Envoi échoué [not-found] ...
+Diag 1/3 auth anonyme : OK, uid=...
+Diag 2/3 jeton d'identité : OK (900 car.)
+Diag 3/3 émulateur de fonctions joignable : HTTP 200
 ```
+
+Leur absence complète veut dire que le mode émulateurs n'est pas actif.
+
+En cas d'échec, la console affiche la vraie erreur **et le backend visé**, à
+côté du message volontairement vague que voit l'utilisateur :
+
+```
+Envoi échoué [not-found] — projet Firebase en ligne (emc-helpline-e82ef)
+```
+
+Le mode est répété là plutôt qu'au seul démarrage : une ligne de lancement sort
+du journal bien avant qu'on appuie sur « Envoyer », et « à quel backend
+parlait-il, au juste » est la première chose à savoir.
 
 | Code | Ce que ça veut dire |
 |---|---|

@@ -52,6 +52,12 @@ const String emulatorHost = String.fromEnvironment(
   defaultValue: '10.0.2.2',
 );
 
+/// Which backend this build talks to, in one line, for logs.
+String get backendDescription => useEmulators
+    ? 'émulateurs Firebase sur $emulatorHost'
+    : 'projet Firebase en ligne '
+          '(${DefaultFirebaseOptions.currentPlatform.projectId})';
+
 /// Brings Firebase up and returns the submitter the provider should use.
 ///
 /// Returns `null` only in debug, and only when Firebase could not start — the
@@ -83,7 +89,7 @@ Future<Backend> initializeBackend() async {
       FirebaseFunctions.instanceFor(
         region: backendRegion,
       ).useFunctionsEmulator(emulatorHost, 5001);
-      debugPrint('Backend: émulateurs Firebase sur $emulatorHost.');
+      debugPrint('Backend: $backendDescription.');
       await _reportBackendHealth();
       return (
         submitter: _FirebaseReportSubmitter(
@@ -111,8 +117,7 @@ Future<Backend> initializeBackend() async {
     // to where it was even trying to go. Forgetting `--dart-define` is the
     // easiest mistake to make and the hardest to see.
     debugPrint(
-      'Backend: projet Firebase en ligne '
-      '(${DefaultFirebaseOptions.currentPlatform.projectId}). '
+      'Backend: $backendDescription. '
       'Pour les émulateurs : flutter run --dart-define=USE_EMULATORS=true',
     );
 
@@ -284,7 +289,18 @@ class _FirebaseReportSubmitter {
       // looks exactly like a network problem.
       if (kDebugMode) {
         final code = error is FirebaseFunctionsException ? error.code : '';
-        debugPrint('Envoi échoué [$code] $error');
+        // The mode is repeated here, next to the failure, rather than only at
+        // startup. A launch line scrolls out of the log long before anyone
+        // presses "Envoyer", and "which backend was it even talking to" is the
+        // first thing worth knowing.
+        debugPrint('Envoi échoué [$code] — $backendDescription\n$error');
+        if (!useEmulators) {
+          debugPrint(
+            '  → Pour les émulateurs locaux : '
+            'flutter run --dart-define=USE_EMULATORS=true, '
+            "ou la configuration « main.dart (émulateurs) » d'Android Studio.",
+          );
+        }
       }
       final failure = failureFor(error);
       // Unmapped errors are left to travel: `ReportProvider.submitReport`
