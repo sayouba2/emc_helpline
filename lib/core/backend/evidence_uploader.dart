@@ -5,6 +5,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:http/http.dart' as http;
 
 import '../../models/submission_outcome.dart';
+import 'emulators.dart';
 
 /// Sends the screenshots to Cloud Storage and returns the paths the server
 /// will accept.
@@ -119,12 +120,18 @@ class EvidenceUploader {
       sizeBytes: bytes.length,
     );
 
-    final request = http.Request(signed.method, Uri.parse(signed.uploadUrl))
-      // Signed into the URL. Cloud Storage refuses the write if this header
-      // does not match what the function declared.
-      ..headers['Content-Type'] = contentType
-      ..headers.addAll(signed.headers)
-      ..bodyBytes = bytes;
+    // L'URL vient d'un processus qui voit l'émulateur sur sa propre boucle
+    // locale. Ce téléphone, non — voir `reachableFromDevice`.
+    final request =
+        http.Request(
+            signed.method,
+            Uri.parse(reachableFromDevice(signed.uploadUrl)),
+          )
+          // Signed into the URL. Cloud Storage refuses the write if this header
+          // does not match what the function declared.
+          ..headers['Content-Type'] = contentType
+          ..headers.addAll(signed.headers)
+          ..bodyBytes = bytes;
 
     final response = await http.Response.fromStream(
       await _client.send(request).timeout(_perFileTimeout),

@@ -12,6 +12,7 @@ import '../../firebase_options.dart';
 import '../../models/report_enums.dart';
 import '../../models/submission_outcome.dart';
 import '../../models/tracking_outcome.dart';
+import 'emulators.dart';
 import 'evidence_uploader.dart';
 import 'report_payload.dart';
 
@@ -26,36 +27,6 @@ const String backendRegion = 'europe-west1';
 /// submission it may already have committed, and returns the original code
 /// rather than opening a second case.
 const Duration _callTimeout = Duration(seconds: 28);
-
-/// Run against the local Firebase emulators instead of the real project.
-///
-///     flutter run --dart-define=USE_EMULATORS=true
-///
-/// This is how the whole workflow can be exercised end to end today: reports
-/// really are written, really get a reference number, and really come back on
-/// the tracking screen — in a database that lives on this machine. No billing
-/// account, no App Check registration, and nothing to clean up afterwards.
-///
-/// A `const` from the environment rather than a runtime flag, so a release
-/// build cannot be talked into pointing at a developer's laptop.
-const bool useEmulators = bool.fromEnvironment('USE_EMULATORS');
-
-/// Where the emulators are, seen from the device.
-///
-/// `10.0.2.2` is a **property of the Android emulator (AVD)**, not a general
-/// convention: that emulator rewrites the address to the host's loopback.
-/// `localhost` there would mean the emulated phone itself.
-///
-/// Anything else — a physical device, or one of the phone-preview extensions
-/// that render a Flutter app without an AVD underneath — does not perform that
-/// rewrite, and the host is simply unreachable. Pass the machine's address on
-/// the local network instead:
-///
-///     --dart-define=EMULATOR_HOST=192.168.1.24
-const String emulatorHost = String.fromEnvironment(
-  'EMULATOR_HOST',
-  defaultValue: '10.0.2.2',
-);
 
 /// Which backend this build talks to, in one line, for logs.
 String get backendDescription => useEmulators

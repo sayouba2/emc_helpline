@@ -959,7 +959,19 @@ propre point d'envoi et le jeton d'administration `owner` qu'il accepte. Ce
 jeton ne vaut rien ailleurs, et cette branche ne peut pas s'exécuter en
 production : elle dépend de `FUNCTIONS_EMULATOR`, que rien n'y pose.
 
-Une conséquence à connaître : **l'émulateur enregistre tout en
+**L'URL est réécrite par le client, pas par le serveur.** La fonction voit
+l'émulateur sur sa propre boucle locale, `127.0.0.1` — mais cette URL part vers
+le téléphone, où `127.0.0.1` désigne le téléphone. Le seul côté qui sache
+comment cet appareil joint la machine hôte, c'est cet appareil :
+`reachableFromDevice()` remplace la boucle locale par `emulatorHost`. Hors mode
+émulateur elle ne touche à rien — l'URL est signée, et changer un caractère
+invaliderait la signature.
+
+C'est la même erreur que `10.0.2.2` deux sections plus haut, sous une autre
+forme, et elle mérite d'être énoncée en règle : **une URL n'est utile qu'à
+l'adresse de celui qui va l'appeler.**
+
+Une autre conséquence à connaître : **l'émulateur enregistre tout en
 `application/octet-stream`**, quel que soit le type déclaré. La vérification du
 type MIME est donc sautée en local — sinon elle rejetterait chaque capture. Le
 contrôle qui compte, lui, tourne partout : le chemin doit appartenir au dossier
