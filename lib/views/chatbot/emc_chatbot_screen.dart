@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../l10n/app_localizations.dart';
+import 'bot_topics.dart';
 
 class EmcChatbotScreen extends StatefulWidget {
   const EmcChatbotScreen({super.key});
@@ -21,29 +22,11 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
     (isBot: true, text: null),
   ];
 
-  /// Which canned reply a free-text message maps to. The matching is keyword
-  /// based and French-only for now — see the note in `_answerFor`.
-  _BotTopic _topicFor(String userText) {
-    final lower = userText.toLowerCase();
-    if (lower.contains('bloquer') || lower.contains('harcel')) {
-      return _BotTopic.blocking;
-    }
-    if (lower.contains('photo') || lower.contains('image')) {
-      return _BotTopic.photo;
-    }
-    if (lower.contains('conseiller') ||
-        lower.contains('humain') ||
-        lower.contains('contact')) {
-      return _BotTopic.humanContact;
-    }
-    return _BotTopic.fallback;
-  }
-
-  String _answerFor(_BotTopic topic, AppLocalizations l10n) => switch (topic) {
-    _BotTopic.blocking => l10n.chatbotAnswerBlock,
-    _BotTopic.photo => l10n.chatbotAnswerPhoto,
-    _BotTopic.humanContact => l10n.chatbotAnswerContact,
-    _BotTopic.fallback => l10n.chatbotAnswerDefault,
+  String _answerFor(BotTopic topic, AppLocalizations l10n) => switch (topic) {
+    BotTopic.blocking => l10n.chatbotAnswerBlock,
+    BotTopic.photo => l10n.chatbotAnswerPhoto,
+    BotTopic.humanContact => l10n.chatbotAnswerContact,
+    BotTopic.fallback => l10n.chatbotAnswerDefault,
   };
 
   void _sendMessage(String text, AppLocalizations l10n) {
@@ -56,7 +39,7 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
       return;
     }
 
-    final answer = _answerFor(_topicFor(text), l10n);
+    final answer = _answerFor(topicFor(text), l10n);
 
     setState(() {
       _messages.add((isBot: false, text: text));
@@ -360,6 +343,3 @@ class _EmcChatbotScreenState extends State<EmcChatbotScreen> {
     );
   }
 }
-
-/// The canned topics the simulated assistant can answer.
-enum _BotTopic { blocking, photo, humanContact, fallback }

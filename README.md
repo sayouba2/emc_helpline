@@ -28,7 +28,10 @@ est invisible.
 - **Ressources** — les gestes à adopter face à un incident.
 - **Contact** — WhatsApp, téléphone, e-mail et portail web de l'équipe.
 - **Chatbot** (+12 ans) — assistant proposé depuis l'étape « âge » et depuis
-  l'écran de confirmation, là où commence l'attente d'une réponse humaine.
+  l'écran de confirmation, là où commence l'attente d'une réponse humaine. Il
+  répond en français, en arabe et en anglais : l'aiguillage normalise le texte
+  avant de chercher ses mots-clés, faute de quoi un message arabe écrit avec
+  ses voyelles, ou un « harcelement » sans accent, ne serait jamais reconnu.
 
 Les numéros d'urgence sont accessibles en permanence : Police **19**,
 Gendarmerie **177**.
@@ -321,9 +324,10 @@ en `AppColors.primaryOrangeBright` pour les usages décoratifs.
 
 ## Limites connues
 
-- Le chatbot est simulé : réponses scriptées, détection par mots-clés **en
-  français uniquement**. Un message en arabe tombe toujours sur la réponse par
-  défaut. Le badge BÊTA de son en-tête le signale à l'utilisateur.
+- Le chatbot est simulé : les réponses sont scriptées, et l'aiguillage se fait
+  par mots-clés. Il reconnaît les trois langues ; ce qu'il ne sait pas faire,
+  c'est comprendre une phrase qu'aucun mot-clé n'attrape — elle tombe alors sur
+  la réponse par défaut. Le badge BÊTA de son en-tête le signale.
 - Le seuil d'âge qui décide de proposer l'assistant est une règle interne :
   aucun texte ne le mentionne, un test le vérifie.
 - Le sélecteur de langue est annoncé au sein du titre de l'`AppBar`, que Flutter
