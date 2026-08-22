@@ -1,60 +1,702 @@
+/*
+  Console de triage — EMC Helpline.
+
+  Ce n'est pas un produit, c'est un instrument. Quelqu'un s'y assied une heure
+  d'affilée pour lire des récits d'enfants menacés en ligne, et décider quoi
+  traiter en premier. Le dessin suit trois règles qui en découlent :
+
+  1. L'urgence et l'échéance se lisent sans lire. Ce sont les deux seules
+     questions du triage — qu'est-ce qui est le plus grave, qu'est-ce qui va
+     expirer — et elles occupent les deux marges de chaque ligne.
+  2. Tout ce qui identifie ou date un dossier est en chasse fixe ; tout ce qui
+     le décrit est en linéale. La règle encode quelque chose de vrai : ceci est
+     un registre, et un numéro de dossier n'est pas une phrase.
+  3. Rien ne célèbre. Pas de dégradé, pas de relief, pas d'animation d'appoint.
+     Une interface qui aurait l'air « designée » au-dessus du récit d'une
+     agression serait indécente.
+
+  Le bleu vient du badge EMC, échantillonné : #26368F.
+*/
+
 :root {
-  --bg: #f7f7f8;
-  --card: #fff;
-  --border: #dcdce2;
-  --text: #1d1b20;
-  --muted: #5c5c68;
-  --blue: #1d4ed8;
-  --orange: #c2410c;
-  --danger: #b91c1c;
+  /* Clair uniquement, comme l'application. Une console qui bascule seule
+     selon les réglages du système donne deux rendus à vérifier pour un outil
+     qui n'en demandait qu'un. */
+  color-scheme: light;
+
+  --indigo: #26368f;
+  --indigo-deep: #1a2566;
+  --indigo-wash: #e7e9f5;
+
+  /* Brique plutôt que rouge d'alerte : l'urgence est une information, pas une
+     alarme, et elle est affichée en permanence. */
+  --brick: #9e2b20;
+  --brick-wash: #f7e8e6;
+  --sage: #35624f;
+  --sage-wash: #e4eeea;
+
+  --ink: #14172b;
+  --slate: #565c76;
+  /* 4,56:1 sur le papier. Le gris plus clair que j'avais d'abord posé tombait
+     à 3,34 — sous le seuil AA — et c'est précisément lui qui porte les
+     métadonnées et le tampon d'échéance, en 11,5 px. */
+  --mute: #666c84;
+
+  /* Papier froid, pas crème : un registre, pas une revue. */
+  --paper: #eef0f6;
+  --surface: #ffffff;
+  --rule: #d7dbe7;
+  --rule-soft: #e6e9f1;
+
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, "Cascadia Mono",
+    "Roboto Mono", "Liberation Mono", monospace;
+
+  --step: 4px;
+  --radius: 8px;
 }
-* { box-sizing: border-box; }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
 }
-header {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; padding: 14px 24px;
-  background: var(--card); border-bottom: 1px solid var(--border);
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
-h1 { font-size: 17px; margin: 0; }
-h1 .sub { color: var(--muted); font-weight: 400; }
-main { max-width: 1100px; margin: 0 auto; padding: 24px; }
-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-h2 { font-size: 15px; margin: 0 0 10px; }
-.note { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
-label { display: block; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
-input, select {
-  display: block; width: 100%; max-width: 340px; margin-top: 4px; padding: 9px 11px;
-  border: 1px solid var(--border); border-radius: 8px; font: inherit; background: #fff; color: var(--text);
+
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+  border-radius: 3px;
 }
+
+/* ── Bandeau ───────────────────────────────────────────────────────────── */
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--step) * 4);
+  padding: calc(var(--step) * 3) calc(var(--step) * 6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--step) * 2);
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.wordmark span {
+  font-weight: 400;
+  color: var(--mute);
+}
+
+.session {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step) * 3);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.session-email {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+/* ── Boutons ───────────────────────────────────────────────────────────── */
+
 button {
-  font: inherit; padding: 9px 15px; border-radius: 8px; border: 1px solid var(--blue);
-  background: var(--blue); color: #fff; cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  padding: calc(var(--step) * 2) calc(var(--step) * 3.5);
+  border: 1px solid var(--indigo);
+  border-radius: var(--radius);
+  background: var(--indigo);
+  color: var(--surface);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
-button.ghost { background: #fff; color: var(--blue); }
-button.danger { background: #fff; color: var(--danger); border-color: var(--danger); }
-button:disabled { opacity: .5; cursor: default; }
-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-th, td { text-align: start; padding: 9px 8px; border-bottom: 1px solid var(--border); }
-th { color: var(--muted); font-weight: 600; }
-.queue-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.queue-head label { margin: 0; }
-.error { color: var(--danger); font-size: 13px; }
-.tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid; }
-.tag.received { color: var(--orange); border-color: var(--orange); }
-.tag.inReview { color: var(--blue); border-color: var(--blue); }
-.tag.contacted { color: #15803d; border-color: #15803d; }
-.tag.closed { color: var(--muted); border-color: var(--muted); }
-.urgent { color: var(--danger); font-weight: 700; }
-.expiring { color: var(--danger); font-weight: 600; }
-.field { display: grid; grid-template-columns: 190px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.field dt { color: var(--muted); font-size: 13px; }
-.field dd { margin: 0; }
-.story { white-space: pre-wrap; background: var(--bg); padding: 14px; border-radius: 8px; margin: 10px 0 0; }
-.shots { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.shots img { max-width: 220px; border: 1px solid var(--border); border-radius: 8px; }
-.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+button:hover:not(:disabled) {
+  background: var(--indigo-deep);
+  border-color: var(--indigo-deep);
+}
+
+button.quiet {
+  background: transparent;
+  color: var(--indigo);
+}
+
+button.quiet:hover:not(:disabled) {
+  background: var(--indigo-wash);
+  border-color: var(--indigo);
+}
+
+button.grave {
+  background: transparent;
+  color: var(--brick);
+  border-color: var(--brick);
+}
+
+button.grave:hover:not(:disabled) {
+  background: var(--brick-wash);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── Connexion ─────────────────────────────────────────────────────────── */
+
+.signin {
+  max-width: 380px;
+  margin: calc(var(--step) * 20) auto;
+  padding: calc(var(--step) * 8);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: calc(var(--radius) * 1.5);
+}
+
+.signin h2 {
+  margin: 0 0 calc(var(--step) * 2);
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.signin p {
+  margin: 0 0 calc(var(--step) * 6);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+label {
+  display: block;
+  margin-bottom: calc(var(--step) * 4);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+input,
+select {
+  display: block;
+  width: 100%;
+  margin-top: calc(var(--step) * 1.5);
+  padding: calc(var(--step) * 2.5) calc(var(--step) * 3);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px var(--indigo-wash);
+}
+
+.signin button {
+  width: 100%;
+  padding: calc(var(--step) * 2.75);
+}
+
+/* ── Deux panneaux ─────────────────────────────────────────────────────── */
+
+.console {
+  display: grid;
+  grid-template-columns: minmax(340px, 400px) 1fr;
+  gap: 1px;
+  height: calc(100vh - 57px);
+  background: var(--rule);
+}
+
+.queue,
+.file {
+  overflow-y: auto;
+  background: var(--paper);
+}
+
+.file {
+  background: var(--surface);
+}
+
+/* ── File ──────────────────────────────────────────────────────────────── */
+
+.queue-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: calc(var(--step) * 5) calc(var(--step) * 5) calc(var(--step) * 3);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.queue-head h2 {
+  margin: 0 0 calc(var(--step) * 3);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.lookup {
+  display: flex;
+  gap: calc(var(--step) * 2);
+  margin-bottom: calc(var(--step) * 3);
+}
+
+.lookup input {
+  margin-top: 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.lookup button {
+  flex: none;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--step) * 1.5);
+}
+
+.filter {
+  padding: calc(var(--step) * 1.25) calc(var(--step) * 2.5);
+  font-size: 12.5px;
+  color: var(--slate);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 99px;
+}
+
+.filter:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--rule);
+  color: var(--ink);
+}
+
+.filter[aria-pressed="true"] {
+  color: var(--surface);
+  background: var(--indigo);
+  border-color: var(--indigo);
+}
+
+.filter .count {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  opacity: 0.7;
+  margin-inline-start: calc(var(--step) * 1.5);
+}
+
+.ledger {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+  La ligne de dossier. Deux marges qui portent tout le triage : le rail
+  d'urgence à gauche, l'échéance à droite. Le milieu est délibérément calme.
+*/
+.case {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: calc(var(--step) * 3);
+  padding: calc(var(--step) * 3.5) calc(var(--step) * 5) calc(var(--step) * 3.5)
+    calc(var(--step) * 6);
+  border-bottom: 1px solid var(--rule-soft);
+  cursor: pointer;
+}
+
+.case:hover {
+  background: var(--surface);
+}
+
+.case[aria-selected="true"] {
+  background: var(--surface);
+}
+
+.case[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 2px;
+  background: var(--indigo);
+}
+
+/* Le rail : couleur *et* épaisseur, donc lisible sans distinguer les
+   couleurs. Un daltonien lit l'urgence à la largeur du trait. */
+.case::before,
+.dossier::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  background: var(--rule);
+  width: 2px;
+}
+
+.case[data-urgency="urgent"]::before,
+.dossier[data-urgency="urgent"]::before {
+  background: var(--brick);
+  width: 5px;
+}
+
+.case[data-urgency="unsure"]::before,
+.dossier[data-urgency="unsure"]::before {
+  background: repeating-linear-gradient(
+    var(--slate) 0 4px,
+    transparent 4px 8px
+  );
+  width: 3px;
+}
+
+.case-type {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.case-urgent {
+  margin-inline-start: calc(var(--step) * 2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brick);
+}
+
+.case-meta {
+  margin-top: calc(var(--step) * 0.5);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.case-edge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(var(--step) * 1.5);
+}
+
+/* Le tampon d'échéance. Une vraie horloge sur chaque dossier. */
+.expiry {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.expiry[data-soon="true"] {
+  color: var(--brick);
+  font-weight: 700;
+}
+
+.chip {
+  padding: calc(var(--step) * 0.5) calc(var(--step) * 2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border-radius: 99px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.chip.received {
+  color: var(--brick);
+  border-color: var(--brick);
+  background: var(--brick-wash);
+}
+
+.chip.inReview {
+  color: var(--indigo);
+  border-color: var(--indigo);
+  background: var(--indigo-wash);
+}
+
+.chip.contacted {
+  color: var(--sage);
+  border-color: var(--sage);
+  background: var(--sage-wash);
+}
+
+.chip.closed {
+  color: var(--mute);
+  border-color: var(--rule);
+}
+
+.queue-foot {
+  padding: calc(var(--step) * 4) calc(var(--step) * 5);
+  text-align: center;
+}
+
+/* ── États vides et messages ───────────────────────────────────────────── */
+
+.state {
+  padding: calc(var(--step) * 12) calc(var(--step) * 6);
+  text-align: center;
+  color: var(--slate);
+}
+
+.state h3 {
+  margin: 0 0 calc(var(--step) * 2);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.state p {
+  margin: 0 auto;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.notice {
+  margin: calc(var(--step) * 4) calc(var(--step) * 5);
+  padding: calc(var(--step) * 3) calc(var(--step) * 4);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--brick);
+  background: var(--brick-wash);
+  border: 1px solid var(--brick);
+  border-radius: var(--radius);
+}
+
+/* ── Le dossier ────────────────────────────────────────────────────────── */
+
+.dossier {
+  position: relative;
+  padding: calc(var(--step) * 7) calc(var(--step) * 9) calc(var(--step) * 12);
+  max-width: 68ch;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dossier {
+    animation: pull 180ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  @keyframes pull {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.dossier h2 {
+  margin: calc(var(--step) * 1) 0 0;
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* La ligne d'audit. Montrée à l'agent, à chaque ouverture, dans le même
+   registre typographique que le reste du dossier — pas un avertissement, un
+   fait. Les gens qui lisent ces récits sont ceux dont l'accès est au
+   registre. */
+.audit {
+  margin: calc(var(--step) * 3) 0 0;
+  padding-inline-start: calc(var(--step) * 3);
+  border-inline-start: 2px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--mute);
+}
+
+/* La filière : reçu → examen → contacté → clos. C'est une vraie séquence,
+   donc elle a le droit d'être dessinée comme telle. */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--step) * 1);
+  margin: calc(var(--step) * 6) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline li {
+  flex: 1;
+  padding-top: calc(var(--step) * 2);
+  border-top: 3px solid var(--rule);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.pipeline li[data-done="true"] {
+  border-top-color: var(--indigo);
+  color: var(--slate);
+}
+
+.pipeline li[aria-current="step"] {
+  border-top-color: var(--indigo);
+  color: var(--indigo);
+}
+
+.facts {
+  margin: 0;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 15ch 1fr;
+  gap: calc(var(--step) * 4);
+  padding: calc(var(--step) * 2.5) 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.fact dt {
+  font-size: 12.5px;
+  color: var(--mute);
+}
+
+.fact dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.fact dd.mono {
+  font-size: 13px;
+}
+
+.section-title {
+  margin: calc(var(--step) * 9) 0 calc(var(--step) * 3);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* Le récit. C'est le contenu le plus important de l'écran et il se lit en
+   entier : mesure courte, interligne large, pas de cadre qui le réduise à un
+   champ parmi d'autres. */
+.account {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.evidence {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: calc(var(--step) * 3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.evidence a:focus-visible img {
+  outline: 2px solid var(--indigo);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--step) * 2);
+  margin-top: calc(var(--step) * 9);
+  padding-top: calc(var(--step) * 6);
+  border-top: 1px solid var(--rule);
+}
+
+.actions .spacer {
+  flex: 1;
+}
+
+/* ── Étroit ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .console {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .queue,
+  .file {
+    overflow: visible;
+  }
+
+  .console[data-reading="true"] .queue {
+    display: none;
+  }
+
+  .dossier {
+    padding: calc(var(--step) * 5) calc(var(--step) * 5) calc(var(--step) * 10);
+  }
+
+  .fact {
+    grid-template-columns: 1fr;
+    gap: calc(var(--step) * 0.5);
+  }
+}

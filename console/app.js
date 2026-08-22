@@ -1,4 +1,4 @@
-// Console de l'équipe EMC Helpline.
+// Console de triage — EMC Helpline.
 //
 // Aucun accès direct à Firestore : les règles refusent tout, aux agents comme
 // au reste du monde. Tout passe par des fonctions appelables, ce qui donne le
@@ -33,19 +33,24 @@ if (LOCAL) {
     disableWarnings: true,
   });
   connectFunctionsEmulator(functions, location.hostname, 5001);
-  document.title = "EMC Helpline — Console (local)";
 }
 
 const call = (name) => httpsCallable(functions, name);
 const $ = (id) => document.getElementById(id);
 
-const STATUS_LABELS = {
+// ── Vocabulaire ────────────────────────────────────────────────────────────
+//
+// Les valeurs voyagent en identifiants d'enum, jamais en texte : traduire un
+// libellé ne peut donc pas casser un filtre.
+
+const STATUSES = ["received", "inReview", "contacted", "closed"];
+const STATUS = {
   received: "Reçu",
-  inReview: "En cours d'examen",
+  inReview: "En examen",
   contacted: "Contacté",
   closed: "Clos",
 };
-const INCIDENT_LABELS = {
+const INCIDENT = {
   hateSpeech: "Discours haineux",
   discrimination: "Discrimination",
   defamation: "Diffamation",
@@ -54,86 +59,171 @@ const INCIDENT_LABELS = {
   threat: "Menace",
   other: "Autre",
 };
-const URGENCY_LABELS = { urgent: "Urgent", notUrgent: "Non urgent", unsure: "Ne sait pas" };
-const AGE_LABELS = { child: "Moins de 12 ans", teen: "12–17 ans", adult: "18 ans et plus", undisclosed: "Non précisé" };
-const ASSISTANCE_LABELS = { wanted: "Demandé", none: "Refusé", unsure: "Ne sait pas" };
-const GENDER_LABELS = { female: "Féminin", male: "Masculin", undisclosed: "Non précisé" };
-const WHO_LABELS = { self: "Pour lui/elle-même", someoneElse: "Pour quelqu'un d'autre" };
+const URGENCY = { urgent: "Urgent", notUrgent: "Non urgent", unsure: "Indéterminée" };
+const AGE = {
+  child: "Moins de 12 ans",
+  teen: "12 à 17 ans",
+  adult: "18 ans et plus",
+  undisclosed: "Non précisé",
+};
+const GENDER = { female: "Féminin", male: "Masculin", undisclosed: "Non précisé" };
+const WHO = { self: "Pour elle ou lui-même", someoneElse: "Pour quelqu'un d'autre" };
+const ASSISTANCE = { wanted: "Demandé", none: "Refusé", unsure: "Indécis" };
+const ASSISTANCE_TYPE = {
+  legal: "Juridique",
+  psychological: "Psychologique",
+  both: "Les deux",
+  unsure: "Indécis",
+};
+const PLATFORM = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  facebook: "Facebook",
+  onlineGame: "Jeu en ligne",
+  messenger: "Messenger",
+};
 
-let cursor = null;
-let loading = false;
+const label = (map, key) => map[key] ?? key ?? "—";
 
 const dateOf = (iso) =>
-  iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  iso
+    ? new Date(iso).toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
 
-/** Combien de jours avant que le dossier soit supprimé automatiquement. */
-function daysLeft(expiresAt) {
-  if (!expiresAt) return null;
-  return Math.ceil((new Date(expiresAt) - Date.now()) / 86400000);
+/** Jours avant la suppression automatique. */
+const daysLeft = (iso) =>
+  iso === null || iso === undefined
+    ? null
+    : Math.ceil((new Date(iso) - Date.now()) / 86400000);
+
+const el = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+/**
+ * Un message d'échec dit ce qui s'est passé et quoi faire, jamais « une erreur
+ * est survenue ». Remplace les `alert()` qui bloquaient la page.
+ */
+function notice(host, text) {
+  host.replaceChildren();
+  if (text) host.append(el("p", "notice", text));
+  host.hidden = !text;
 }
+
+function stateBlock(host, title, body) {
+  const wrap = el("div", "state");
+  wrap.append(el("h3", null, title));
+  if (body) wrap.append(el("p", null, body));
+  host.replaceChildren(wrap);
+}
+
+// ── Connexion ──────────────────────────────────────────────────────────────
 
 $("signin-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  $("signin-error").hidden = true;
+  const button = $("signin-button");
+  button.disabled = true;
+  notice($("signin-notice"), null);
   try {
     await signInWithEmailAndPassword(auth, $("email").value, $("password").value);
   } catch {
     // Volontairement identique pour un compte inconnu et un mot de passe faux :
     // sinon le formulaire dit qui a un compte ici.
-    $("signin-error").textContent = "Connexion impossible.";
-    $("signin-error").hidden = false;
+    notice(
+      $("signin-notice"),
+      "Adresse ou mot de passe incorrect. Vérifiez, puis réessayez.",
+    );
+  } finally {
+    button.disabled = false;
   }
 });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     $("signin").hidden = false;
-    $("queue").hidden = true;
-    $("detail").hidden = true;
-    $("who").textContent = "";
+    $("console").hidden = true;
+    $("session").replaceChildren();
     return;
   }
 
-  // Le rôle vit dans le jeton, pas dans la page : un agent révoqué perd l'accès
-  // à la prochaine actualisation du jeton, et le serveur refuse de toute façon.
+  // Le rôle vit dans le jeton, pas dans la page : un agent révoqué le perd à la
+  // prochaine actualisation, et le serveur refuse de toute façon.
   const token = await user.getIdTokenResult();
   if (token.claims.role !== "agent") {
-    $("who").textContent = user.email;
-    $("signin-error").textContent =
-      "Ce compte n'a pas accès à la console. Demandez au responsable technique de l'autoriser.";
-    $("signin-error").hidden = false;
+    notice(
+      $("signin-notice"),
+      `${user.email} n'a pas accès à la console. Demandez au responsable technique de l'autoriser.`,
+    );
     await signOut(auth);
     return;
   }
 
   $("signin").hidden = true;
-  $("queue").hidden = false;
-  $("who").innerHTML = "";
-  if (LOCAL) {
-    const badge = document.createElement("span");
-    badge.className = "tag received";
-    badge.textContent = "émulateurs";
-    badge.title = "Cette console lit la base locale, pas le vrai projet.";
-    $("who").append(badge, document.createTextNode(" "));
-  }
-  const label = document.createElement("span");
-  label.textContent = user.email + " ";
-  const out = document.createElement("button");
-  out.className = "ghost";
-  out.textContent = "Se déconnecter";
-  out.addEventListener("click", () => signOut(auth));
-  $("who").append(label, out);
+  $("console").hidden = false;
 
+  const session = $("session");
+  session.replaceChildren();
+  if (LOCAL) {
+    const badge = el("span", "chip inReview", "émulateurs");
+    badge.title = "Cette console lit la base locale, pas le vrai projet.";
+    session.append(badge);
+  }
+  session.append(el("span", "session-email", user.email));
+  const out = el("button", "quiet", "Se déconnecter");
+  out.addEventListener("click", () => signOut(auth));
+  session.append(out);
+
+  buildFilters();
   reload();
 });
 
-$("status-filter").addEventListener("change", reload);
-$("more").addEventListener("click", () => loadPage());
+// ── Filtres ────────────────────────────────────────────────────────────────
+
+let activeStatus = "";
+let cursor = null;
+let loading = false;
+let openId = null;
+
+function buildFilters() {
+  const host = $("filters");
+  host.replaceChildren();
+  for (const [value, text] of [["", "Tous"], ...STATUSES.map((s) => [s, STATUS[s]])]) {
+    const button = el("button", "filter", text);
+    button.type = "button";
+    button.setAttribute("aria-pressed", String(value === activeStatus));
+    button.dataset.status = value;
+    button.append(el("span", "count", ""));
+    button.addEventListener("click", () => {
+      activeStatus = value;
+      for (const other of host.children) {
+        other.setAttribute("aria-pressed", String(other.dataset.status === value));
+      }
+      reload();
+    });
+    host.append(button);
+  }
+}
+
+function setCount(status, value) {
+  const button = $("filters").querySelector(`[data-status="${status}"] .count`);
+  if (button) button.textContent = value === null ? "" : value;
+}
+
+// ── La file ────────────────────────────────────────────────────────────────
 
 function reload() {
   cursor = null;
-  $("queue-table").querySelector("tbody").innerHTML = "";
-  $("detail").hidden = true;
+  $("ledger").replaceChildren();
+  notice($("queue-notice"), null);
   loadPage();
 }
 
@@ -141,184 +231,322 @@ async function loadPage() {
   if (loading) return;
   loading = true;
   $("more").disabled = true;
+
   try {
-    // Seules les clés qui portent une valeur sont envoyées. Le serveur tolère
-    // les `null` que le SDK web fabrique à partir d'`undefined`, mais autant ne
-    // pas les produire.
     const query = {};
-    if ($("status-filter").value) query.status = $("status-filter").value;
+    if (activeStatus) query.status = activeStatus;
     if (cursor) query.startAfter = cursor;
+
     const { data } = await call("listReports")(query);
-    for (const report of data.reports) appendRow(report);
+    for (const report of data.reports) $("ledger").append(row(report));
+
     cursor = data.cursor;
     $("more").hidden = data.reports.length === 0 || !cursor;
+    setCount(activeStatus, $("ledger").children.length);
+
+    if ($("ledger").children.length === 0) {
+      stateBlock(
+        $("ledger"),
+        activeStatus ? `Aucun dossier « ${STATUS[activeStatus]} »` : "Aucun dossier",
+        activeStatus
+          ? "Changez de filtre pour voir les autres."
+          : "Les signalements déposés depuis l'application apparaîtront ici.",
+      );
+    }
   } catch (error) {
-    alert("Chargement impossible : " + (error?.message ?? error));
+    notice(
+      $("queue-notice"),
+      `La file n'a pas pu être chargée : ${error?.message ?? error}. Rechargez la page.`,
+    );
   } finally {
     loading = false;
     $("more").disabled = false;
   }
 }
 
-function cell(row, text, className) {
-  const td = document.createElement("td");
-  td.textContent = text;
-  if (className) td.className = className;
-  row.append(td);
-  return td;
-}
+/**
+ * Une ligne de dossier.
+ *
+ * Deux marges portent tout le triage : le rail d'urgence à gauche, l'échéance
+ * à droite. Le milieu reste calme — ce n'est pas là qu'on décide.
+ */
+function row(report) {
+  const item = el("li", "case");
+  item.dataset.urgency = report.urgencyLevel ?? "";
+  item.dataset.id = report.id;
+  item.setAttribute("role", "option");
+  item.setAttribute("aria-selected", String(report.id === openId));
+  item.tabIndex = -1;
 
-function appendRow(report) {
-  const row = document.createElement("tr");
-  cell(row, dateOf(report.createdAt));
-  cell(row, INCIDENT_LABELS[report.incidentType] ?? report.incidentType);
-  cell(
-    row,
-    URGENCY_LABELS[report.urgencyLevel] ?? report.urgencyLevel,
-    report.urgencyLevel === "urgent" ? "urgent" : "",
+  const body = el("div");
+  const line = el("div");
+  line.append(el("span", "case-type", label(INCIDENT, report.incidentType)));
+  if (report.urgencyLevel === "urgent") {
+    line.append(el("span", "case-urgent", "Urgent"));
+  }
+  body.append(line);
+  body.append(
+    el(
+      "div",
+      "case-meta",
+      [
+        dateOf(report.createdAt),
+        label(PLATFORM, report.platform),
+        report.evidenceCount === 1
+          ? "1 preuve"
+          : `${report.evidenceCount} preuves`,
+      ].join("  ·  "),
+    ),
   );
-  cell(row, report.platform);
-  cell(row, String(report.evidenceCount));
+  item.append(body);
 
-  const statusCell = document.createElement("td");
-  const tag = document.createElement("span");
-  tag.className = "tag " + report.status;
-  tag.textContent = STATUS_LABELS[report.status] ?? report.status;
-  statusCell.append(tag);
-  row.append(statusCell);
-
+  const edge = el("div", "case-edge");
+  edge.append(el("span", `chip ${report.status}`, label(STATUS, report.status)));
   const left = daysLeft(report.expiresAt);
-  // Un dossier supprimé automatiquement pendant qu'on l'instruit serait le pire
-  // effet de la conservation à 30 jours. Le compte à rebours est visible, et il
-  // repart à zéro dès qu'on change le statut.
-  cell(row, left === null ? "—" : `${left} j`, left !== null && left <= 7 ? "expiring" : "");
+  if (left !== null) {
+    const stamp = el("span", "expiry", `${left} j`);
+    stamp.title = `Suppression automatique dans ${left} jours`;
+    if (left <= 7) stamp.dataset.soon = "true";
+    edge.append(stamp);
+  }
+  item.append(edge);
 
-  const actions = document.createElement("td");
-  const open = document.createElement("button");
-  open.className = "ghost";
-  open.textContent = "Ouvrir";
-  open.addEventListener("click", () => openReport(report.id));
-  actions.append(open);
-  row.append(actions);
-
-  $("queue-table").querySelector("tbody").append(row);
+  item.addEventListener("click", () => openCase({ reportId: report.id }));
+  return item;
 }
 
-function field(list, label, value) {
-  if (value === undefined || value === null || value === "") return;
-  const wrap = document.createElement("div");
-  wrap.className = "field";
-  const dt = document.createElement("dt");
-  dt.textContent = label;
-  const dd = document.createElement("dd");
-  dd.textContent = value;
-  wrap.append(dt, dd);
-  list.append(wrap);
-}
+$("more").addEventListener("click", () => loadPage());
 
-async function openReport(reportId) {
-  const detail = $("detail");
-  detail.hidden = false;
-  detail.textContent = "Ouverture…";
-  detail.scrollIntoView({ behavior: "smooth" });
+// Un agent qui descend trente dossiers ne devrait pas avoir à viser à la
+// souris à chaque fois.
+$("ledger").addEventListener("keydown", (event) => {
+  const rows = [...$("ledger").querySelectorAll(".case")];
+  if (rows.length === 0) return;
+  const current = rows.findIndex((r) => r.getAttribute("aria-selected") === "true");
+
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    const next = Math.min(
+      rows.length - 1,
+      Math.max(0, current + (event.key === "ArrowDown" ? 1 : -1)),
+    );
+    rows[next].scrollIntoView({ block: "nearest" });
+    openCase({ reportId: rows[next].dataset.id });
+  }
+});
+
+// ── Ouvrir par numéro de référence ─────────────────────────────────────────
+
+$("lookup-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const code = $("lookup-code").value.trim();
+  if (code) openCase({ referenceCode: code });
+});
+
+// ── Le dossier ─────────────────────────────────────────────────────────────
+
+async function openCase(query) {
+  const host = $("file");
+  $("console").dataset.reading = "true";
+  stateBlock(host, "Ouverture…");
 
   let report;
   try {
-    ({ data: report } = await call("getReport")({ reportId }));
+    ({ data: report } = await call("getReport")(query));
   } catch (error) {
-    detail.textContent = "Ouverture impossible : " + (error?.message ?? error);
+    const missing = String(error?.code ?? "").includes("not-found");
+    stateBlock(
+      host,
+      missing ? "Aucun dossier ne porte ce numéro" : "Ouverture impossible",
+      missing
+        ? "Vérifiez le numéro tel qu'il a été dicté, puis réessayez."
+        : `${error?.message ?? error}`,
+    );
     return;
   }
 
-  detail.innerHTML = "";
-  const title = document.createElement("h2");
-  title.textContent = "Dossier";
-  const notice = document.createElement("p");
-  notice.className = "note";
-  notice.textContent = "Cette ouverture a été enregistrée avec votre adresse.";
-  detail.append(title, notice);
+  openId = report.id;
+  for (const item of $("ledger").querySelectorAll(".case")) {
+    item.setAttribute("aria-selected", String(item.dataset.id === report.id));
+  }
 
-  const list = document.createElement("dl");
-  field(list, "Déposé le", dateOf(report.createdAt));
-  field(list, "Statut", STATUS_LABELS[report.status] ?? report.status);
-  field(list, "Suppression automatique", `${daysLeft(report.expiresAt) ?? "—"} jours`);
-  field(list, "Signale", WHO_LABELS[report.whoFor] ?? report.whoFor);
-  field(list, "Âge", AGE_LABELS[report.ageGroup] ?? report.ageGroup);
-  field(list, "Genre", GENDER_LABELS[report.gender] ?? report.gender);
-  field(list, "Type", INCIDENT_LABELS[report.incidentType] ?? report.incidentType);
-  field(list, "Plateforme", report.platform);
-  field(list, "Urgence", URGENCY_LABELS[report.urgencyLevel] ?? report.urgencyLevel);
-  field(list, "Accompagnement", ASSISTANCE_LABELS[report.assistanceNeeded] ?? report.assistanceNeeded);
-  field(list, "Type d'aide", report.assistanceType);
-  field(list, "Pseudo", report.pseudo);
-  field(list, "Téléphone", report.contactPhone);
-  field(list, "Lien", report.evidenceUrl);
-  detail.append(list);
+  host.replaceChildren(dossier(report));
+  host.scrollTop = 0;
+}
+
+function dossier(report) {
+  const article = el("article", "dossier");
+  article.dataset.urgency = report.urgencyLevel ?? "";
+
+  article.append(el("p", "eyebrow", "Dossier"));
+  article.append(el("h2", null, report.id));
+
+  // La ligne d'audit, montrée à l'agent lui-même. Pas un avertissement : un
+  // fait, dans le même registre que le reste du dossier.
+  article.append(
+    el(
+      "p",
+      "audit",
+      `Ouverture enregistrée — ${auth.currentUser.email}, ${new Date().toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" })}`,
+    ),
+  );
+
+  article.append(pipeline(report.status));
+  article.append(facts(report));
 
   if (report.description) {
-    const heading = document.createElement("h2");
-    heading.textContent = "Récit";
-    const story = document.createElement("p");
-    story.className = "story";
-    story.textContent = report.description;
-    detail.append(heading, story);
+    article.append(el("h3", "section-title", "Ce qui s'est passé"));
+    article.append(el("p", "account", report.description));
   }
 
   if (report.evidenceUrls?.length) {
-    const heading = document.createElement("h2");
-    heading.textContent = `Captures (${report.evidenceUrls.length})`;
-    const shots = document.createElement("div");
-    shots.className = "shots";
+    article.append(
+      el("h3", "section-title", `Preuves (${report.evidenceUrls.length})`),
+    );
+    const list = el("ul", "evidence");
     for (const url of report.evidenceUrls) {
-      const link = document.createElement("a");
+      const item = el("li");
+      const link = el("a");
       link.href = url;
       link.target = "_blank";
       link.rel = "noopener";
-      const img = document.createElement("img");
+      const img = el("img");
       // Liens signés, valables quinze minutes : la console montre les preuves,
       // elle ne les publie pas.
       img.src = url;
       img.alt = "Capture jointe au signalement";
+      img.loading = "lazy";
       link.append(img);
-      shots.append(link);
+      item.append(link);
+      list.append(item);
     }
-    detail.append(heading, shots);
+    article.append(list);
   }
 
-  const actions = document.createElement("div");
-  actions.className = "actions";
-  for (const [status, label] of Object.entries(STATUS_LABELS)) {
-    if (status === report.status) continue;
-    const button = document.createElement("button");
-    button.textContent = "→ " + label;
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      try {
-        await call("setReportStatus")({ reportId, status });
-        reload();
-      } catch (error) {
-        alert("Changement impossible : " + (error?.message ?? error));
-        button.disabled = false;
-      }
-    });
-    actions.append(button);
-  }
-
-  const remove = document.createElement("button");
-  remove.className = "danger";
-  remove.textContent = "Supprimer";
-  remove.addEventListener("click", async () => {
-    const reason = prompt("Motif de la suppression (conservé au journal) :");
-    if (!reason || reason.trim().length < 3) return;
-    // Les captures partent avec le dossier ; la ligne du journal reste.
-    if (!confirm("Le dossier et ses captures seront supprimés définitivement.")) return;
-    try {
-      await call("deleteReport")({ reportId, reason });
-      reload();
-    } catch (error) {
-      alert("Suppression impossible : " + (error?.message ?? error));
-    }
-  });
-  actions.append(remove);
-  detail.append(actions);
+  article.append(actions(report));
+  return article;
 }
+
+/** Reçu → examen → contacté → clos. Une vraie séquence, dessinée comme telle. */
+function pipeline(status) {
+  const list = el("ol", "pipeline");
+  const index = STATUSES.indexOf(status);
+  STATUSES.forEach((step, position) => {
+    const item = el("li", null, STATUS[step]);
+    if (position < index) item.dataset.done = "true";
+    if (position === index) item.setAttribute("aria-current", "step");
+    list.append(item);
+  });
+  return list;
+}
+
+function facts(report) {
+  const list = el("dl", "facts");
+
+  const add = (term, value, mono) => {
+    if (value === undefined || value === null || value === "") return;
+    const wrap = el("div", "fact");
+    wrap.append(el("dt", null, term));
+    wrap.append(el("dd", mono ? "mono" : null, value));
+    list.append(wrap);
+  };
+
+  const left = daysLeft(report.expiresAt);
+  add("Déposé le", dateOf(report.createdAt), true);
+  add(
+    "Suppression",
+    left === null ? null : `dans ${left} jours`,
+    true,
+  );
+  add("Signale", label(WHO, report.whoFor));
+  add("Âge", label(AGE, report.ageGroup));
+  add("Genre", label(GENDER, report.gender));
+  add("Type", label(INCIDENT, report.incidentType));
+  add("Plateforme", label(PLATFORM, report.platform));
+  add("Urgence", label(URGENCY, report.urgencyLevel));
+  add("Accompagnement", label(ASSISTANCE, report.assistanceNeeded));
+  add("Type d'aide", report.assistanceType && label(ASSISTANCE_TYPE, report.assistanceType));
+  add("Pseudo", report.pseudo);
+  add("Téléphone", report.contactPhone, true);
+  add("Lien", report.evidenceUrl, true);
+
+  return list;
+}
+
+function actions(report) {
+  const bar = el("div", "actions");
+  const index = STATUSES.indexOf(report.status);
+  const next = STATUSES[index + 1];
+
+  // L'action principale est la suivante dans la filière. Les autres restent
+  // possibles, en retrait : un dossier ne progresse pas toujours en ligne
+  // droite.
+  if (next) {
+    const advance = el("button", null, `Marquer « ${STATUS[next]} »`);
+    advance.addEventListener("click", () => changeStatus(report.id, next, advance));
+    bar.append(advance);
+  }
+
+  for (const status of STATUSES) {
+    if (status === report.status || status === next) continue;
+    const button = el("button", "quiet", STATUS[status]);
+    button.addEventListener("click", () => changeStatus(report.id, status, button));
+    bar.append(button);
+  }
+
+  bar.append(el("span", "spacer"));
+
+  const remove = el("button", "grave", "Supprimer");
+  remove.addEventListener("click", () => deleteCase(report.id));
+  bar.append(remove);
+
+  return bar;
+}
+
+async function changeStatus(reportId, status, button) {
+  button.disabled = true;
+  try {
+    await call("setReportStatus")({ reportId, status });
+    await openCase({ reportId });
+    reload();
+  } catch (error) {
+    stateBlock(
+      $("file"),
+      "Le statut n'a pas changé",
+      `${error?.message ?? error}. Le dossier est inchangé.`,
+    );
+  }
+}
+
+async function deleteCase(reportId) {
+  const reason = prompt("Motif de la suppression (conservé au journal) :");
+  if (!reason || reason.trim().length < 3) return;
+  // Les captures partent avec le dossier ; la ligne du journal reste.
+  if (
+    !confirm(
+      "Le dossier et ses captures seront supprimés définitivement. Continuer ?",
+    )
+  ) {
+    return;
+  }
+
+  try {
+    await call("deleteReport")({ reportId, reason });
+    openId = null;
+    stateBlock($("file"), "Dossier supprimé", "Le motif est conservé au journal.");
+    reload();
+  } catch (error) {
+    stateBlock(
+      $("file"),
+      "Suppression impossible",
+      `${error?.message ?? error}. Le dossier est intact.`,
+    );
+  }
+}
+
+// L'écran de droite au démarrage : une consigne, pas un vide.
+stateBlock(
+  $("file"),
+  "Choisissez un dossier",
+  "La file ne montre ni récit, ni preuves, ni coordonnées. Ouvrir un dossier est un acte distinct, enregistré avec votre adresse.",
+);

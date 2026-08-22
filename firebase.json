@@ -66,8 +66,7 @@
     "public": "console",
     "ignore": [
       "**/.*",
-      "**/node_modules/**",
-      "**/config.example.js"
+      "**/node_modules/**"
     ],
     "headers": [
       {

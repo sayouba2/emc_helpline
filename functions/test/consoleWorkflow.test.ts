@@ -158,6 +158,62 @@ describe.skipIf(!ready)("la console, avec un compte agent", () => {
     expect(sent.result.referenceCode).toMatch(/^EMC/);
   });
 
+  it("ouvre un dossier depuis le numéro que son auteur dicte", async () => {
+    // Le moment pour lequel tout le produit existe : quelqu'un appelle et lit
+    // son numéro. Le code est stocké haché, donc l'agent ne peut pas le
+    // chercher à l'œil — sans ce chemin, il ne pourrait pas l'aider.
+    const anonymous = await anonymousToken();
+    const agent = await agentToken();
+    const sent = await call(
+      "submitReport",
+      { idempotencyKey: uniqueKey(), report },
+      anonymous,
+    );
+    const referenceCode = sent.result.referenceCode as string;
+
+    const opened = await call("getReport", { referenceCode }, agent);
+
+    expect(opened.error, JSON.stringify(opened.error)).toBeUndefined();
+    expect(opened.result.description).toHaveLength(130);
+    expect(opened.result.pseudo).toBe("HérosDiscret42");
+  });
+
+  it("tolère la façon dont le numéro a été recopié", async () => {
+    const anonymous = await anonymousToken();
+    const agent = await agentToken();
+    const sent = await call(
+      "submitReport",
+      { idempotencyKey: uniqueKey(), report },
+      anonymous,
+    );
+    const code = sent.result.referenceCode as string;
+
+    for (const typed of [code.toLowerCase(), code.replace(/-/g, ""), ` ${code} `]) {
+      const opened = await call("getReport", { referenceCode: typed }, agent);
+      expect(opened.error, typed).toBeUndefined();
+    }
+  });
+
+  it("ne trouve rien pour un numéro que personne n'a reçu", async () => {
+    const agent = await agentToken();
+
+    const refused = await call(
+      "getReport",
+      { referenceCode: "EMC-0000-0000-0000" },
+      agent,
+    );
+
+    expect(refused.error?.status).toBe("NOT_FOUND");
+  });
+
+  it("refuse une ouverture sans dossier ni numéro", async () => {
+    const agent = await agentToken();
+
+    const refused = await call("getReport", { reportId: null }, agent);
+
+    expect(refused.error?.status).toBe("INVALID_ARGUMENT");
+  });
+
   it("fait avancer un dossier, et le suivi le voit", async () => {
     const anonymous = await anonymousToken();
     const agent = await agentToken();

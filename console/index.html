@@ -3,57 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Nothing here is indexable anyway — the app refuses to load without an
-     agent claim — but a stray link should not end up in a search engine. -->
+<!-- La console refuse de charger sans claim agent, mais un lien égaré n'a
+     rien à faire dans un index. -->
 <meta name="robots" content="noindex, nofollow">
-<title>EMC Helpline — Console</title>
+<title>Console — EMC Helpline</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <h1>EMC Helpline <span class="sub">Console</span></h1>
-  <div id="who"></div>
+
+<header class="masthead">
+  <h1 class="wordmark">EMC Helpline <span>Console</span></h1>
+  <div class="session" id="session"></div>
 </header>
 
-<main>
-  <section id="signin">
-    <h2>Connexion</h2>
-    <p class="note">Réservé aux membres de l'équipe. Chaque consultation d'un
-      dossier est enregistrée avec votre adresse.</p>
-    <form id="signin-form">
-      <label>Adresse e-mail<input type="email" id="email" required autocomplete="username"></label>
-      <label>Mot de passe<input type="password" id="password" required autocomplete="current-password"></label>
-      <button type="submit">Se connecter</button>
-    </form>
-    <p id="signin-error" class="error" hidden></p>
-  </section>
+<section class="signin" id="signin">
+  <h2>Connexion</h2>
+  <p>Réservé à l'équipe. Chaque dossier ouvert est enregistré avec votre adresse.</p>
+  <form id="signin-form">
+    <label>Adresse e-mail
+      <input type="email" id="email" required autocomplete="username" autofocus>
+    </label>
+    <label>Mot de passe
+      <input type="password" id="password" required autocomplete="current-password">
+    </label>
+    <button type="submit" id="signin-button">Se connecter</button>
+  </form>
+  <div id="signin-notice" hidden></div>
+</section>
 
-  <section id="queue" hidden>
+<main class="console" id="console" hidden>
+
+  <section class="queue" aria-label="File des dossiers">
     <div class="queue-head">
-      <h2>Dossiers</h2>
-      <label class="filter">Statut
-        <select id="status-filter">
-          <option value="">Tous</option>
-          <option value="received">Reçu</option>
-          <option value="inReview">En cours d'examen</option>
-          <option value="contacted">Contacté</option>
-          <option value="closed">Clos</option>
-        </select>
-      </label>
+      <h2>File</h2>
+
+      <!-- Quelqu'un appelle et lit son numéro : c'est le seul moyen d'ouvrir
+           son dossier, puisque le code est stocké haché. -->
+      <form class="lookup" id="lookup-form">
+        <input
+          id="lookup-code"
+          class="mono"
+          placeholder="EMC-4K7P-W9XM-2QTR"
+          aria-label="Ouvrir un dossier par son numéro de référence"
+          autocomplete="off"
+          spellcheck="false">
+        <button type="submit" class="quiet">Ouvrir</button>
+      </form>
+
+      <div class="filters" id="filters" role="group" aria-label="Filtrer par statut"></div>
     </div>
-    <p class="note">Cette liste ne contient ni récit, ni preuves, ni
-      coordonnées. Ouvrir un dossier est un acte distinct, et il est journalisé.</p>
-    <table id="queue-table">
-      <thead><tr>
-        <th>Déposé</th><th>Type</th><th>Urgence</th><th>Plateforme</th>
-        <th>Preuves</th><th>Statut</th><th>Expire</th><th></th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
-    <button id="more" hidden>Charger la suite</button>
+
+    <div id="queue-notice"></div>
+    <ol class="ledger" id="ledger" role="listbox" aria-label="Dossiers" tabindex="0"></ol>
+    <div class="queue-foot">
+      <button id="more" class="quiet" hidden>Charger la suite</button>
+    </div>
   </section>
 
-  <section id="detail" hidden></section>
+  <section class="file" id="file" aria-live="polite"></section>
+
 </main>
 
 <script type="module" src="app.js"></script>

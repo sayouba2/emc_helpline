@@ -597,8 +597,37 @@ casse donc pas les applications déjà installées.
 
 ### La console
 
-Une page statique sur Firebase Hosting (`console/`), sans framework. Copier
-`config.example.js` en `config.js` et y mettre la config web du projet.
+Une page statique sur Firebase Hosting (`console/`), sans framework ni étape de
+construction. `npm run console` écrit sa configuration — voir §17.
+
+**Le dessin suit le travail**, pas l'inverse. Quelqu'un s'assied là une heure
+d'affilée pour lire des récits d'enfants menacés et décider quoi traiter en
+premier. Trois règles en découlent :
+
+- **L'urgence et l'échéance se lisent sans lire.** Ce sont les deux seules
+  questions du triage, et elles occupent les deux marges de chaque ligne : un
+  rail à gauche dont la couleur *et* l'épaisseur encodent l'urgence — donc
+  lisible sans distinguer les couleurs — et le compte à rebours de conservation
+  à droite, en rouge sous sept jours.
+- **Ce qui identifie ou date un dossier est en chasse fixe ; ce qui le décrit
+  est en linéale.** La règle encode quelque chose de vrai : ceci est un
+  registre, et un numéro de dossier n'est pas une phrase.
+- **Rien ne célèbre.** Pas de dégradé, pas de relief, une seule animation —
+  l'ouverture d'un dossier. Une interface qui aurait l'air « designée » au-dessus
+  du récit d'une agression serait indécente.
+
+Le bleu est échantillonné dans le badge EMC (`#26368F`). Le contraste le plus
+faible de la palette est de 4,56:1, au-dessus du seuil AA — le gris discret
+porte les métadonnées en 11,5 px, et un gris plus clair tombait à 3,34.
+
+**La ligne d'audit est montrée à l'agent lui-même**, à chaque ouverture, dans le
+même registre typographique que le reste du dossier. Pas un avertissement : un
+fait. Les gens qui lisent ces récits sont ceux dont l'accès est au registre.
+
+**Ouvrir par numéro de référence.** Un champ en tête de file résout le code que
+son auteur dicte au téléphone. Sans lui, un agent ne pouvait pas aider quelqu'un
+qui appelle : le code est stocké haché, donc introuvable à l'œil. C'est le
+moment pour lequel tout le produit existe, et il manquait.
 
 **Les agents ne touchent pas Firestore non plus.** Les règles restent à `false`
 pour tout le monde, et la console passe par des fonctions appelables. Ce n'est
