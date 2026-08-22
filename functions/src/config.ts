@@ -7,6 +7,20 @@
 export const REGION = "europe-west1";
 
 /**
+ * Whether callables demand a valid App Check token.
+ *
+ * On, always, except inside the emulator suite. `enforceAppCheck` is enforced
+ * by `firebase-functions` itself, in process — it is not a Google-side check
+ * that the emulators simply skip. A local run therefore answers every call with
+ * `401 UNAUTHENTICATED`, however good the auth token is, and no amount of
+ * client-side fiddling changes that.
+ *
+ * The escape hatch is `FUNCTIONS_EMULATOR`, which the emulator sets and which
+ * nothing in production can set: a deployed function always enforces.
+ */
+export const ENFORCE_APP_CHECK = process.env.FUNCTIONS_EMULATOR !== "true";
+
+/**
  * How much someone has to write when they attach no screenshot and no link.
  *
  * Must match `Validators.minDescriptionLength` in

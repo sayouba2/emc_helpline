@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   ALLOWED_EVIDENCE_TYPES,
+  ENFORCE_APP_CHECK,
   EVIDENCE_PREFIX,
   MAX_EVIDENCE_BYTES,
   MAX_EVIDENCE_FILES,
@@ -131,7 +132,7 @@ export async function verifyEvidence(
  * function did not authorise.
  */
 export const requestEvidenceUploadUrl = onCall(
-  { region: REGION, enforceAppCheck: true, memory: "256MiB", timeoutSeconds: 30 },
+  { region: REGION, enforceAppCheck: ENFORCE_APP_CHECK, memory: "256MiB", timeoutSeconds: 30 },
   async (request): Promise<{ uploadUrl: string; storagePath: string }> => {
     const uid = request.auth?.uid;
     if (!uid) {

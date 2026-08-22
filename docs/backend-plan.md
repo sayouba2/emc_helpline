@@ -887,13 +887,19 @@ parlait-il, au juste » est la première chose à savoir.
 | `unauthenticated` | App Check ou la connexion anonyme a été refusée |
 | `unavailable` | rien au bout : émulateurs éteints, ou mauvaise adresse |
 
-**App Check, même contre les émulateurs.** Le SDK Android des Functions
-récupère un jeton d'authentification et un jeton App Check *en parallèle*, et
-compte « aucun fournisseur installé » comme une tâche échouée. L'appel meurt
-alors sur le téléphone — `1 out of 2 underlying tasks failed` — avant qu'un
-seul octet ne parte, et le terminal du backend ne montre évidemment rien.
-`FirebaseAppCheck.activate()` est donc appelé **avant** l'aiguillage vers les
-émulateurs : ceux-ci ne vérifient aucun jeton, mais il faut qu'il en existe un.
+**App Check est appliqué dans l'émulateur.** C'est contre-intuitif et ça m'a
+coûté trois diagnostics faux : `enforceAppCheck` n'est pas une vérification
+côté Google que les émulateurs sauteraient, c'est `firebase-functions` qui
+l'applique lui-même, dans le processus. Un appel local se voyait donc répondre
+`401 UNAUTHENTICATED` quelle que soit la qualité du jeton d'authentification.
+`ENFORCE_APP_CHECK` le désactive sur la seule foi de `FUNCTIONS_EMULATOR`, que
+rien en production ne peut poser.
+
+**L'identifiant de projet doit être celui de l'application.** Les émulateurs
+servent leurs fonctions sous `/{projectId}/{region}/{nom}`. Démarrés sous
+`demo-emc` alors que l'application est `emc-helpline-e82ef`, ils n'exposent
+tout simplement pas l'URL qu'elle appelle. `npm run backend` prend donc le
+projet de `.firebaserc` — le même que `firebase_options.dart`.
 
 **Le trafic en clair.** Les émulateurs parlent en HTTP, qu'Android bloque par
 défaut depuis `targetSdk` 28. `android/app/src/debug/res/xml/network_security_config.xml`
@@ -950,3 +956,34 @@ changement touche le contrat entre deux d'entre elles.
 
 `deploy` ne touche ni aux données, ni aux comptes, ni aux politiques TTL, ni aux
 réglages App Check. Tout cela vit dans la console et n'est pas dans le dépôt.
+
+---
+
+## 16. Le test qui valide le parcours
+
+`functions/test/workflow.test.ts` appelle les fonctions **par HTTP**, avec un
+vrai jeton de l'émulateur d'authentification — exactement comme le fait un
+client, enveloppe des appelables et vérification d'authentification comprises.
+
+```bash
+npm run test:workflow
+```
+
+Les autres suites appellent `submitReportCore` et `trackReportCore` en direct,
+ce qui saute tout ce qu'il y a autour. C'est utile pour la logique, et
+insuffisant : les deux pannes qui ont bloqué la première mise en route locale —
+App Check appliqué dans l'émulateur, et l'identifiant de projet qui ne
+correspondait pas — étaient toutes deux invisibles à ce niveau, et toutes deux
+apparaissent immédiatement ici.
+
+**La ligne de partage qu'il trace :** si cette suite passe et que l'application
+échoue quand même, le problème est dans le téléphone, pas dans le backend.
+
+Pour viser une instance déjà démarrée plutôt que d'en lancer une :
+
+```bash
+EMULATOR_PROJECT_ID=emc-helpline-e82ef \
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 \
+npx vitest run functions/test/workflow.test.ts
+```

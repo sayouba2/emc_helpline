@@ -4,6 +4,7 @@ import { getStorage } from "firebase-admin/storage";
 
 import {
   COLLECTIONS,
+  ENFORCE_APP_CHECK,
   IDEMPOTENCY_TTL_DAYS,
   RATE_LIMITS,
   REGION,
@@ -146,7 +147,7 @@ export async function submitReportCore(
 export const submitReport = onCall(
   {
     region: REGION,
-    enforceAppCheck: true,
+    enforceAppCheck: ENFORCE_APP_CHECK,
     // Evidence travels as storage paths, so the payload is small; a report is
     // a few kilobytes at most.
     memory: "256MiB",

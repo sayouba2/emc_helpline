@@ -2,7 +2,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { z } from "zod";
 
-import { COLLECTIONS, RATE_LIMITS, REGION } from "./config.js";
+import { COLLECTIONS, ENFORCE_APP_CHECK, RATE_LIMITS, REGION } from "./config.js";
 import { logEvent, logProblem } from "./logging.js";
 import { consumeRateLimit } from "./rateLimit.js";
 import { referenceHash, referencePayloadOf } from "./referenceCode.js";
@@ -69,7 +69,7 @@ export async function trackReportCore(
 }
 
 export const trackReport = onCall(
-  { region: REGION, enforceAppCheck: true, memory: "256MiB", timeoutSeconds: 20 },
+  { region: REGION, enforceAppCheck: ENFORCE_APP_CHECK, memory: "256MiB", timeoutSeconds: 20 },
   async (request): Promise<TrackResult> => {
     const uid = request.auth?.uid;
     if (!uid) {
