@@ -107,6 +107,24 @@ describe.skipIf(!ready)("la console, avec un compte agent", () => {
     expect(refused.error?.status).toBe("PERMISSION_DENIED");
   });
 
+  it("accepte les null que fabrique le SDK web", async () => {
+    // La requête la plus banale qui soit : la page au premier chargement, sans
+    // filtre. Le SDK web sérialise `undefined` en `null`, et un schéma qui
+    // n'accepte que l'absence rejetait exactement ça.
+    const agent = await agentToken();
+
+    for (const query of [
+      {},
+      { status: null, startAfter: null },
+      { status: null, startAfter: null, limit: null },
+      { status: "received", startAfter: null },
+    ]) {
+      const listed = await call("listReports", query, agent);
+      expect(listed.error, JSON.stringify(query)).toBeUndefined();
+      expect(Array.isArray(listed.result.reports)).toBe(true);
+    }
+  });
+
   it("liste les dossiers sans en montrer le contenu", async () => {
     const agent = await agentToken();
     await call("submitReport", { idempotencyKey: uniqueKey(), report }, await anonymousToken());

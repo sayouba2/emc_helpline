@@ -142,8 +142,13 @@ async function loadPage() {
   loading = true;
   $("more").disabled = true;
   try {
-    const status = $("status-filter").value || undefined;
-    const { data } = await call("listReports")({ status, startAfter: cursor ?? undefined });
+    // Seules les clés qui portent une valeur sont envoyées. Le serveur tolère
+    // les `null` que le SDK web fabrique à partir d'`undefined`, mais autant ne
+    // pas les produire.
+    const query = {};
+    if ($("status-filter").value) query.status = $("status-filter").value;
+    if (cursor) query.startAfter = cursor;
+    const { data } = await call("listReports")(query);
     for (const report of data.reports) appendRow(report);
     cursor = data.cursor;
     $("more").hidden = data.reports.length === 0 || !cursor;

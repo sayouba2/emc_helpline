@@ -64,10 +64,17 @@ async function audit(
   });
 }
 
+/**
+ * `nullish`, pas `optional`.
+ *
+ * Le SDK web sérialise `undefined` en `null` : un filtre vide part donc en
+ * `{status: null}`, et un schéma qui n'accepte que l'absence rejette la requête
+ * la plus banale qui soit — celle de la page au premier chargement.
+ */
 const listRequest = z.object({
-  status: z.enum(REPORT_STATUSES).optional(),
-  limit: z.number().int().min(1).max(50).default(25),
-  startAfter: z.string().optional(),
+  status: z.enum(REPORT_STATUSES).nullish(),
+  limit: z.number().int().min(1).max(50).nullish(),
+  startAfter: z.string().min(1).nullish(),
 });
 
 /**
@@ -87,16 +94,18 @@ export const listReports = onCall(
     }
 
     const db = getFirestore();
+    const limit = parsed.data.limit ?? 25;
+
     let query = db
       .collection(COLLECTIONS.reports)
       .orderBy("createdAt", "desc")
-      .limit(parsed.data.limit);
+      .limit(limit);
     if (parsed.data.status) {
       query = db
         .collection(COLLECTIONS.reports)
         .where("status", "==", parsed.data.status)
         .orderBy("createdAt", "desc")
-        .limit(parsed.data.limit);
+        .limit(limit);
     }
     if (parsed.data.startAfter) {
       const cursor = await db

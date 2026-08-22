@@ -1051,3 +1051,9 @@ ce contrôle.
 
 Il vérifie aussi que la file ne laisse fuir ni récit, ni pseudo, ni téléphone,
 et que faire avancer un dossier repousse bien son expiration.
+
+**Un piège du SDK web** y est verrouillé : il sérialise `undefined` en `null`.
+Un filtre vide part donc en `{status: null}`, et un schéma Zod en `.optional()`
+— qui n'accepte que l'absence — rejetait la requête la plus banale qui soit,
+celle de la page au premier chargement. Les champs facultatifs des fonctions de
+la console sont en `.nullish()` pour cette raison.
