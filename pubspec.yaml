@@ -61,6 +61,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -106,3 +107,20 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Icône de lanceur. Régénérer après toute modification de assets/icon/ :
+#   dart run flutter_launcher_icons
+#
+# La source est le badge du logo EMC — bouclier, cadenas, pistes de circuit —
+# découpé du logo horizontal, qui ne peut pas servir tel quel : une icône est
+# carrée. Le mot-symbole « emc » est illisible à 48 dp de toute façon.
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  # Icône adaptative : Android applique une forme au fond (cercle, carré arrondi,
+  # goutte selon le lanceur) et peut rogner jusqu'aux deux tiers centraux. Le
+  # premier plan tient donc dans cette zone sûre, et le fond est un aplat.
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
