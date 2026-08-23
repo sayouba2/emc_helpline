@@ -93,7 +93,7 @@ export const trackReport = onCall(
       // someone who simply checked on their case too often would read as their
       // report having vanished, and the enumeration this would obscure is not
       // the thing standing between an attacker and a case — 60 bits of entropy
-      // is. See docs/backend-plan.md §5.
+      // is.
       logProblem({ event: "track_rate_limited" });
       throw new HttpsError("resource-exhausted", "too many lookups");
     }

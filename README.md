@@ -1,205 +1,84 @@
 # EMC Helpline
 
-Application mobile Flutter de signalement des violences numériques visant les
-enfants, les jeunes et les femmes au Maroc, en partenariat avec le CMRPI.
+Application mobile de signalement des violences numériques visant les enfants,
+les jeunes et les femmes au Maroc, développée en partenariat avec le CMRPI.
 
-Interface en **français, arabe et anglais**. En arabe, **toute l'interface est
-mise en miroir**, pas seulement le texte : ordre des onglets, flèches, coins des
-bulles, marges. C'est ce que prescrivent Android, iOS et le W3C, et ce qu'attend
-un lecteur arabophone. Les seules exceptions sont les contenus qui se lisent de
-gauche à droite dans toutes les langues — numéros de téléphone, URL, numéro de
-référence — forcés en LTR. `test/rtl_test.dart` verrouille les deux règles. Au lancement, le logo apparaît en fondu puis laisse la place à
-l'application ; le splash natif Android affiche le même logo, donc la transition
-est invisible.
+Un signalement se dépose sans compte et sans donner son nom. En échange, son
+auteur reçoit un **numéro de référence** — la seule chose qui relie une personne
+à son dossier. L'équipe traite les dossiers depuis une console web séparée.
 
-## Ce que fait l'application
-
-- **Signaler** — l'onglet ouvre sur un choix : déposer un signalement, ou
-  suivre une demande. Le formulaire fait 11 étapes — contexte, profil, incident,
-  récapitulatif —, chacune validée avant de pouvoir avancer, avec un message qui
-  dit ce qui manque quand le bouton est désactivé. Le bouton « SIGNALER
-  MAINTENANT » de l'accueil ouvre le formulaire directement : qui l'utilise a
-  déjà décidé.
-- **Suivre ma demande** — l'utilisateur saisit le numéro de référence reçu à
-  l'envoi et consulte l'état de son dossier. La recherche distingue quatre
-  issues : trouvé, introuvable, numéro mal formé, et vérification impossible.
-  Les deux dernières existent pour qu'un enfant ne lise jamais « aucun dossier
-  ne correspond » parce que le réseau est tombé ou qu'il a mal recopié.
-- **Ressources** — les gestes à adopter face à un incident.
-- **Contact** — WhatsApp, téléphone, e-mail et portail web de l'équipe.
-- **Chatbot** (+12 ans) — assistant proposé depuis l'étape « âge » et depuis
-  l'écran de confirmation, là où commence l'attente d'une réponse humaine. Il
-  répond en français, en arabe et en anglais : l'aiguillage normalise le texte
-  avant de chercher ses mots-clés, faute de quoi un message arabe écrit avec
-  ses voyelles, ou un « harcelement » sans accent, ne serait jamais reconnu.
-
-Les numéros d'urgence sont accessibles en permanence : Police **19**,
-Gendarmerie **177**.
-
-## Règles du formulaire
-
-Trois d'entre elles ne sont pas évidentes à la lecture du code seul.
-
-**Les preuves ne peuvent pas être passées à vide.** Il faut au moins une capture
-d'écran — elles sont multiples, avec vignettes et suppression individuelle —, un
-lien, **ou** un récit d'au moins `Validators.minDescriptionLength` caractères.
-Un signalement anonyme sans rien à examiner ne peut être ni vérifié ni instruit,
-et le portail en ligne demande la même chose. Mais le cas le plus grave est
-souvent celui où l'agresseur a effacé les traces, où le contenu était éphémère,
-ou où l'enfant a été contraint de supprimer : le récit tient donc lieu de preuve
-plutôt que de fermer la porte. Le champ reste visible même quand une preuve est
-jointe — marqué facultatif — pour que rien de ce qui a été écrit ne disparaisse.
-
-**La fin du parcours dépend de la réponse à « Veux-tu de l'aide ? ».**
-
-| Réponse | Type d'aide | Coordonnées |
-|---|---|---|
-| Accompagnement | demandée | **pseudo + téléphone, obligatoires** |
-| Je ne sais pas | sautée | sautées — le signalement reste anonyme |
-| Pas d'accompagnement | sautée | sautées — le signalement reste anonyme |
-
-Ces deux questions n'existent que pour permettre un rappel : elles ne se posent
-donc qu'à qui l'a explicitement demandé. Les étapes conditionnelles sont
-déclarées une seule fois dans `ReportProvider._isStepSkipped()`, et la navigation
-avant comme arrière les enjambe à partir de cette définition — elles ne peuvent
-pas diverger.
-
-**L'anonymat n'est pas un interrupteur mais une conséquence.** Il n'existe pas
-de bouton « rester anonyme » : le vrai nom n'est demandé nulle part, et un
-pseudo associé à un numéro est précisément ce qui permet d'être joint sans se
-nommer. `ReportModel.isAnonymous` se déduit de l'absence de coordonnées. Seuls un
-pseudo et un téléphone sont collectés : ni e-mail, ni WhatsApp.
+L'interface existe en **français, arabe et anglais**. En arabe, toute
+l'interface est mise en miroir, pas seulement le texte.
 
 ---
 
-## État : frontend
+## Trois parties
 
-Le développement est découpé en étapes et celle-ci couvre le frontend. Il n'y a
-pas encore de backend : `ReportProvider.submitReport()` génère un numéro de
-référence localement et ajoute le dossier à une liste en mémoire. L'application
-n'a pas vocation à être déployée avant que le backend existe.
+| | Où | Quoi |
+|---|---|---|
+| **Application** | `lib/` | Flutter, Android et iOS |
+| **Backend** | `functions/` | Cloud Functions en TypeScript, Firestore, Cloud Storage |
+| **Console équipe** | `console/` | Page statique, Firebase Hosting |
 
-Les points d'accroche sont en place et n'attendent que l'appel réseau :
+L'application ne parle jamais à Firestore directement : les règles refusent tout
+à tout le monde, et chaque accès passe par une fonction appelable.
 
-| À remplacer | Où |
-|---|---|
-| Envoi du signalement | injecter un `ReportSubmitter` dans `ReportProvider` — voir « Envoi et échec » ci-dessous |
-| Suivi d'une demande | `ReportProvider.lookupReference()` — appelle `trackReport`, qui ne renvoie qu'un statut, jamais le contenu du dossier |
-| Numéro de référence | rendu par le `ReportSubmitter` ; la simulation le tire au sort, le serveur l'attribuera |
-| Captures d'écran | téléversées par `EvidenceUploader` avant l'envoi ; le serveur ne voit que des chemins d'objet qu'il a lui-même délivrés |
-
-Le backend a commencé : règles fermées, `submitReport` avec idempotence et
-génération du numéro de référence, et le client branché dessus. Le plan complet
-et l'état d'avancement sont dans [`docs/backend-plan.md`](docs/backend-plan.md).
-
-Sans projet Firebase joignable, un build **debug** retombe sur la simulation
-locale et le dit dans les logs ; un build **release** ne le fait jamais — il
-échoue franchement, parce qu'une simulation en production distribuerait un
-numéro de référence pour un signalement parti nulle part.
-
-Les captures d'écran passent par une URL signée délivrée pour un objet, un type
-et quelques minutes ; le bucket n'est jamais ouvert en écriture. Un réessai
-renvoie le signalement, pas les captures.
-
-Un dossier est conservé **30 jours après sa dernière activité** : le dépôt lance
-le compte, chaque changement de statut le relance. Sa suppression emporte les
-captures. L'équipe travaille dans une console web séparée (`console/`), où
-chaque ouverture de dossier est journalisée avec l'adresse de l'agent.
-
-```bash
-npm run backend    # terminal 1
-npm run console    # terminal 2 : config + compte agent local
-```
-
-Puis http://127.0.0.1:5000 — voir [`docs/backend-plan.md`](docs/backend-plan.md) §17.
-
-Les notifications sont **désactivées par défaut** et ne s'activent que depuis
-l'écran qui affiche le numéro de référence. Le message n'apprend rien à qui lit
-l'écran verrouillé, et aucun appareil n'est enregistré en face d'un dossier —
-voir [`docs/backend-plan.md`](docs/backend-plan.md) §12.
-
-```bash
-npm install && npm install --prefix functions && npm run test:emulator
-```
-
-### Le numéro de référence
-
-C'est un jeton porteur : sans compte, quiconque le connaît ouvre le dossier. Il
-doit donc être indevinable. `REF-EMC-2026-123456` ne l'était pas — six chiffres,
-900 000 possibilités, énumérables en une après-midi.
-[`ReferenceCode`](lib/core/utils/reference_code.dart) produit désormais
-`EMC-4K7P-W9XM-2QTR` : base32 de Crockford, douze caractères, environ 10^18.
-
-L'alphabet écarte `I`, `L`, `O` et `U` — les trois premiers parce qu'ils se
-relisent comme `1`, `1` et `0` au téléphone. `ReferenceCode.payloadOf()` pardonne
-ce qui reste : minuscules, tirets absents, espaces, préfixe oublié, et le `O`
-tapé pour un zéro. Deux codes se comparent par leur charge utile, jamais comme
-des chaînes.
-
-L'écran de suivi distingue « ce numéro n'a pas le bon format » de « aucun
-dossier » : une faute de frappe se lit comme une faute de frappe, et un code
-impossible ne coûtera pas d'appel serveur — ni de budget de limitation de débit,
-qui sera la seule défense derrière l'entropie du code.
-
-### Envoi et échec
-
-`ReportProvider` ne sait pas comment un signalement part. Il appelle un
-[`ReportSubmitter`](lib/models/submission_outcome.dart) — une fonction qui reçoit
-le rapport et rend le numéro de référence, ou lève une `SubmissionException`.
-Sans implémentation injectée, une simulation locale prend le relais. Le backend
-n'a donc qu'un seul point à brancher, et les tests injectent des pannes plutôt
-que de faire semblant.
-
-**Un échec ne peut pas passer inaperçu.** `submitReport()` ne lève jamais : il
-enregistre un `SubmissionFailure`, et le wizard remplace le formulaire par
-[`SubmissionErrorScreen`](lib/views/reporting/submission_error_screen.dart).
-Écrire « ton signalement n'est pas parti » importe plus qu'ailleurs : sans cet
-écran, un enfant conclurait soit que l'app est cassée, soit — bien pire — que
-son signalement est arrivé.
-
-**Réessayer ne coûte rien et ne duplique rien.** Les réponses restent en place,
-et l'écran le dit avant de proposer le bouton : la crainte de refaire onze
-étapes est ce qui dissuade de réessayer. Chaque tentative porte la même clé
-d'idempotence, créée une fois par signalement. Un envoi qui expire alors que le
-serveur avait déjà enregistré ne peut donc pas ouvrir un second dossier — un
-doublon ici, c'est une deuxième personne qui passe du temps sur un incident déjà
-traité. **Le serveur devra faire respecter cette clé** ; le client ne fait que la
-transmettre inchangée.
-
-Après deux échecs consécutifs, l'écran cesse de suggérer que réessayer suffira
-et propose la ligne directe de l'équipe ainsi que la Police (19). Un signalement
-qui ne part pas n'est pas qu'une panne technique : c'est que personne n'est au
-courant.
-
-Enfin, un signalement complet dont l'envoi a échoué reste récupérable depuis
-l'écran de choix (« Reprendre l'envoi »). Sans cela, quitter l'écran d'erreur
-puis toucher « Faire un signalement » effacerait tout en silence.
+---
 
 ## Démarrer
 
+Il faut Flutter 3.x, Node 22 et Java (pour les émulateurs Firebase).
+
 ```bash
 flutter pub get
+npm install && npm install --prefix functions
+```
+
+### L'application seule
+
+```bash
 flutter run
 ```
 
-Sans backend joignable, un build debug tourne sur la simulation locale. Pour
-exercer le vrai parcours — signalement écrit dans Firestore, numéro de référence
-rendu par le serveur, suivi qui le retrouve — lancer les émulateurs et pointer
-l'application dessus :
+Sans backend joignable, un build de debug tourne sur une simulation locale : les
+écrans fonctionnent, mais rien n'est envoyé nulle part. La console de `flutter
+run` le dit au démarrage.
+
+### Le parcours complet, en local
+
+Deux terminaux. Le backend d'abord :
 
 ```bash
 npm run backend
 ```
 
+Puis l'application, pointée dessus :
+
 ```bash
 flutter run --dart-define=USE_EMULATORS=true
 ```
 
-Aucun compte de facturation, aucune donnée réelle — captures d'écran comprises.
-Détails dans [`docs/backend-plan.md`](docs/backend-plan.md) §14.
+Un signalement est alors réellement écrit, reçoit un vrai numéro de référence, et
+l'écran de suivi le retrouve — dans une base qui vit sur la machine, visible sur
+`http://127.0.0.1:4000`. Aucun compte de facturation, aucune donnée réelle.
 
-`flutter pub get` régénère `lib/l10n/app_localizations*.dart` à partir des
-fichiers ARB ; ces fichiers générés ne sont pas versionnés.
+Sur un téléphone physique plutôt qu'un émulateur Android, ajouter l'adresse de la
+machine : `--dart-define=EMULATOR_HOST=192.168.1.24`. L'adresse par défaut,
+`10.0.2.2`, n'est traduite que par l'émulateur Android d'AVD.
+
+### La console
+
+```bash
+npm run console      # écrit console/config.js et crée un compte agent local
+```
+
+Puis `http://127.0.0.1:5000`, avec `agent@cmrpi.ma` / `console-locale`.
+
+Les émulateurs conservent leurs données dans `.emulator-data`, mais l'export se
+fait **en quittant** : sortir par `Ctrl-C`. Après un arrêt brutal, relancer
+`npm run console:agent`.
+
+---
 
 ## Vérifications
 
@@ -207,145 +86,145 @@ fichiers ARB ; ces fichiers générés ne sont pas versionnés.
 flutter analyze && flutter test && dart format --output=none --set-exit-if-changed lib test
 ```
 
-Les mêmes commandes tournent en CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+```bash
+npm run check        # typecheck TypeScript + suites backend contre les émulateurs
+```
 
-## Architecture
+180 tests côté application, 103 côté backend. Les mêmes commandes tournent en CI
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+---
+
+## Organisation
 
 ```
 lib/
 ├── core/
+│   ├── backend/       démarrage Firebase, envoi, téléversement, notifications
 │   ├── constants/     couleurs, styles, numéros d'urgence
-│   ├── localization/  libellés localisés des enums métier et des messages de validation
-│   ├── storage/       préférences (langue) — voir « Données » ci-dessous
-│   └── utils/         lancement d'appels/liens, validateurs
-├── l10n/              app_fr.arb, app_ar.arb, app_en.arb (source des traductions)
-├── models/            ReportModel (immuable) + enums métier
-├── providers/         ReportProvider : état du wizard, validation, historique
-└── views/
-    ├── components/    composants partagés (ChoiceCard, StepLayout, stepper…)
-    ├── reporting/     wizard, écran d'envoi animé, confirmation
-    ├── tracking/      suivi d'une demande par numéro de référence
-    └── …              accueil, ressources, contact, chatbot, splash
+│   ├── localization/  libellés des enums métier
+│   ├── storage/       préférences (langue, notifications)
+│   └── utils/         numéro de référence, validateurs, liens
+├── l10n/              app_fr.arb, app_ar.arb, app_en.arb
+├── models/            ReportModel et enums métier
+├── providers/         ReportProvider : état du wizard, validation, envoi
+└── views/             écrans et composants partagés
+
+functions/src/
+├── config.ts          valeurs partagées : région, limites, conservation
+├── schema.ts          contrat de transport + revalidation serveur
+├── referenceCode.ts   génération et normalisation du numéro
+├── submitReport.ts    dépôt, transaction, idempotence
+├── trackReport.ts     suivi par numéro
+├── evidence.ts        URL de téléversement et de lecture
+├── console.ts         fonctions réservées aux agents
+└── retention.ts       suppression des preuves avec le dossier
 ```
 
-**Gestion d'état** : `provider` / `ChangeNotifier`. `ReportProvider` détient la
-machine à états du wizard et la validation par étape ; les indices d'étapes sont
-des constantes nommées (`ReportProvider.stepEvidence`…) pour éviter les
-décalages.
+### Ce qu'il faut savoir avant de modifier
 
-**Valeurs métier** : ce sont des `enum`, jamais des chaînes. Traduire un libellé
-ne peut donc pas casser la logique de branchement. Les libellés vivent dans
-[`report_enum_labels.dart`](lib/core/localization/report_enum_labels.dart).
-
-**Validation** : le provider ne renvoie pas des phrases mais des
-`ValidationMessage` — il n'a pas de `BuildContext`, et la formulation appartient
-aux fichiers ARB.
-
-**Modification du modèle** : `ReportModel.copyWith()` distingue « argument omis »
-de « champ à effacer » grâce à une sentinelle `unsetField`. Omettre conserve,
-passer `null` efface. Les champs à choix (enums) n'acceptent pas d'effacement :
-un choix se change, il ne s'annule pas.
-
-**Thème** : clair uniquement, volontairement. Une variante sombre a existé mais
-était inatteignable et illisible sur les deux tiers des écrans.
-
-**Étapes du wizard** : les onze écrans sont déclaratifs. `StepLayout` porte la
-question et le sous-titre, `ChoiceCard` / `ChoiceTile` portent une réponse
-sélectionnable — état choisi, sémantique et zone tactile compris. Un écran de
-choix tient en une quarantaine de lignes, et l'état « sélectionné » annoncé aux
-lecteurs d'écran ne peut plus être oublié sur une étape. Les fichiers sont
-numérotés d'après les indices de `ReportProvider` (`step00_who` … `step10_summary`).
-
-**Écrans** : un seul est construit à la fois. Les deux `IndexedStack` imbriqués
-d'origine gardaient ~15 écrans vivants à chaque frame, ce qui suffisait à
-étrangler un émulateur.
-
-## Textes légaux
-
-L'écran Paramètres — une ligne en bas de l'accueil — donne accès à la politique
-de confidentialité, aux conditions d'utilisation et à une note « Mes données ».
-
-Il vivait dans l'en-tête, où il occupait sur tous les écrans la place d'une
-chose qu'on ouvre une fois, et où l'engrenage disputait la sienne à la pastille
-de langue. Celle-ci est le seul contrôle **auto-descriptif** de la barre : un
-enfant qui ouvre l'application dans une langue qu'il ne lit pas reconnaît un
-drapeau, jamais un engrenage. Un test vérifie que l'engrenage n'y est pas
-revenu.
-
-> Ces textes sont des **brouillons**. Les passages qui relèvent du juridique
-> portent un marqueur `⚠️ À COMPLÉTER PAR LE CMRPI` : responsable de traitement,
-> délégué à la protection des données, déclaration CNDP au titre de la loi
-> 09-08, durée de conservation, exercice des droits, traitement des données d'un
-> mineur, limites de responsabilité. `LegalDocumentScreen` détecte ce marqueur
-> et affiche un bandeau d'avertissement en tête du document, pour qu'un
-> paragraphe non validé ne passe jamais pour une clause approuvée.
->
-> Les passages **sans** marqueur décrivent le comportement réel de
-> l'application et sont vérifiables dans le code.
->
-> Une politique de confidentialité est **obligatoire** pour publier sur Google
-> Play dès lors que l'application collecte des données personnelles, et cette
-> application relève en plus de la Families Policy.
-
-## Traductions
-
-Le français est la langue source. Pour modifier un texte, éditer
-`lib/l10n/app_fr.arb` puis les deux autres, et relancer `flutter gen-l10n`.
-
-> Les traductions **arabes et anglaises n'ont pas été relues par un locuteur
-> natif**. Pour une ligne d'assistance destinée à des enfants en détresse, le ton
-> compte autant que l'exactitude : une relecture est nécessaire avant mise en
-> production, en particulier sur les messages du chatbot et les textes de
-> réconfort.
-
-## Données et vie privée
-
-Seule la langue choisie est écrite sur l'appareil.
-
-L'accueil n'affiche **aucun historique de signalements** : sur un téléphone
-partagé, la liste montrerait à la première personne qui l'ouvre ce qui a été
-signalé et sur quelle plateforme. Le suivi passe par le numéro de référence,
-que seul l'auteur possède.
+**Les noms des membres d'enum sont un contrat.** `IncidentType.threat` voyage
+tel quel jusqu'à `functions/src/schema.ts`. Renommer un membre d'un seul côté
+casse l'envoi ; `test/backend_contract_test.dart` lit le fichier TypeScript et
+échoue si les deux listes divergent.
 
 **Rien du contenu d'un signalement n'est écrit sur l'appareil** — ni pseudo, ni
-coordonnées, ni preuves, ni historique. Le suivi passe par le serveur, qui ne
-renvoie qu'un statut. C'est délibéré : l'application vise des
-enfants qui partagent souvent leur téléphone, parfois avec la personne qu'ils
-signalent. Une trace lisible localement serait un risque, pas une fonctionnalité.
-Un test (`test/settings_store_test.dart`) vérifie qu'aucune donnée de
-signalement n'atteint le disque.
+coordonnées, ni preuves, ni historique. L'application vise des enfants qui
+partagent souvent leur téléphone, parfois avec la personne qu'ils signalent. Un
+test vérifie qu'aucune donnée de signalement n'atteint le disque.
 
-## Accessibilité
+**Le thème est clair uniquement.** Pas de variante sombre, nulle part.
 
-Sept garde-fous automatisés dans `test/accessibility_test.dart` : contraste
-WCAG AA, cibles tactiles ≥ 48 dp, étiquettes pour lecteurs d'écran, absence de
-débordement jusqu'à un agrandissement du texte de 2×, barre de navigation qui
-reste à sa taille, dégagement du header sous une encoche haute, et contenu qui
-évite une encoche latérale en paysage.
+**Le numéro de référence n'est jamais stocké en clair.** Son empreinte SHA-256
+sert de clé de recherche. Un code perdu est un dossier perdu, et c'est le prix
+de l'anonymat.
 
-Les écrans qui défilent passent par [`ScrollablePage`](lib/views/components/scrollable_page.dart) :
-la barre de défilement reste visible dès que le contenu dépasse, pour qu'on
-sache en arrivant sur une étape qu'il y a autre chose plus bas. Flutter ne
-dessine rien quand tout tient à l'écran, donc une étape courte reste nette.
+---
 
-Le contenu s'écarte des encoches latérales en paysage, sans que les fonds
-cessent de couvrir toute la largeur.
+## Règles du formulaire
 
-L'orange de marque est volontairement plus sombre que le #EA580C d'origine
-(3,56:1 contre le blanc, sous le seuil AA) ; la teinte claire reste disponible
-en `AppColors.primaryOrangeBright` pour les usages décoratifs.
+Trois règles ne se devinent pas à la lecture du code.
+
+**Les preuves ne peuvent pas être passées à vide.** Il faut au moins une
+capture, un lien, **ou** un récit d'au moins 120 caractères. Le récit tient lieu
+de preuve parce que le cas le plus grave est souvent celui où l'agresseur a
+effacé les traces.
+
+**La fin du parcours dépend de la réponse à « Veux-tu de l'aide ? ».**
+
+| Réponse | Type d'aide | Coordonnées |
+|---|---|---|
+| Accompagnement | demandée | pseudo + téléphone, obligatoires |
+| Je ne sais pas | sautée | sautées |
+| Pas d'accompagnement | sautée | sautées |
+
+**L'anonymat n'est pas un interrupteur mais une conséquence.** Le vrai nom n'est
+demandé nulle part ; `ReportModel.isAnonymous` se déduit de l'absence de
+coordonnées. Seuls un pseudo et un téléphone sont collectés.
+
+---
+
+## Déployer
+
+Rien de ceci ne se fait depuis le dépôt. Dans la console Firebase :
+
+1. Créer le projet, puis `firebase use --add`.
+2. Activer **Authentication → Anonymous**.
+3. Créer la base Firestore : **mode production**, région `europe-west1`. La
+   région ne se change pas après coup.
+4. Activer **App Check** avec Play Integrity, après avoir ajouté l'empreinte
+   SHA-256 (`cd android && ./gradlew signingReport`). Play Integrity ne peut pas
+   attester une application que Play n'a pas installée : en développement, il
+   faut enregistrer un jeton de débogage, que l'application imprime dans ses logs
+   au premier lancement.
+5. Politiques TTL sur `reports.expiresAt`, `referenceIndex.expiresAt`,
+   `idempotency.expiresAt`, `rateLimits.expiresAt`.
+6. Règle de cycle de vie Cloud Storage sur `evidence/`, ~35 jours, pour les
+   téléversements dont le signalement n'a jamais été envoyé.
+7. Donner au compte de service d'exécution le rôle *Créateur de jetons du compte
+   de service* sur lui-même — sans quoi les URL de téléversement ne peuvent pas
+   être signées. Les émulateurs ne signent pas : ça ne se voit qu'en ligne.
+8. Comptes agents : les créer, faire vérifier l'adresse, puis
+   `npm --prefix functions run grant-agent -- grant adresse@cmrpi.ma`.
+
+```bash
+npx firebase deploy --only firestore:rules,storage:rules   # gratuit
+npx firebase deploy --only functions                       # demande le plan Blaze
+npx firebase deploy --only hosting
+```
+
+Les Cloud Functions exigent le plan Blaze — pas la base, ni les règles. Blaze
+inclut les quotas gratuits : en dessous des seuils, la facture est nulle. Poser
+tout de même une alerte de budget.
+
+---
+
+## État
+
+| | |
+|---|---|
+| Dépôt d'un signalement, preuves comprises | fait |
+| Suivi par numéro de référence | fait |
+| Console équipe, journal d'audit | fait |
+| Conservation 30 jours glissants | fait |
+| Notifications | code en place, non testable sans déploiement |
+
+Avant une mise en production, il reste trois choses qui ne relèvent pas du code :
+
+- **Les textes juridiques** portent un marqueur `⚠️ À COMPLÉTER PAR LE CMRPI` sur
+  les passages qui demandent un juriste. L'écran affiche un bandeau tant qu'ils
+  sont là.
+- **Les traductions arabe et anglaise n'ont pas été relues par un locuteur
+  natif.** Pour une ligne d'assistance destinée à des enfants en détresse, le ton
+  compte autant que l'exactitude.
+- **Le compte de facturation doit appartenir au CMRPI**, pas à un développeur :
+  qui le ferme emporte les signalements en cours.
 
 ## Limites connues
 
-- Le chatbot est simulé : les réponses sont scriptées, et l'aiguillage se fait
-  par mots-clés. Il reconnaît les trois langues ; ce qu'il ne sait pas faire,
-  c'est comprendre une phrase qu'aucun mot-clé n'attrape — elle tombe alors sur
-  la réponse par défaut. Le badge BÊTA de son en-tête le signale.
-- Le seuil d'âge qui décide de proposer l'assistant est une règle interne :
-  aucun texte ne le mentionne, un test le vérifie.
-- Le sélecteur de langue est annoncé au sein du titre de l'`AppBar`, que Flutter
-  fusionne en un seul nœud sémantique, plutôt que comme un bouton distinct.
-- Le récapitulatif indique qu'un récit a été écrit mais ne l'affiche pas : il
-  peut faire plusieurs centaines de caractères. « Modifier » ouvre l'étape.
-- L'orientation n'est pas verrouillée, mais la mise en page est pensée pour le
-  portrait ; le paysage reste utilisable sans être soigné.
+- L'assistant est simulé : réponses scriptées, aiguillage par mots-clés dans les
+  trois langues. Une phrase qu'aucun mot-clé n'attrape tombe sur la réponse par
+  défaut. Le badge BÊTA le signale.
+- Le récapitulatif indique qu'un récit a été écrit sans l'afficher.
+- La mise en page vise le portrait ; le paysage reste utilisable sans être
+  soigné.

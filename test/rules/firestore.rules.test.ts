@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 
 /**
- * Step 1 of docs/backend-plan.md, verified rather than asserted.
+ * The whole security model, verified rather than asserted.
  *
  * The whole security model rests on one claim — the client cannot touch
  * Firestore — and a rules file is easy to loosen by accident while debugging.

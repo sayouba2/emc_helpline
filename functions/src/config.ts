@@ -56,7 +56,14 @@ export const IDEMPOTENCY_TTL_DAYS = 30;
  */
 export const REPORT_RETENTION_DAYS = 30;
 
-/** Rate limits, per anonymous device UID. See docs/backend-plan.md §5. */
+/**
+ * Rate limits, per anonymous device UID.
+ *
+ * A defence against floods and casual abuse, not against a determined
+ * attacker: an anonymous uid is free and unlimited, so anyone set on
+ * enumerating simply resets their counter. What protects a case is the 60 bits
+ * of entropy in its reference code.
+ */
 export const RATE_LIMITS = {
   submitReportHourly: { limit: 5, windowSeconds: 60 * 60 },
   submitReportDaily: { limit: 20, windowSeconds: 24 * 60 * 60 },

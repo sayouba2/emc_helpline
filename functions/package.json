@@ -1,7 +1,7 @@
 {
   "name": "emc-helpline-functions",
   "version": "1.0.0",
-  "description": "Cloud Functions for EMC Helpline — see docs/backend-plan.md",
+  "description": "Cloud Functions for EMC Helpline — see the repository README.",
   "private": true,
   "type": "module",
   "main": "lib/index.js",

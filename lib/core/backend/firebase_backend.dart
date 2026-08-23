@@ -350,7 +350,8 @@ class _FirebaseReportSubmitter {
 
 /// Which failure the user should be told about, or `null` when we do not know.
 ///
-/// The mapping follows `docs/backend-plan.md` §8.
+/// Coarse on purpose: the user needs to know whether to retry now, retry
+/// later, or reach the team another way, and nothing finer than that.
 SubmissionFailure? failureFor(Object error) {
   if (error is SocketException) return SubmissionFailure.network;
   if (error is TimeoutException) return SubmissionFailure.timeout;
