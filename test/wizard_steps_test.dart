@@ -22,7 +22,12 @@ Future<ReportProvider> _openWizard(
   Size size = const Size(390, 844),
   bool fillAnswers = true,
 }) async {
-  SharedPreferences.setMockInitialValues({'settings.localeLanguageCode': 'fr'});
+  SharedPreferences.setMockInitialValues({
+    'settings.localeLanguageCode': 'fr',
+    // Ces suites portent sur l'application, pas sur l'écran de premier
+    // lancement : elles simulent une installation déjà passée par là.
+    'settings.hasSeenOnboarding': true,
+  });
   final settings = await SettingsStore.open();
 
   tester.view.physicalSize = size;

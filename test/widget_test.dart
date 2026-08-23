@@ -10,7 +10,11 @@ import 'package:emc_helpline/views/splash_screen.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    // Une installation déjà passée par l'écran de premier lancement : ce test
+    // porte sur l'application, pas sur l'accueil.
+    SharedPreferences.setMockInitialValues({
+      'settings.hasSeenOnboarding': true,
+    });
     await tester.pumpWidget(
       EMCHelplineApp(settings: await SettingsStore.open()),
     );
@@ -62,6 +66,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({
       'settings.localeLanguageCode': 'fr',
+      'settings.hasSeenOnboarding': true,
     });
     await tester.pumpWidget(
       EMCHelplineApp(settings: await SettingsStore.open()),

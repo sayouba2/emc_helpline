@@ -14,7 +14,8 @@ class ReportProvider with ChangeNotifier {
     this.submitter,
     this.lookup,
   }) : _locale = _settings.readLocale(),
-       _notificationsEnabled = _settings.readNotificationsEnabled();
+       _notificationsEnabled = _settings.readNotificationsEnabled(),
+       _hasSeenOnboarding = _settings.readHasSeenOnboarding();
 
   final SettingsStore _settings;
 
@@ -48,6 +49,7 @@ class ReportProvider with ChangeNotifier {
   static const int stepSummary = 10;
 
   bool _notificationsEnabled = false;
+  bool _hasSeenOnboarding = false;
   int _currentTab = 0;
   int _wizardStep = 0;
   Locale? _locale;
@@ -70,6 +72,11 @@ class ReportProvider with ChangeNotifier {
   /// Whether this device asked to be told when a case moves. A preference, not
   /// a record — it says nothing about which case, or that there is one.
   bool get notificationsEnabled => _notificationsEnabled;
+
+  /// Whether this installation has already been through the first-launch
+  /// screen. Read once at startup, so the splash can hand over to the right
+  /// screen without a flicker.
+  bool get hasSeenOnboarding => _hasSeenOnboarding;
   int get wizardStep => _wizardStep;
 
   /// The language the user explicitly picked, or `null` to follow the device.
@@ -236,6 +243,12 @@ class ReportProvider with ChangeNotifier {
   void setTab(int tabIndex) {
     _currentTab = tabIndex;
     notifyListeners();
+  }
+
+  void markOnboardingSeen() {
+    _hasSeenOnboarding = true;
+    // Fire and forget: the screen must not wait on a disk write to close.
+    _settings.writeHasSeenOnboarding();
   }
 
   Future<void> setNotificationsEnabled(bool enabled) async {

@@ -469,5 +469,21 @@
   "notifyInAppUpdate": "Tu as une nouvelle information sur ton dossier. Va dans « Suivre ma demande » avec ton numéro.",
   "@notifyInAppUpdate": {
     "description": "Shown in-app when an update arrives while the app is open — Android draws nothing itself in the foreground"
-  }
+  },
+  "onboardingTitle": "Tu peux en parler ici",
+  "@onboardingTitle": {
+    "description": "First-launch screen. Shown once, before anything else."
+  },
+  "onboardingSubtitle": "EMC Helpline reçoit les signalements de violences en ligne et te met en lien avec des personnes qui peuvent aider.",
+  "onboardingAnonymousTitle": "Ton nom n'est jamais demandé",
+  "onboardingAnonymousBody": "Pas de compte à créer, pas d'inscription. Si tu veux qu'on te rappelle, tu choisiras un pseudo — jamais ton vrai nom.",
+  "onboardingReferenceTitle": "Un numéro pour revenir",
+  "onboardingReferenceBody": "À la fin de ton signalement, tu reçois un numéro. C'est la seule façon de suivre ton dossier ensuite, alors garde-le.",
+  "onboardingNotifyTitle": "Être prévenu, si tu veux",
+  "onboardingNotifyBody": "L'application pourra te prévenir quand ton dossier avance. Elle te le proposera à la fin — et si ton téléphone est partagé, sache que le message sera visible par qui l'utilise.",
+  "@onboardingNotifyBody": {
+    "description": "Says what will be asked later and what it would look like on a shared phone. Requests nothing here."
+  },
+  "onboardingEmergency": "Si tu es en danger maintenant, appelle la Police (19).",
+  "onboardingStart": "Commencer"
 }

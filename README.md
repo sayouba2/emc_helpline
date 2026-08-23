@@ -90,7 +90,7 @@ flutter analyze && flutter test && dart format --output=none --set-exit-if-chang
 npm run check        # typecheck TypeScript + suites backend contre les émulateurs
 ```
 
-180 tests côté application, 103 côté backend. Les mêmes commandes tournent en CI
+187 tests côté application, 103 côté backend. Les mêmes commandes tournent en CI
 ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ---
@@ -120,6 +120,22 @@ functions/src/
 ├── console.ts         fonctions réservées aux agents
 └── retention.ts       suppression des preuves avec le dossier
 ```
+
+### Le premier lancement
+
+Un écran s'affiche une fois, après le logo : ce que fait l'application, qu'aucun
+nom n'est demandé, que le numéro de référence est la seule façon de revenir, et
+que les notifications seront proposées plus tard — avec ce qu'un message
+donnerait sur un téléphone partagé.
+
+**Il ne demande aucune permission.** Android cesse d'afficher la boîte des
+notifications après deux refus, et un « non » à froid — avant de savoir ce que
+fait l'application — la grille définitivement. Annoncer d'avance, demander au
+moment où il y a enfin quelque chose à annoncer. Les photos n'en exigent aucune :
+`image_picker` passe par le sélecteur Android.
+
+Le numéro d'urgence est placé au-dessus du texte : qui est en danger maintenant
+n'a pas à lire une présentation.
 
 ### Ce qu'il faut savoir avant de modifier
 

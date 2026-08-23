@@ -21,7 +21,12 @@ Future<void> _pumpApp(
   double sideInset = 0,
 }) async {
   // A stored preference also exercises the persistence path.
-  SharedPreferences.setMockInitialValues({'settings.localeLanguageCode': 'fr'});
+  SharedPreferences.setMockInitialValues({
+    'settings.localeLanguageCode': 'fr',
+    // Ces suites portent sur l'application, pas sur l'écran de premier
+    // lancement : elles simulent une installation déjà passée par là.
+    'settings.hasSeenOnboarding': true,
+  });
   final settings = await SettingsStore.open();
 
   tester.view.physicalSize = size;

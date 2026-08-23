@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../core/constants/app_colors.dart';
 import '../core/utils/icon_utils.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/report_provider.dart';
 import 'main_navigation_screen.dart';
+import 'onboarding_screen.dart';
 
 /// Opening screen: the EMC Helpline logo fades in, holds, then hands over to
 /// the app with a cross-fade.
@@ -34,6 +37,9 @@ class SplashGate extends StatefulWidget {
 
 class _SplashGateState extends State<SplashGate>
     with SingleTickerProviderStateMixin {
+  /// `null` until the preference has been read, so the first frame after the
+  /// logo cannot show the wrong screen and then swap.
+  bool? _needsOnboarding;
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: SplashGate.fadeIn,
@@ -57,6 +63,7 @@ class _SplashGateState extends State<SplashGate>
   void initState() {
     super.initState();
     _controller.forward();
+    _needsOnboarding = !context.read<ReportProvider>().hasSeenOnboarding;
     _handoverTimer = Timer(SplashGate.fadeIn + SplashGate.hold, () {
       if (mounted) setState(() => _showApp = true);
     });
@@ -76,7 +83,15 @@ class _SplashGateState extends State<SplashGate>
     return AnimatedSwitcher(
       duration: SplashGate.handover,
       child: _showApp
-          ? const MainNavigationScreen()
+          ? (_needsOnboarding ?? false
+                ? OnboardingScreen(
+                    key: const ValueKey<String>('onboarding'),
+                    onDone: () {
+                      context.read<ReportProvider>().markOnboardingSeen();
+                      setState(() => _needsOnboarding = false);
+                    },
+                  )
+                : const MainNavigationScreen())
           : Scaffold(
               key: const ValueKey<String>('splash'),
               backgroundColor: Colors.white,

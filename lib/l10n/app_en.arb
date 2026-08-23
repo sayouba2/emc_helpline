@@ -300,5 +300,15 @@
   "notifySettingsSubtitle": "Turn everything off on this device",
   "notifySettingsBody": "Turning this off stops this device receiving any notification, for all your cases. You can still track a case with its reference number.",
   "notifyDisabled": "Notifications are off on this device.",
-  "notifyInAppUpdate": "You have an update on your case. Go to \"Track my request\" with your number."
+  "notifyInAppUpdate": "You have an update on your case. Go to \"Track my request\" with your number.",
+  "onboardingTitle": "You can talk about it here",
+  "onboardingSubtitle": "EMC Helpline receives reports of online abuse and puts you in touch with people who can help.",
+  "onboardingAnonymousTitle": "Your name is never asked",
+  "onboardingAnonymousBody": "No account to create, no sign-up. If you want to be called back, you will choose a nickname — never your real name.",
+  "onboardingReferenceTitle": "A number to come back with",
+  "onboardingReferenceBody": "At the end of your report you get a number. It is the only way to follow your case afterwards, so keep it.",
+  "onboardingNotifyTitle": "Be told, if you want",
+  "onboardingNotifyBody": "The app can let you know when your case moves, and will offer that at the end. If your phone is shared, know that the message will be visible to whoever uses it.",
+  "onboardingEmergency": "If you are in danger right now, call the Police (19).",
+  "onboardingStart": "Start"
 }

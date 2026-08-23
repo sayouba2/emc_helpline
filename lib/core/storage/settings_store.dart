@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsStore {
   static const String _localeKey = 'settings.localeLanguageCode';
   static const String _notificationsKey = 'settings.notificationsEnabled';
+  static const String _onboardingKey = 'settings.hasSeenOnboarding';
 
   const SettingsStore(this._prefs);
 
@@ -41,5 +42,15 @@ class SettingsStore {
 
   Future<void> writeNotificationsEnabled(bool enabled) async {
     await _prefs.setBool(_notificationsKey, enabled);
+  }
+
+  /// Whether the first-launch screen has been shown.
+  ///
+  /// Says nothing about the person: only that this installation has already
+  /// been told how the app works.
+  bool readHasSeenOnboarding() => _prefs.getBool(_onboardingKey) ?? false;
+
+  Future<void> writeHasSeenOnboarding() async {
+    await _prefs.setBool(_onboardingKey, true);
   }
 }
