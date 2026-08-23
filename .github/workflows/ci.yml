@@ -6,17 +6,24 @@ on:
   pull_request:
 
 jobs:
-  analyze-and-test:
+  # ── Application ──────────────────────────────────────────────────────────
+  flutter:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: subosito/flutter-action@v2
         with:
+          # Épinglée, pas `stable`. Le formateur de Dart change de règles d'une
+          # version à l'autre : sans épingle, un fichier correct devient
+          # incorrect le jour où le canal avance, sans qu'aucune ligne n'ait
+          # bougé. Monter de version est alors un commit délibéré, qui reformate
+          # ce qu'il faut.
+          flutter-version: 3.44.6
           channel: stable
           cache: true
 
-      # Also regenerates lib/l10n/app_localizations*.dart, which are gitignored.
+      # Régénère aussi lib/l10n/app_localizations*.dart, ignorés par git.
       - name: Install dependencies
         run: flutter pub get
 
@@ -28,3 +35,35 @@ jobs:
 
       - name: Test
         run: flutter test
+
+  # ── Backend et console ───────────────────────────────────────────────────
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      # Les émulateurs Firestore et Storage tournent sur la JVM.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci && npm ci --prefix functions
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Démarre auth, firestore, storage et functions, crée le compte agent que
+      # les suites de la console utilisent, puis lance vitest — le tout dans une
+      # seule session d'émulateurs.
+      - name: Test
+        run: npm run test:emulator

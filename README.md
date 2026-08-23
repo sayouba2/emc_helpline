@@ -27,7 +27,12 @@ L'application ne parle jamais à Firestore directement : les règles refusent to
 
 ## Démarrer
 
-Il faut Flutter 3.x, Node 22 et Java (pour les émulateurs Firebase).
+Il faut **Flutter 3.44.6**, Node 22 et Java (pour les émulateurs Firebase).
+
+La version de Flutter est épinglée, dans la CI comme ici : le formateur de Dart
+change de règles d'une version à l'autre, et sans épingle un fichier correct
+devient incorrect le jour où le canal stable avance. Monter de version est un
+commit délibéré, qui reformate ce qu'il faut.
 
 ```bash
 flutter pub get
@@ -90,7 +95,11 @@ flutter analyze && flutter test && dart format --output=none --set-exit-if-chang
 npm run check        # typecheck TypeScript + suites backend contre les émulateurs
 ```
 
-187 tests côté application, 103 côté backend. Les mêmes commandes tournent en CI
+187 tests côté application, 103 côté backend. `npm run check` démarre les
+émulateurs, crée le compte agent que les suites de la console utilisent, puis
+lance le tout — rien à préparer à la main.
+
+Les deux suites tournent en CI, dans deux tâches séparées
 ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ---

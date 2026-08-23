@@ -10,7 +10,8 @@ import { describe, expect, it } from "vitest";
  * contrôle.
  */
 
-const PROJECT_ID = process.env.EMULATOR_PROJECT_ID ?? "demo-emc";
+const PROJECT_ID =
+  process.env.EMULATOR_PROJECT_ID ?? process.env.GCLOUD_PROJECT ?? "demo-emc";
 const REGION = "europe-west1";
 const AUTH_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST;
 const FUNCTIONS_HOST = process.env.FUNCTIONS_EMULATOR_HOST ?? "127.0.0.1:5001";

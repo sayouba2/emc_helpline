@@ -7,10 +7,9 @@
   "scripts": {
     "backend": "npm --prefix functions run build && node functions/scripts/backend.mjs",
     "test": "vitest run",
-    "test:emulator": "firebase emulators:exec --project demo-emc --only firestore,storage \"vitest run\"",
+    "test:emulator": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,storage,functions \"node functions/scripts/seed-agent.mjs && vitest run\"",
     "typecheck": "npm --prefix functions run typecheck",
-    "check": "npm run typecheck && npm run test:emulator && npm run test:workflow",
-    "test:workflow": "npm --prefix functions run build && firebase emulators:exec --project demo-emc \"vitest run functions/test/workflow.test.ts\"",
+    "check": "npm run typecheck && npm run test:emulator",
     "console:config": "node functions/scripts/console-config.mjs",
     "console:agent": "node functions/scripts/seed-agent.mjs",
     "console": "npm run console:config && npm run console:agent"
