@@ -28,22 +28,51 @@ Future<void> _pumpApp(WidgetTester tester) async {
 Future<AppLocalizations> _fr() =>
     AppLocalizations.delegate.load(const Locale('fr'));
 
+/// Les paramètres s'ouvrent depuis le bas de l'accueil. Ils vivaient dans
+/// l'en-tête, où ils occupaient sur tous les écrans la place d'une chose qu'on
+/// ouvre une fois — et où l'engrenage disputait le sien à la pastille de
+/// langue, seul contrôle de la barre que reconnaît qui ne lit pas la langue
+/// affichée.
+Future<void> _openSettings(WidgetTester tester, AppLocalizations l10n) async {
+  final entry = find.widgetWithText(InkWell, l10n.settingsTitle);
+  await tester.scrollUntilVisible(
+    entry,
+    240,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(entry);
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  testWidgets('settings are reachable from the header', (tester) async {
+  testWidgets('settings are reachable from the home screen', (tester) async {
     await _pumpApp(tester);
     final l10n = await _fr();
 
-    await tester.tap(find.byTooltip(l10n.settingsTitle));
-    await tester.pumpAndSettle();
+    await _openSettings(tester, l10n);
 
     expect(find.byType(SettingsScreen), findsOneWidget);
+  });
+
+  testWidgets('the header keeps the one control that names itself', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+    final l10n = await _fr();
+
+    // Un enfant qui ouvre l'application dans une langue qu'il ne lit pas
+    // reconnaît un drapeau. Il ne devine pas qu'un engrenage mène à la langue,
+    // et c'est pour ça que l'engrenage n'a pas pris cette place.
+    expect(find.byTooltip(l10n.settingsTitle), findsNothing);
+    // Le drapeau, pas l'étiquette : Flutter fusionne la pastille dans le nœud
+    // sémantique du titre de l'AppBar, une limite déjà connue.
+    expect(find.textContaining('🇫🇷'), findsWidgets);
   });
 
   testWidgets('every store-required document is reachable', (tester) async {
     await _pumpApp(tester);
     final l10n = await _fr();
-    await tester.tap(find.byTooltip(l10n.settingsTitle));
-    await tester.pumpAndSettle();
+    await _openSettings(tester, l10n);
 
     // Google Play refuses an app that collects personal data without these.
     for (final entry in {

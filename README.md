@@ -262,9 +262,15 @@ d'origine gardaient ~15 écrans vivants à chaque frame, ce qui suffisait à
 
 ## Textes légaux
 
-L'écran Paramètres — accessible par l'engrenage de l'en-tête — donne accès à la
-politique de confidentialité, aux conditions d'utilisation et à une note « Mes
-données ».
+L'écran Paramètres — une ligne en bas de l'accueil — donne accès à la politique
+de confidentialité, aux conditions d'utilisation et à une note « Mes données ».
+
+Il vivait dans l'en-tête, où il occupait sur tous les écrans la place d'une
+chose qu'on ouvre une fois, et où l'engrenage disputait la sienne à la pastille
+de langue. Celle-ci est le seul contrôle **auto-descriptif** de la barre : un
+enfant qui ouvre l'application dans une langue qu'il ne lit pas reconnaît un
+drapeau, jamais un engrenage. Un test vérifie que l'engrenage n'y est pas
+revenu.
 
 > Ces textes sont des **brouillons**. Les passages qui relèvent du juridique
 > portent un marqueur `⚠️ À COMPLÉTER PAR LE CMRPI` : responsable de traitement,

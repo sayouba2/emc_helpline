@@ -6,7 +6,6 @@ import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/icon_utils.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/report_provider.dart';
-import '../settings/settings_screen.dart';
 import 'language_picker.dart';
 
 /// The header: EMC logo, app title, language picker, CMRPI logo.
@@ -53,7 +52,8 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
     // couvrir toute la largeur, seuls les logos s'en écartent.
     final sideInset = MediaQuery.paddingOf(context);
     final leadingWidth = (width * 0.24).clamp(72.0, 104.0) + sideInset.left;
-    final partnerWidth = (width * 0.17).clamp(52.0, 76.0);
+    // Revenu à 0,21 : il avait été rétréci à 0,17 pour caser l'engrenage.
+    final partnerWidth = (width * 0.21).clamp(52.0, 88.0);
     final logoHeight = (height - 24).clamp(32.0, 56.0);
 
     return AppBar(
@@ -158,28 +158,12 @@ class HeaderAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        // Le tooltip d'IconButton pose un `tooltip` sémantique, pas un `label` :
-        // sans ce Semantics, un lecteur d'écran n'a rien pour nommer le bouton.
-        Semantics(
-          button: true,
-          label: l10n.settingsTitle,
-          child: IconButton(
-            // Pas de visualDensity.compact ici : elle ramenait la cible sous
-            // les 48dp exigés.
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            padding: EdgeInsets.zero,
-            tooltip: l10n.settingsTitle,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-            ),
-            icon: IconUtils.buildIcon(
-              FontAwesomeIcons.gear,
-              color: AppColors.primaryBlue,
-              size: 18,
-            ),
-          ),
-        ),
+        // L'engrenage vivait ici, et coûtait à l'en-tête la place qu'il prenait
+        // sur tous les écrans pour quelque chose qu'on ouvre une fois. Il est
+        // en bas de l'accueil. Reste la pastille de langue : c'est le seul
+        // contrôle auto-descriptif de la barre, et un enfant qui ouvre
+        // l'application dans une langue qu'il ne lit pas reconnaît un drapeau
+        // — pas un engrenage.
         // CMRPI Partner Logo (Occupe TOUT l'espace de droite sans aucune obstruction)
         Padding(
           padding: EdgeInsetsDirectional.only(

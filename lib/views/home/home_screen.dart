@@ -13,6 +13,7 @@ import '../components/glass_container.dart';
 import '../components/interactive_card.dart';
 import '../components/pulsing_widget.dart';
 import '../components/scrollable_page.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -136,6 +137,16 @@ class HomeScreen extends StatelessWidget {
               child: _buildHowItWorksCard(l10n),
             ),
             const SizedBox(height: 24),
+
+            // Les paramètres, en bas et discrets. Ils s'ouvrent une fois —
+            // pour vérifier ce qui est conservé — ou jamais, donc ils n'ont pas
+            // à occuper l'en-tête sur tous les écrans. Ici parce que c'est où
+            // l'on atterrit, et parce que « tout le reste sur cette
+            // application » se range en bas de la page d'accueil.
+            AnimatedEntrance(
+              delay: const Duration(milliseconds: 420),
+              child: _buildSettingsRow(context, l10n),
+            ),
 
             // No list of past reports here. On a shared phone — the common
             // case for this audience — it would show whoever picks the device
@@ -345,6 +356,63 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Une ligne, pas une carte : ce qui mène ailleurs ne doit pas peser autant
+  /// que ce qui aide ici.
+  Widget _buildSettingsRow(BuildContext context, AppLocalizations l10n) {
+    return Semantics(
+      button: true,
+      label: l10n.settingsTitle,
+      child: ExcludeSemantics(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+            ),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              // 48dp de haut au minimum, comme toute cible tactile.
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  IconUtils.buildIcon(
+                    FontAwesomeIcons.gear,
+                    color: AppColors.textSecondary,
+                    size: 15,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      l10n.settingsTitle,
+                      style: AppTextStyles.cardTitle.copyWith(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                    // Suit le sens de lecture : en arabe, le chevron pointe
+                    // vers la gauche.
+                    textDirection: Directionality.of(context),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
