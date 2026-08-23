@@ -299,5 +299,6 @@
   "notifySettingsTitle": "Notifications",
   "notifySettingsSubtitle": "Turn everything off on this device",
   "notifySettingsBody": "Turning this off stops this device receiving any notification, for all your cases. You can still track a case with its reference number.",
-  "notifyDisabled": "Notifications are off on this device."
+  "notifyDisabled": "Notifications are off on this device.",
+  "notifyInAppUpdate": "You have an update on your case. Go to \"Track my request\" with your number."
 }

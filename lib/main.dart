@@ -8,6 +8,7 @@ import 'models/submission_outcome.dart';
 import 'models/tracking_outcome.dart';
 import 'l10n/app_localizations.dart';
 import 'providers/report_provider.dart';
+import 'views/components/foreground_update_banner.dart';
 import 'views/splash_screen.dart';
 
 Future<void> main() async {
@@ -28,6 +29,7 @@ Future<void> main() async {
       settings: await SettingsStore.open(),
       submitter: backend.submitter,
       lookup: backend.lookup,
+      updates: backend.updates,
     ),
   );
 }
@@ -38,6 +40,7 @@ class EMCHelplineApp extends StatelessWidget {
     required this.settings,
     this.submitter,
     this.lookup,
+    this.updates,
   });
 
   final SettingsStore settings;
@@ -47,6 +50,10 @@ class EMCHelplineApp extends StatelessWidget {
   /// touch the network.
   final ReportSubmitter? submitter;
   final ReportLookup? lookup;
+
+  /// Messages arriving while the app is open. `null` in tests and when no
+  /// backend is configured — nothing then listens, and nothing breaks.
+  final Stream<void>? updates;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +90,12 @@ class EMCHelplineApp extends StatelessWidget {
                 elevation: 0,
                 iconTheme: IconThemeData(color: AppColors.primaryBlue),
               ),
+            ),
+            // Autour de l'application entière : une mise à jour peut arriver
+            // quoi que fasse l'utilisateur, y compris en plein signalement.
+            builder: (context, child) => ForegroundUpdateBanner(
+              updates: updates ?? const Stream<void>.empty(),
+              child: child ?? const SizedBox.shrink(),
             ),
             home: const SplashGate(),
           );

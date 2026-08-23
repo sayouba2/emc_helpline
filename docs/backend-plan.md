@@ -679,6 +679,48 @@ Trois règles en découlent, et elles sont testées :
    jeton à côté d'un signalement. Le lien entre ce téléphone et ce dossier
    n'existe que sur ce téléphone.
 
+### Ce qui ne se teste pas en local
+
+**Il n'existe pas d'émulateur Cloud Messaging.** Firebase n'en a jamais publié :
+la suite couvre `auth`, `firestore`, `storage` et `functions`, rien d'autre.
+`notifyStatusChange` sortirait donc vers le vrai service, sans identités, et
+échouerait — ce que le `try/catch` avalait en silence. Il journalise maintenant
+`notify_skipped_no_emulator` et s'arrête là, plutôt que de laisser croire à un
+problème d'abonnement.
+
+Pour essayer les notifications pour de vrai, il faut soit déployer, soit poser
+`GOOGLE_APPLICATION_CREDENTIALS` sur une clé de compte de service : la fonction
+locale enverrait alors par le vrai FCM, vers le vrai projet, auquel
+l'application est déjà abonnée. Cette clé est un secret à part entière, à ne pas
+laisser traîner dans le dépôt.
+
+### Au premier plan, personne n'affiche rien
+
+Android ne dessine une notification de lui-même que si l'application est **en
+arrière-plan**. Au premier plan, le message lui est remis et n'est affiché par
+personne — donc un dossier qui avançait pendant que son auteur regardait
+justement l'écran de suivi ne produisait rien, nulle part.
+
+`CaseNotifications.whileOpen` expose ces messages, et
+[`ForegroundUpdateBanner`](../lib/views/components/foreground_update_banner.dart)
+en fait une barre discrète, posée autour de l'application entière — la mise à
+jour peut arriver quoi que fasse l'utilisateur, y compris en plein signalement.
+Elle n'en dit pas plus que la notification : être dans l'application n'est pas
+être seul avec elle.
+
+### La demande de permission
+
+Sur Android 13 et au-delà, `requestPermission()` ouvre la boîte système. **En
+deçà, la permission est accordée à l'installation et aucune boîte n'apparaît** —
+d'où l'impression d'une activation automatique sur un émulateur ancien. Ce n'est
+pas un bug ; c'est la même ligne de code qui se comporte différemment selon la
+version.
+
+Les photos, elles, ne demandent rien : `image_picker` passe par le sélecteur de
+photos Android, et le manifeste fusionné ne contient ni `READ_MEDIA_IMAGES` ni
+`READ_EXTERNAL_STORAGE`. Il n'y a aucune permission à demander pour les
+captures, au premier démarrage ou ailleurs.
+
 Le serveur publie vers les trois sujets de langue (`case_{hash}_{fr|ar|en}`)
 parce qu'il ignore lequel l'appareil a choisi — et refuse délibérément de
 l'apprendre. Deux envois sur trois n'atteignent personne, ce qui ne coûte rien

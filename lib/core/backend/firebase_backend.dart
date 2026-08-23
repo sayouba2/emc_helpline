@@ -12,6 +12,7 @@ import '../../firebase_options.dart';
 import '../../models/report_enums.dart';
 import '../../models/submission_outcome.dart';
 import '../../models/tracking_outcome.dart';
+import 'case_notifications.dart';
 import 'emulators.dart';
 import 'evidence_uploader.dart';
 import 'report_payload.dart';
@@ -47,7 +48,11 @@ String get backendDescription => useEmulators
 /// report that went nowhere, and the child walks away believing help is coming.
 /// What `initializeBackend` hands back: how to send a report, and how to look
 /// one up. Both `null` means the app runs on its local simulation.
-typedef Backend = ({ReportSubmitter? submitter, ReportLookup? lookup});
+typedef Backend = ({
+  ReportSubmitter? submitter,
+  ReportLookup? lookup,
+  Stream<void>? updates,
+});
 
 Future<Backend> initializeBackend() async {
   try {
@@ -72,6 +77,7 @@ Future<Backend> initializeBackend() async {
           EvidenceUploader(region: backendRegion),
         ).submit,
         lookup: lookupReport,
+        updates: CaseNotifications.whileOpen,
       );
     }
 
@@ -102,6 +108,7 @@ Future<Backend> initializeBackend() async {
         EvidenceUploader(region: backendRegion),
       ).submit,
       lookup: lookupReport,
+      updates: CaseNotifications.whileOpen,
     );
   } catch (error, stackTrace) {
     if (kReleaseMode) {
@@ -114,13 +121,14 @@ Future<Backend> initializeBackend() async {
         // their report is gone.
         lookup: (_) =>
             throw const SubmissionException(SubmissionFailure.server),
+        updates: null,
       );
     }
     debugPrint(
       'Firebase did not start, falling back to the local simulation.\n'
       'Reports will NOT be sent anywhere. $error\n$stackTrace',
     );
-    return (submitter: null, lookup: null);
+    return (submitter: null, lookup: null, updates: null);
   }
 }
 

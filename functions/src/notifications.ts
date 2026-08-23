@@ -2,6 +2,9 @@ import { getMessaging } from "firebase-admin/messaging";
 import type { Firestore } from "firebase-admin/firestore";
 
 import { COLLECTIONS } from "./config.js";
+
+/** Posé par la suite d'émulateurs, et par rien en production. */
+const IN_EMULATOR = process.env.FUNCTIONS_EMULATOR === "true";
 import { logEvent, logProblem } from "./logging.js";
 
 /**
@@ -71,6 +74,19 @@ export async function notifyStatusChange(
   const referenceHash = entries.docs[0]?.id;
   if (!referenceHash) {
     logProblem({ event: "notify_no_reference", reportId });
+    return;
+  }
+
+  if (IN_EMULATOR) {
+    // Il n'existe pas d'émulateur Cloud Messaging — Firebase n'en a jamais
+    // publié. `send()` sortirait vers le vrai service, sans identités, et
+    // échouerait. Le dire plutôt que de laisser un `try/catch` avaler ça : le
+    // développeur croirait sinon à un bug d'abonnement.
+    logEvent({
+      event: "notify_skipped_no_emulator",
+      reportId,
+      reasons: [`aurait notifié ${NOTIFICATION_LANGUAGES.length} sujets`],
+    });
     return;
   }
 

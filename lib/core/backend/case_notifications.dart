@@ -79,4 +79,15 @@ class CaseNotifications {
 
   static Future<void> _deleteToken() =>
       FirebaseMessaging.instance.deleteToken();
+
+  /// Fires when a message arrives **while the app is open**.
+  ///
+  /// Android draws a notification by itself only when the app is in the
+  /// background. In the foreground the message is handed to the app and shown
+  /// by nobody — so without this, a case moving while its author had the app
+  /// open produced nothing at all, anywhere. Which is precisely when they were
+  /// most likely to be waiting for it.
+  ///
+  /// The event carries nothing, on purpose: the message itself carries nothing.
+  static Stream<void> get whileOpen => FirebaseMessaging.onMessage.map((_) {});
 }

@@ -465,5 +465,9 @@
   "notifySettingsTitle": "Notifications",
   "notifySettingsSubtitle": "Tout désactiver sur cet appareil",
   "notifySettingsBody": "Quand tu désactives, cet appareil cesse de recevoir toute notification, pour tous tes dossiers. Tu pourras toujours suivre un dossier avec son numéro de référence.",
-  "notifyDisabled": "Les notifications sont désactivées sur cet appareil."
+  "notifyDisabled": "Les notifications sont désactivées sur cet appareil.",
+  "notifyInAppUpdate": "Tu as une nouvelle information sur ton dossier. Va dans « Suivre ma demande » avec ton numéro.",
+  "@notifyInAppUpdate": {
+    "description": "Shown in-app when an update arrives while the app is open — Android draws nothing itself in the foreground"
+  }
 }
