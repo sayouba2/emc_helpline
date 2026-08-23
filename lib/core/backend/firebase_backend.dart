@@ -153,6 +153,12 @@ Future<void> _reportBackendHealth() async {
   } catch (error) {
     debugPrint('Diag 1-2/3 auth : ÉCHEC — $error');
     debugPrint(
+      "  → si c'est un délai dépassé, le jeton part vers un serveur que ce "
+      "téléphone n'atteint pas. Une session gardée d'une exécution précédente "
+      'peut avoir été délivrée par le vrai projet ; `_ensureSignedIn` la jette '
+      'désormais avant de repartir.',
+    );
+    debugPrint(
       "  → l'émulateur d'authentification est-il démarré sur "
       '$emulatorHost:9099 ?',
     );
@@ -228,9 +234,42 @@ Future<TrackedReport?> lookupReport(String referenceCode) async {
 /// network and survives a session that expired in the background.
 Future<void> _ensureSignedIn() async {
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return;
-  await auth.signInAnonymously();
+
+  // A session survives a restart, on disk. Against the emulators that is a
+  // liability rather than a convenience: the restored user may have been issued
+  // by the real project, from a run before emulator mode worked, and refreshing
+  // its token reaches for an endpoint this build no longer talks to. Starting
+  // clean costs one round trip to a server on this machine.
+  if (useEmulators && auth.currentUser != null) {
+    final issuedElsewhere = auth.currentUser!.uid != _emulatorUid;
+    if (issuedElsewhere) await auth.signOut();
+  }
+
+  if (auth.currentUser == null) {
+    final credential = await auth.signInAnonymously().timeout(
+      _authTimeout,
+      onTimeout: () => throw TimeoutException('auth'),
+    );
+    if (useEmulators) _emulatorUid = credential.user?.uid;
+  }
+
+  // The Functions SDK fetches this itself, in parallel with the App Check
+  // token, and reports the pair as "1 out of 2 underlying tasks failed" without
+  // saying which failed. Fetching it here first turns that into a real error,
+  // and bounds it: an unbounded refresh froze the app for 99 seconds.
+  await auth.currentUser?.getIdToken().timeout(
+    _authTimeout,
+    onTimeout: () => throw TimeoutException('token'),
+  );
 }
+
+/// The uid this build signed in with against the emulators, so a session
+/// restored from disk can be told apart from one issued here.
+String? _emulatorUid;
+
+/// Long enough for a slow emulator, short enough that a failure is a failure
+/// rather than a freeze.
+const Duration _authTimeout = Duration(seconds: 10);
 
 class _FirebaseReportSubmitter {
   const _FirebaseReportSubmitter(this._uploader);
@@ -240,6 +279,14 @@ class _FirebaseReportSubmitter {
   Future<String> submit(SubmissionAttempt attempt) async {
     try {
       await _ensureSignedIn();
+
+      if (kDebugMode) {
+        final user = FirebaseAuth.instance.currentUser;
+        debugPrint(
+          'Envoi : session ${user == null ? "ABSENTE" : "uid=${user.uid}"} '
+          'vers $backendDescription',
+        );
+      }
 
       // Before the report, because the report references what this returns.
       // Already-uploaded screenshots are not sent again on a retry.
@@ -307,14 +354,14 @@ class _FirebaseReportSubmitter {
 SubmissionFailure? failureFor(Object error) {
   if (error is SocketException) return SubmissionFailure.network;
   if (error is TimeoutException) return SubmissionFailure.timeout;
-  if (error is FirebaseFunctionsException) return failureForCode(error.code);
   if (error is FirebaseAuthException) {
-    // Anonymous sign-in failed. Either the provider is off in the console or
-    // the device is offline; `network-request-failed` says which.
+    // Anonymous sign-in failed. Either the provider is off in the console, or
+    // the device cannot reach whoever issues tokens.
     return error.code == 'network-request-failed'
         ? SubmissionFailure.network
         : SubmissionFailure.server;
   }
+  if (error is FirebaseFunctionsException) return failureForCode(error.code);
   return null;
 }
 
