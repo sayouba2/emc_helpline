@@ -57,7 +57,15 @@ async function call(
   name: string,
   data: unknown,
   idToken?: string,
-): Promise<{ result?: any; error?: any }> {
+): Promise<{
+  // Ce que renvoie une fonction appelable, tel quel : les tests naviguent
+  // dedans, et un type nominal ici ne prouverait rien de plus.
+  // Les tests naviguent librement dans la réponse ; un type nominal ici ne
+  // prouverait rien de plus que ce qu'ils vérifient déjà.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  result?: Record<string, any>;
+  error?: { status?: string; message?: string };
+}> {
   const response = await fetch(
     `http://${FUNCTIONS_HOST}/${PROJECT_ID}/${REGION}/${name}`,
     {

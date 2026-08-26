@@ -62,6 +62,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Le script existait mais pointait vers un eslint jamais installé : le
+      # TypeScript n'était linté nulle part. `tsc` attrape les types, pas les
+      # fautes de raisonnement.
+      - name: Lint
+        run: npm --prefix functions run lint
+
       # Démarre auth, firestore, storage et functions, crée le compte agent que
       # les suites de la console utilisent, puis lance vitest — le tout dans une
       # seule session d'émulateurs.

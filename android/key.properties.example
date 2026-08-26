@@ -1,0 +1,17 @@
+# Copier en android/key.properties — ignoré par git, jamais commité.
+#
+# Sans ce fichier, les builds release sont signés avec la clé de debug :
+# utilisable pour tester, refusée par Google Play, et partagée par toutes les
+# machines de développement — elle ne prouve donc pas qui a publié une mise à
+# jour.
+#
+# Générer le keystore :
+#   keytool -genkey -v -keystore emc-release.jks -keyalg RSA \
+#     -keysize 2048 -validity 10000 -alias emc
+#
+# Le fichier .jks appartient au CMRPI et se conserve hors du dépôt, avec une
+# sauvegarde : le perdre rend toute mise à jour impossible.
+storeFile=../emc-release.jks
+storePassword=
+keyAlias=emc
+keyPassword=

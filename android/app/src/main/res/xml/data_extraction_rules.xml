@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Rien ne quitte l'appareil, y compris par la sauvegarde.
+
+  Les préférences ne contiennent que la langue, le drapeau de premier
+  lancement et l'interrupteur de notifications — l'enjeu direct est faible.
+  Mais « rien du signalement ne quitte l'appareil » doit être vrai sans
+  exception, et une sauvegarde Google Drive est une sortie comme une autre.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+    </device-transfer>
+</data-extraction-rules>

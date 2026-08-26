@@ -13,6 +13,15 @@ import 'views/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Le paysage était autorisé sans être dessiné : la mise en page vise le
+  // portrait, et laisser tourner l'écran offrait une version qu'on n'a jamais
+  // soignée plutôt que rien.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

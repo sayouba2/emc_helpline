@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -30,11 +32,44 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        // La clé de release vit dans android/key.properties, hors du dépôt.
+        // Tant qu'il n'existe pas, les builds release restent signés avec la
+        // clé de debug — utilisable pour tester, refusée par Google Play, et
+        // partagée par toutes les machines de développement, donc incapable de
+        // garantir qui a publié une mise à jour.
+        create("release") {
+            val propsFile = rootProject.file("key.properties")
+            if (propsFile.exists()) {
+                val props = Properties()
+                propsFile.inputStream().use { stream -> props.load(stream) }
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+                storePassword = props.getProperty("storePassword")
+                props.getProperty("storeFile")?.let { path ->
+                    storeFile = rootProject.file(path)
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (rootProject.file("key.properties").exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+
+            // R8 : allège l'APK et obfusque le code natif. Construire avec
+            // --obfuscate --split-debug-info pour que les traces restent
+            // lisibles côté rapport de plantage.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

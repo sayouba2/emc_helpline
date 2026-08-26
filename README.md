@@ -160,6 +160,11 @@ test vérifie qu'aucune donnée de signalement n'atteint le disque.
 
 **Le thème est clair uniquement.** Pas de variante sombre, nulle part.
 
+**L'écran est fermé aux captures.** `FLAG_SECURE` est posé sur toute
+l'application : ni capture d'écran, ni vignette dans le sélecteur
+d'applications. C'est le pendant de « rien n'est écrit sur l'appareil » — sans
+lui, Android photographiait le récit en cours de saisie.
+
 **Le numéro de référence n'est jamais stocké en clair.** Son empreinte SHA-256
 sert de clé de recherche. Un code perdu est un dossier perdu, et c'est le prix
 de l'anonymat.
@@ -193,6 +198,11 @@ coordonnées. Seuls un pseudo et un téléphone sont collectés.
 
 Rien de ceci ne se fait depuis le dépôt. Dans la console Firebase :
 
+0. **Créer la clé de signature de release.** `android/key.properties` est lu
+   s'il existe, sinon les builds retombent sur la clé de debug — utilisable
+   pour tester, refusée par Google Play, et partagée par toutes les machines de
+   développement. Le keystore doit appartenir au CMRPI, comme le compte de
+   facturation : qui le perd ne peut plus publier de mise à jour.
 1. Créer le projet, puis `firebase use --add`.
 2. Activer **Authentication → Anonymous**.
 3. Créer la base Firestore : **mode production**, région `europe-west1`. La
