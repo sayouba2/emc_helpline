@@ -10,6 +10,7 @@ import { z } from "zod";
 import {
   AGENT_ROLE,
   COLLECTIONS,
+  RATE_LIMITS,
   REGION,
   REPORT_RETENTION_DAYS,
   REPORT_STATUSES,
@@ -17,10 +18,10 @@ import {
 import { getStorage } from "firebase-admin/storage";
 
 import { evidenceReadUrl } from "./evidence.js";
-import { logEvent } from "./logging.js";
+import { logEvent, logProblem } from "./logging.js";
+import { consumeRateLimit } from "./rateLimit.js";
 import { referenceHash, referencePayloadOf } from "./referenceCode.js";
 import { notifyStatusChange } from "./notifications.js";
-import { forgetReferenceFor } from "./retention.js";
 
 /**
  * The console is the one place with accounts.
@@ -34,6 +35,26 @@ import { forgetReferenceFor } from "./retention.js";
  * cannot be granted from the console itself: an account that can promote
  * accounts is an account worth stealing.
  */
+/**
+ * Un frein sur les lectures de la console.
+ *
+ * Le rôle dit qui a le droit ; il ne dit rien du rythme. Sans compteur, une
+ * session d'agent volée aspire la base entière sans que rien ne ralentisse ni
+ * ne laisse de trace exploitable.
+ */
+async function throttleAgent(db: Firestore, uid: string): Promise<void> {
+  const verdict = await consumeRateLimit(
+    db,
+    "console_read",
+    uid,
+    RATE_LIMITS.consoleReadHourly,
+  );
+  if (!verdict.allowed) {
+    logProblem({ event: "console_rate_limited", agentUid: uid });
+    throw new HttpsError("resource-exhausted", "too many reads");
+  }
+}
+
 function requireAgent(request: CallableRequest): { uid: string; email: string } {
   const uid = request.auth?.uid;
   const token = request.auth?.token;
@@ -91,13 +112,14 @@ const listRequest = z.object({
 export const listReports = onCall(
   { region: REGION, memory: "256MiB", timeoutSeconds: 30 },
   async (request) => {
-    requireAgent(request);
+    const agent = requireAgent(request);
     const parsed = listRequest.safeParse(request.data ?? {});
     if (!parsed.success) {
       throw new HttpsError("invalid-argument", "malformed query");
     }
 
     const db = getFirestore();
+    await throttleAgent(db, agent.uid);
     const limit = parsed.data.limit ?? 25;
 
     let query = db
@@ -164,6 +186,7 @@ export const getReport = onCall(
     if (!parsed.success) throw new HttpsError("invalid-argument", "malformed");
 
     const db = getFirestore();
+    await throttleAgent(db, agent.uid);
 
     let reportId = parsed.data.reportId ?? null;
     let via = "queue";
@@ -298,6 +321,29 @@ export const deleteReport = onCall(
     if (!parsed.success) throw new HttpsError("invalid-argument", "malformed");
 
     const db = getFirestore();
+    const ref = db.collection(COLLECTIONS.reports).doc(parsed.data.reportId);
+
+    // L'existence d'abord. Auditer puis répondre `{deleted: true}` pour un
+    // identifiant inventé écrivait au journal une suppression qui n'a jamais
+    // eu lieu — un journal d'audit qui ment est pire qu'aucun.
+    if (!(await ref.get()).exists) {
+      throw new HttpsError("not-found", "no such case");
+    }
+
+    // Le dossier et son entrée d'index partent ensemble. Un échec entre les
+    // deux laissait un dossier introuvable mais bien présent : invisible au
+    // suivi, invisible à la console, et toujours là.
+    await db.runTransaction(async (tx) => {
+      const entries = await tx.get(
+        db
+          .collection(COLLECTIONS.referenceIndex)
+          .where("reportId", "==", parsed.data.reportId),
+      );
+      for (const entry of entries.docs) tx.delete(entry.ref);
+      tx.delete(ref);
+    });
+
+    // Après coup : la ligne dit ce qui s'est réellement passé.
     await audit(db, {
       action: "delete",
       reportId: parsed.data.reportId,
@@ -305,9 +351,6 @@ export const deleteReport = onCall(
       agentEmail: agent.email,
       to: parsed.data.reason,
     });
-
-    await forgetReferenceFor(db, parsed.data.reportId);
-    await db.collection(COLLECTIONS.reports).doc(parsed.data.reportId).delete();
 
     return { deleted: true };
   },

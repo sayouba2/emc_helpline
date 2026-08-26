@@ -69,6 +69,16 @@ export const RATE_LIMITS = {
   submitReportDaily: { limit: 20, windowSeconds: 24 * 60 * 60 },
   uploadUrlHourly: { limit: 20, windowSeconds: 60 * 60 },
   trackReportHourly: { limit: 10, windowSeconds: 60 * 60 },
+
+  /**
+   * Les fonctions de la console, par compte agent.
+   *
+   * Le claim `agent` est un contrôle solide, mais il n'est pas un frein : une
+   * session volée pouvait énumérer toute la base sans rien pour la ralentir.
+   * Large, parce qu'un agent qui trie une file en ouvre beaucoup — assez serré
+   * pour qu'une aspiration se voie.
+   */
+  consoleReadHourly: { limit: 300, windowSeconds: 60 * 60 },
 } as const;
 
 /** Who may reach the team console. Carried as a custom claim on the account. */

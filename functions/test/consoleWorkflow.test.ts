@@ -327,6 +327,52 @@ describe.skipIf(!ready)("la console, avec un compte agent", () => {
     expect(Date.parse(after.result.expiresAt)).toBeGreaterThan(before);
   });
 
+  it("refuse de supprimer un dossier qui n'existe pas", async () => {
+    // Auditer puis répondre « supprimé » pour un identifiant inventé écrivait
+    // au journal une suppression qui n'a jamais eu lieu.
+    const agent = await agentToken();
+
+    const refused = await call(
+      "deleteReport",
+      { reportId: "dossier-invente", reason: "test" },
+      agent,
+    );
+
+    expect(refused.error?.status).toBe("NOT_FOUND");
+  });
+
+  it("emporte l'entrée d'index avec le dossier", async () => {
+    // Un échec entre les deux laissait un dossier introuvable au suivi, mais
+    // toujours présent en base.
+    const anonymous = await anonymousToken();
+    const agent = await agentToken();
+    const sent = await call(
+      "submitReport",
+      { idempotencyKey: uniqueKey(), report },
+      anonymous,
+    );
+    const referenceCode = sent.result.referenceCode as string;
+
+    const listed = await call("listReports", {}, agent);
+    const opened = await call("getReport", { referenceCode }, agent);
+    expect(opened.error).toBeUndefined();
+    void listed;
+
+    const removed = await call(
+      "deleteReport",
+      { reportId: opened.result.id, reason: "doublon de test" },
+      agent,
+    );
+    expect(removed.error, JSON.stringify(removed.error)).toBeUndefined();
+
+    // Ni par le numéro côté public, ni par le numéro côté console.
+    const tracked = await call("trackReport", { referenceCode }, anonymous);
+    expect(tracked.result.found).toBe(false);
+
+    const reopened = await call("getReport", { referenceCode }, agent);
+    expect(reopened.error?.status).toBe("NOT_FOUND");
+  });
+
   it("refuse un statut qui n'existe pas", async () => {
     const agent = await agentToken();
     const listed = await call("listReports", {}, agent);

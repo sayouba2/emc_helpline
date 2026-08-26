@@ -22,6 +22,13 @@ type Loggable = {
   durationMs?: number;
   code?: string;
   attempt?: number;
+  /** Combien d'objets une opération a traités — jamais un numéro d'essai. */
+  count?: number;
+  /**
+   * L'identifiant d'un agent, jamais celui d'un appareil anonyme : lier deux
+   * signalements au même téléphone ferait de l'anonymat une fiction.
+   */
+  agentUid?: string;
 };
 
 export function logEvent(entry: Loggable): void {

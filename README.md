@@ -95,7 +95,7 @@ flutter analyze && flutter test && dart format --output=none --set-exit-if-chang
 npm run check        # typecheck TypeScript + suites backend contre les émulateurs
 ```
 
-187 tests côté application, 103 côté backend. `npm run check` démarre les
+188 tests côté application, 107 côté backend. `npm run check` démarre les
 émulateurs, crée le compte agent que les suites de la console utilisent, puis
 lance le tout — rien à préparer à la main.
 
@@ -202,18 +202,19 @@ Rien de ceci ne se fait depuis le dépôt. Dans la console Firebase :
    attester une application que Play n'a pas installée : en développement, il
    faut enregistrer un jeton de débogage, que l'application imprime dans ses logs
    au premier lancement.
-5. Politiques TTL sur `reports.expiresAt`, `referenceIndex.expiresAt`,
-   `idempotency.expiresAt`, `rateLimits.expiresAt`.
-6. Règle de cycle de vie Cloud Storage sur `evidence/`, ~35 jours, pour les
+5. Règle de cycle de vie Cloud Storage sur `evidence/`, ~35 jours, pour les
    téléversements dont le signalement n'a jamais été envoyé.
-7. Donner au compte de service d'exécution le rôle *Créateur de jetons du compte
+6. Donner au compte de service d'exécution le rôle *Créateur de jetons du compte
    de service* sur lui-même — sans quoi les URL de téléversement ne peuvent pas
    être signées. Les émulateurs ne signent pas : ça ne se voit qu'en ligne.
-8. Comptes agents : les créer, faire vérifier l'adresse, puis
+7. Comptes agents : les créer, faire vérifier l'adresse, puis
    `npm --prefix functions run grant-agent -- grant adresse@cmrpi.ma`.
 
+L'index composite et les quatre politiques TTL sont déclarés dans
+`firestore.indexes.json` et partent avec les règles — rien à créer à la main.
+
 ```bash
-npx firebase deploy --only firestore:rules,storage:rules   # gratuit
+npx firebase deploy --only firestore:rules,firestore:indexes,storage:rules   # gratuit
 npx firebase deploy --only functions                       # demande le plan Blaze
 npx firebase deploy --only hosting
 ```

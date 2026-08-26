@@ -45,7 +45,13 @@ export const onReportDeleted = onDocumentDeleted(
       }),
     );
 
-    logEvent({ event: "retention_evidence_deleted", reportId: event.params.reportId, attempt: deleted });
+    // `count`, pas `attempt` : une alerte bâtie sur un champ prévu pour un
+    // numéro d'essai mesurerait autre chose que ce qu'elle croit.
+    logEvent({
+      event: "retention_evidence_deleted",
+      reportId: event.params.reportId,
+      count: deleted,
+    });
   },
 );
 

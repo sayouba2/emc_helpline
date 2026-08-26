@@ -1,4 +1,40 @@
 {
-  "indexes": [],
-  "fieldOverrides": []
+  "indexes": [
+    {
+      "//": "listReports combine where(status) et orderBy(createdAt) : Firestore exige un index composite. L'émulateur ne vérifie jamais les index, donc les tests passent sans lui — et la console aurait échoué en FAILED_PRECONDITION au premier clic sur un filtre, en production seulement.",
+      "collectionGroup": "reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "//": "Les politiques de conservation, déclarées ici plutôt que créées à la main dans la console. Quatre gestes manuels en moins, dont l'oubli ferait grossir la base indéfiniment sans que rien ne le signale.",
+      "collectionGroup": "reports",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "referenceIndex",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "idempotency",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "rateLimits",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    }
+  ]
 }
