@@ -394,6 +394,20 @@ class ReportProvider with ChangeNotifier {
       );
       _history.insert(0, _currentReport);
       _submittedRefCode = code;
+
+      // Le contenu ne sert plus à rien une fois déposé, et il pèse : le récit,
+      // le pseudo et le téléphone resteraient sinon en mémoire tant que le
+      // processus vit. Un téléphone repris en main dix minutes plus tard
+      // rouvrirait l'application sur cet état. Seul le numéro de référence
+      // survit, parce que l'écran de confirmation l'affiche.
+      _currentReport = ReportModel(
+        referenceCode: code,
+        createdAt: _currentReport.createdAt,
+        // La tranche d'âge survit : l'écran de confirmation s'en sert pour
+        // proposer l'assistant, et c'est un intervalle, pas une identité.
+        ageGroup: _currentReport.ageGroup,
+      );
+
       _clearSubmissionState();
       return code;
     } on SubmissionException catch (error) {

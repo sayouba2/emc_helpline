@@ -145,6 +145,33 @@ void main() {
       );
     });
 
+    test('le contenu ne survit pas au dépôt', () async {
+      // Un téléphone repris en main dix minutes plus tard rouvre l'application
+      // sur cet état. Le récit, le pseudo et le téléphone n'ont plus rien à y
+      // faire une fois le signalement parti.
+      final provider =
+          _completeProvider(submitter: _FlakySubmitter(failures: 0).call)
+            ..updateReport(
+              assistanceNeeded: AssistanceNeed.wanted,
+              assistanceType: AssistanceType.legal,
+              pseudo: 'HérosDiscret42',
+              contactPhone: '0612345678',
+              description: 'a' * 130,
+            );
+
+      await provider.submitReport();
+
+      expect(provider.currentReport.description, isNull);
+      expect(provider.currentReport.pseudo, isNull);
+      expect(provider.currentReport.contactPhone, isNull);
+      expect(provider.currentReport.evidenceFilePaths, isEmpty);
+
+      // Ce qui reste : le numéro, que l'écran de confirmation affiche, et la
+      // tranche d'âge, dont il se sert pour proposer l'assistant.
+      expect(provider.currentReport.referenceCode, isNotNull);
+      expect(provider.currentReport.ageGroup, AgeGroup.teen);
+    });
+
     test('a new report gets a new key', () async {
       final submitter = _FlakySubmitter(failures: 0);
       final provider = _completeProvider(submitter: submitter.call);

@@ -10,8 +10,11 @@ import { trackReportCore } from "../src/trackReport.js";
 const PROJECT_ID = "demo-emc";
 const emulated = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
-const submission = (key: string, overrides: Record<string, unknown> = {}) =>
-  submitReportRequest.parse({
+const DEVICE = "device-under-test";
+
+const submission = (key: string, overrides: Record<string, unknown> = {}) => ({
+  uid: DEVICE,
+  ...submitReportRequest.parse({
     idempotencyKey: key,
     report: {
       whoFor: "self",
@@ -28,7 +31,8 @@ const submission = (key: string, overrides: Record<string, unknown> = {}) =>
       description: "a".repeat(130),
       ...overrides,
     },
-  });
+  }),
+});
 
 describe.skipIf(!emulated)("looking a case up by its number", () => {
   let app: ReturnType<typeof initializeApp>;

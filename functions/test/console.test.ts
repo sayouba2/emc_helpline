@@ -14,8 +14,11 @@ import { trackReportCore } from "../src/trackReport.js";
 const PROJECT_ID = "demo-emc";
 const emulated = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
-const submission = (key: string) =>
-  submitReportRequest.parse({
+const DEVICE = "device-under-test";
+
+const submission = (key: string) => ({
+  uid: DEVICE,
+  ...submitReportRequest.parse({
     idempotencyKey: key,
     report: {
       whoFor: "self",
@@ -28,7 +31,8 @@ const submission = (key: string) =>
       evidencePaths: [],
       description: "a".repeat(130),
     },
-  });
+  }),
+});
 
 describe.skipIf(!emulated)("how long a case is kept", () => {
   let app: ReturnType<typeof initializeApp>;

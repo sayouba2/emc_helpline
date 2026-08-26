@@ -1,0 +1,1350 @@
+% ============================================================================
+%  Rapport de stage PFA — Application mobile EMC Helpline
+%  Sayouba Ouédraogo · CMRPI · 15 juillet – 31 août 2026
+%
+%  Compilation :  latexmk -xelatex rapport.tex
+%  (ou :  xelatex rapport → biber rapport → xelatex ×2)
+% ============================================================================
+\documentclass[11pt,a4paper,oneside,openany]{report}
+\input{preambule}
+
+% ------------------------------------------------------------------ SIGLES
+\newacronym{cmrpi}{CMRPI}{Centre Marocain de Recherches Polytechniques et d'Innovation}
+\newacronym{emc}{EMC}{Espace Maroc Cyberconfiance}
+\newacronym{pfa}{PFA}{Projet de Fin d'Année}
+\newacronym{ui}{UI}{Interface utilisateur (\emph{User Interface})}
+\newacronym{ux}{UX}{Expérience utilisateur (\emph{User Experience})}
+\newacronym{rtl}{RTL}{Écriture de droite à gauche (\emph{Right-To-Left})}
+\newacronym{ttl}{TTL}{Durée de vie d'un enregistrement (\emph{Time To Live})}
+\newacronym{sdk}{SDK}{Kit de développement (\emph{Software Development Kit})}
+\newacronym{api}{API}{Interface de programmation (\emph{Application Programming Interface})}
+\newacronym{fcm}{FCM}{Firebase Cloud Messaging}
+\newacronym{ci}{CI}{Intégration continue (\emph{Continuous Integration})}
+\newacronym{wcag}{WCAG}{\emph{Web Content Accessibility Guidelines}}
+\newacronym{cndp}{CNDP}{Commission Nationale de contrôle de la protection des Données à caractère Personnel}
+\newacronym{uid}{UID}{Identifiant unique d'utilisateur}
+\newacronym{uml}{UML}{\emph{Unified Modeling Language}}
+
+\begin{document}
+
+% ============================================================================
+%  PAGE DE GARDE
+% ============================================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+
+% --- Bandeau des logos -------------------------------------------------
+% Déposer les deux fichiers dans figures/logos/ ; aucune autre modification
+% n'est nécessaire, la page de garde les prend automatiquement.
+\begin{minipage}[c]{0.42\textwidth}\centering
+  \IfFileExists{figures/logos/ecole.png}
+    {\includegraphics[height=2.4cm,keepaspectratio]{figures/logos/ecole.png}}
+    {\begin{tikzpicture}
+       \node[draw=emcgrey!50,dashed,fill=emcbg,rounded corners=2pt,
+             minimum width=4.6cm,minimum height=2.4cm,align=center]
+            {\sffamily\scriptsize\color{emcgrey}Logo de l'établissement\\[2pt]
+             \tiny\ttfamily\color{emcorange}figures/logos/ecole.png};
+     \end{tikzpicture}}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.42\textwidth}\centering
+  \IfFileExists{figures/logos/entreprise.png}
+    {\includegraphics[height=2.4cm,keepaspectratio]{figures/logos/entreprise.png}}
+    {\begin{tikzpicture}
+       \node[draw=emcgrey!50,dashed,fill=emcbg,rounded corners=2pt,
+             minimum width=4.6cm,minimum height=2.4cm,align=center]
+            {\sffamily\scriptsize\color{emcgrey}Logo de l'organisme d'accueil\\[2pt]
+             \tiny\ttfamily\color{emcorange}figures/logos/entreprise.png};
+     \end{tikzpicture}}
+\end{minipage}
+
+\vspace{6mm}
+{\sffamily\small\color{emcgrey}
+ Université Cadi Ayyad — Faculté des Sciences et Techniques de Marrakech\\[1mm]
+ Filière Ingénierie des Réseaux et Systèmes d'Information\par}
+
+\vspace{4mm}
+\noindent{\color{emcborder}\rule{\textwidth}{1pt}}
+\vspace{8mm}
+
+{\sffamily\bfseries\large\color{emcorange}RAPPORT DE PROJET DE FIN D'ANNÉE\par}
+\vspace{3mm}
+{\sffamily\small\color{emcgrey}Année universitaire 2025 — 2026\par}
+
+\vspace{12mm}
+
+{\sffamily\bfseries\LARGE\color{emcblue}
+ Application mobile de signalement\\[2mm]
+ des cyberviolences pour les enfants\par}
+
+\vspace{5mm}
+{\sffamily\large\color{emcslate}Ligne d'assistance \emc du \gls{cmrpi}\par}
+
+\vspace{4mm}
+{\itshape\color{emcgrey}\small
+ Un prototype Flutter anonyme, trilingue et adossé à une architecture Firebase
+ sans écriture directe depuis le client\par}
+
+\vspace{14mm}
+{\color{emcborder}\rule{0.5\textwidth}{0.6pt}}
+\vspace{10mm}
+
+\begin{minipage}[t]{0.46\textwidth}\raggedright
+ {\sffamily\small\color{emcgrey}RÉALISÉ PAR\par}\vspace{2mm}
+ {\sffamily\bfseries\large\color{emcslate}Sayouba Ouédraogo\par}
+ {\small\color{emcgrey}Étudiant en 4\ieme{} année, IRISI\par}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.46\textwidth}\raggedleft
+ {\sffamily\small\color{emcgrey}ENCADRÉ PAR\par}\vspace{2mm}
+ {\sffamily\bfseries\large\color{emcslate}Pr. Youssef Bentaleb\par}
+ {\small\color{emcgrey}Encadrant principal, \gls{cmrpi}\par}\vspace{1.5mm}
+ {\sffamily\bfseries\color{emcslate}Dr. Bouchra Assiss\par}
+ {\small\color{emcgrey}Co-encadrante, \gls{cmrpi}\par}
+\end{minipage}
+
+\vfill
+\noindent{\color{emcborder}\rule{\textwidth}{1pt}}\\[2mm]
+{\sffamily\small\color{emcgrey}Stage effectué du 15 juillet au 31 août 2026\par}
+\end{titlepage}
+
+% ============================================================================
+%  PAGES LIMINAIRES
+% ============================================================================
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+\markboth{Remerciements}{}
+
+Je remercie le \gls{cmrpi} de m'avoir confié un sujet qui porte à conséquence :
+une application dont se servent des enfants en difficulté n'autorise pas les
+approximations d'usage, et cette exigence a structuré tout le stage.
+
+Ma reconnaissance va au Professeur Youssef Bentaleb, encadrant principal, pour
+la clarté du document de cadrage et pour des retours qui ont, à chaque jalon,
+tranché des questions que je n'aurais pas su trancher seul — en particulier le
+niveau de finition attendu des maquettes et le traitement des contenus
+sensibles. Je remercie également la Docteure Bouchra Assiss pour son
+co-encadrement.
+
+Mes remerciements vont enfin au corps enseignant de la Faculté des Sciences et
+Techniques de Marrakech, dont les enseignements en génie logiciel, en réseaux et
+en sécurité ont trouvé dans ce projet un terrain d'application direct.
+
+\vspace{4mm}
+\begin{constat}
+\small\sffamily
+\textbf{Note de lecture.} Ce rapport rend compte d'un travail dont le périmètre
+a dépassé celui du document de cadrage. Le \cref{tab:ecart} 
+(\cref{chap:bilan}) confronte explicitement ce qui était demandé et ce qui a
+été livré, afin que l'écart soit lisible et justifié plutôt que sous-entendu.
+\end{constat}
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+\markboth{Résumé}{}
+
+Les enfants victimes de cyberviolences disposent au Maroc de canaux de
+signalement conçus pour des adultes. Ce projet de fin d'année, mené au
+\gls{cmrpi} du 15 juillet au 31 août 2026, a consisté à concevoir et développer
+le prototype mobile de la ligne d'assistance \emc : une application Flutter par
+laquelle un enfant dépose un signalement \textbf{sans compte et sans donner son
+nom}, et reçoit en échange un numéro de référence — seul lien entre lui et son
+dossier.
+
+Le travail s'est déroulé en trois jalons de quinze jours : étude du public et
+maquettage Figma, développement des écrans en Flutter, puis connexion au
+back-end et finalisation. Le résultat dépasse le prototype à quatre écrans
+initialement demandé : un parcours de signalement en onze étapes adapté à trois
+tranches d'âge, une interface en français, arabe et anglais avec mise en miroir
+complète en \gls{rtl}, un suivi de dossier par numéro de référence, une console
+web pour l'équipe de traitement, et une politique de conservation de trente
+jours glissants.
+
+L'architecture retenue rompt avec le schéma Firebase usuel : \textbf{le client
+n'écrit jamais dans la base}. Les règles Firestore refusent tout accès et chaque
+opération passe par une fonction \emph{cloud} qui revalide le contrat de
+données, applique une limitation de débit et exige une attestation d'intégrité
+de l'application. Ce choix découle directement de l'absence de comptes
+utilisateurs, elle-même dictée par la nature du public. Le numéro de référence
+n'est stocké nulle part en clair : seule son empreinte SHA-256 sert de clé de
+recherche.
+
+L'ensemble est couvert par 290 tests automatisés exécutés en intégration
+continue, dont un test de contrat qui compare les énumérations Dart au schéma
+TypeScript et échoue dès que les deux divergent.
+
+\vspace{3mm}
+\noindent\textbf{Mots-clés} — cyberviolence, protection de l'enfance, Flutter,
+Firebase, anonymat, accessibilité, architecture sans confiance client.
+
+\vspace{6mm}
+\noindent{\color{emcborder}\rule{\textwidth}{0.6pt}}
+\vspace{4mm}
+
+\begin{otherlanguage}{english}
+\noindent\textbf{Abstract} — Children facing cyberviolence in Morocco are
+offered reporting channels designed for adults. This end-of-year project,
+carried out at \gls{cmrpi} between 15 July and 31 August 2026, delivers the
+mobile prototype of the \emc line: a Flutter application through which a child
+files a report \emph{without an account and without giving a name}, receiving a
+reference number that is the only link between them and their case. The
+delivered system exceeds the four-screen prototype initially scoped: an
+eleven-step reporting flow adapted to three age groups, a French/Arabic/English
+interface with full \gls{rtl} mirroring, reference-number case tracking, a web
+console for the handling team, and a thirty-day rolling retention policy. The
+architecture departs from the usual Firebase pattern: the client never writes to
+the database. Security rules deny every direct access and each operation goes
+through a cloud function that re-validates the data contract, rate-limits
+requests and requires an app-integrity attestation. The reference number is
+never stored in clear text — only its SHA-256 digest serves as a lookup key. The
+whole is covered by 290 automated tests running in continuous integration.
+\end{otherlanguage}
+
+\cleardoublepage
+\microtypesetup{protrusion=false}
+\tableofcontents
+% Les trois listes s'enchaînent sur la même page : \clearpage est neutralisé
+% le temps de les composer, puis rétabli.
+\begingroup
+\let\originalclearpage\clearpage
+\let\clearpage\relax
+\vspace*{26pt}
+\listoffigures
+\vspace*{20pt}
+\listoftables
+\vspace*{20pt}
+\printnoidxglossary[type=\acronymtype,title={Liste des acronymes},
+                    toctitle={Liste des acronymes}]
+\let\clearpage\originalclearpage
+\endgroup
+\microtypesetup{protrusion=true}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ============================================================================
+\chapter{Introduction générale}
+\label{chap:intro}
+% ============================================================================
+
+Un enfant harcelé en ligne partage souvent son téléphone, parfois avec la
+personne qu'il voudrait signaler. Il ne sait pas nommer ce qui lui arrive, il
+craint qu'on prévienne ses parents, et il abandonne devant un formulaire qui lui
+demande son identité. Les canaux de signalement existants au Maroc — le portail
+national \texttt{e-vigilance}, les lignes téléphoniques — sont efficaces, mais
+ils ont été pensés pour des adultes capables de qualifier un fait et d'assumer
+une démarche administrative.
+
+Le \gls{cmrpi}, à l'origine de la plateforme \gls{emc} et de la ligne
+d'assistance \emc, a proposé de combler cet écart par une application mobile
+dédiée. Le présent rapport rend compte du \gls{pfa} réalisé sur ce sujet du
+15 juillet au 31 août 2026, en trois jalons de quinze jours.
+
+\section{Problématique}
+
+La difficulté du sujet n'est pas technique au sens habituel : construire quatre
+écrans et écrire dans une base de données ne pose aucun problème d'ingénierie.
+Elle tient à une contradiction qu'il faut résoudre, pas contourner.
+
+\begin{constat}
+Pour être utilisable par un enfant, l'application doit \textbf{ne rien demander} :
+ni compte, ni nom, ni adresse électronique. Mais une application sans comptes est
+une application sans identité, donc sans le mécanisme sur lequel repose toute la
+sécurité usuelle d'une base de données \emph{cloud}. Comment garantir la
+confidentialité de signalements d'enfants dans un système où personne ne
+s'authentifie ?
+\end{constat}
+
+Cette question a commandé l'essentiel des choix d'architecture décrits au
+\cref{chap:conception}, jusqu'à des conséquences que le projet a dû assumer,
+comme le fait qu'un numéro de référence perdu soit un dossier définitivement
+perdu.
+
+\section{Objectifs du stage}
+
+Le document de cadrage fixe un objectif volontairement mesuré : un prototype
+mobile à quatre écrans, en français, sans intégration au back-end \gls{emc},
+livré en trois jalons. Il s'agit d'un parcours d'apprentissage guidé plus que
+d'un produit fini.
+
+Le travail effectivement mené a suivi ce plan de jalons, mais l'a dépassé sur le
+périmètre fonctionnel : le prototype livré est trilingue, comporte un parcours de
+signalement en onze étapes, un suivi de dossier, une console de traitement et
+une politique de conservation des données. Le \cref{chap:bilan} met cet écart en
+regard des objectifs initiaux.
+
+\section{Organisation du rapport}
+
+Le \cref{chap:contexte} présente l'organisme d'accueil, l'analyse de l'existant
+et la démarche. Le \cref{chap:besoins} spécifie les besoins, fonctionnels comme
+non fonctionnels, et les contraintes réglementaires propres à un public mineur.
+Le \cref{chap:conception} expose l'architecture, le modèle de données et la
+conception de l'interface. Le \cref{chap:realisation} décrit la réalisation, du
+parcours Flutter aux fonctions \emph{cloud}. Le \cref{chap:tests} rend compte de
+la stratégie de test et de l'intégration continue. Le \cref{chap:bilan} dresse le
+bilan et ouvre sur les extensions possibles.
+
+% ============================================================================
+\chapter{Contexte et cadre du projet}
+\label{chap:contexte}
+% ============================================================================
+
+\section{Organisme d'accueil}
+
+Le \gls{cmrpi} est une association scientifique marocaine qui opère sous l'égide
+du ministère chargé de l'industrie et de l'économie numérique, avec l'appui du
+Conseil de l'Europe. Il porte depuis 2013 la plateforme \gls{emc} et la campagne
+nationale de prévention contre la cyberviolence et le cyberharcèlement
+\cite{cyberconfiance,cmrpi}.
+
+La ligne d'assistance \emc en constitue le volet opérationnel : elle accueille
+les signalements de cyberviolence, propose un accompagnement juridique et
+psychologique et intervient pour le retrait de contenus. Son extension
+\emph{\emc for women}, lancée en décembre 2024, l'a ouverte aux femmes et jeunes
+filles \cite{emcwomen}. Le présent projet en constitue le canal mobile destiné au
+public le plus jeune.
+
+\section{Analyse de l'existant}
+
+Trois canaux coexistent avant ce projet, chacun avec une limite précise pour un
+enfant.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Canaux de signalement existants et limites pour un public mineur}
+\label{tab:existant}
+\begin{tabularx}{\textwidth}{@{}L{3.2cm} X L{4.3cm}@{}}
+\toprule
+\textbf{Canal} & \textbf{Fonctionnement} & \textbf{Limite pour un enfant} \\
+\midrule
+Portail \texttt{e-vigilance} & Formulaire web national de signalement des
+cyberviolences \cite{evigilance} & Vocabulaire juridique, champs d'identité,
+navigation dense sur mobile \\
+Ligne téléphonique \emc & Contact direct avec un intervenant &
+Suppose de parler, souvent impossible depuis un domicile partagé \\
+Réseaux sociaux et signalement intégré aux plateformes & Retrait de contenu &
+Aucun accompagnement, aucun suivi, aucune orientation locale \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+L'étude du portail \texttt{e-vigilance} a fourni le vocabulaire métier — types
+d'incident, plateformes, niveaux d'urgence — repris tel quel dans les
+énumérations de l'application, afin qu'un signalement mobile reste transposable
+vers le système national.
+
+\section{Objectifs et périmètre}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Périmètre du prototype : ce qui est dans le stage et ce qui en est écarté}
+\label{tab:perimetre}
+\begin{tabularx}{\textwidth}{@{}L{1.1cm} X@{}}
+\toprule
+\textbf{Inclus} & Application mobile multilingue ; parcours de signalement adapté
+aux tranches d'âge 5–8, 8–12 et 12–15 ans ; formulaire simple et rassurant ;
+enregistrement du signalement dans Firebase \\
+\midrule
+\textbf{Écarté} & React Native ; intégration complète au back-end \gls{emc}
+existant ; espace dédié aux parents et enseignants \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Démarche et planning}
+
+Le stage a suivi les trois jalons de quinze jours du document de cadrage, chacun
+clos par l'envoi d'un livrable à l'encadrant et par un retour écrit conditionnant
+la suite ; la validation du jalon 2 a été prononcée sur la base d'une vidéo de
+démonstration.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\sffamily\scriptsize]
+\begin{ganttchart}[
+    hgrid=false, vgrid={*1{draw=emcborder}},
+    x unit=0.247cm, y unit title=0.56cm, y unit chart=0.54cm,
+    title height=1, title label font=\sffamily\scriptsize\color{emcgrey},
+    bar height=0.44, bar top shift=0.28,
+    bar/.append style={draw=none, fill=emcblue!75},
+    bar label font=\sffamily\scriptsize\color{emcslate},
+    group/.append style={draw=none, fill=emcorange},
+    group label font=\sffamily\bfseries\scriptsize\color{emcslate},
+    group left shift=0, group right shift=0, group top shift=0.5,
+    group height=0.22, group peaks height=0,
+    milestone/.append style={fill=emcred, draw=none},
+    milestone label font=\sffamily\scriptsize\color{emcred},
+    link/.style={-{Latex[length=1.2mm]}, emcgrey}
+  ]{1}{48}
+  \gantttitle{Juillet 2026}{17}
+  \gantttitle{Août 2026}{31} \\
+  \gantttitlelist{15,...,31}{1}
+  \gantttitlelist{1,...,31}{1} \\
+  \ganttgroup{Jalon 1 — Public et maquettes}{1}{17} \\
+  \ganttbar{Ressources EMC, portail e-vigilance}{1}{5} \\
+  \ganttbar{Besoins d'un jeune public}{4}{8} \\
+  \ganttbar{Maquettage Figma (13 écrans)}{7}{17} \\
+  \ganttgroup{Jalon 2 — Squelette Flutter}{18}{32} \\
+  \ganttbar{Écrans et navigation}{18}{25} \\
+  \ganttbar{Parcours en onze étapes, i18n, RTL}{24}{32} \\
+  \ganttgroup{Jalon 3 — Back-end et finalisation}{33}{48} \\
+  \ganttbar{Fonctions cloud, preuves, suivi}{33}{41} \\
+  \ganttbar{Console, conservation, tests, CI}{40}{46} \\
+  \ganttbar{Documentation et rapport}{44}{48} \\
+  \ganttmilestone{L1}{17} \ganttmilestone{L2}{32} \ganttmilestone{L3}{48}
+\end{ganttchart}
+\end{tikzpicture}
+\caption[Planning du stage en trois jalons]{Déroulement du stage. Les losanges
+marquent les trois livrables (\textsf{L1} maquettes Figma, \textsf{L2}
+application navigable, \textsf{L3} prototype fonctionnel documenté).}
+\label{fig:gantt}
+\end{figure}
+
+% ============================================================================
+\chapter{Analyse et spécification des besoins}
+\label{chap:besoins}
+% ============================================================================
+
+\section{Le public cible et ce qu'il impose}
+
+Le cadrage désigne trois tranches d'âge — 5 à 8 ans, 8 à 12 ans, 12 à 15 ans —
+qui ne diffèrent pas seulement par le niveau de lecture. Elles diffèrent par ce
+qu'un utilisateur est capable de faire seul, et l'analyse a converti ces
+différences en règles de conception applicables.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Des caractéristiques du public aux règles de conception}
+\label{tab:public}
+\begin{tabularx}{\textwidth}{@{}L{4.1cm} X@{}}
+\toprule
+\textbf{Caractéristique observée} & \textbf{Règle retenue} \\
+\midrule
+Lecture lente, vocabulaire limité & Une question par écran, phrases courtes,
+choix illustrés plutôt que champs libres \\
+Incapacité à qualifier juridiquement un fait & Types d'incident exprimés en
+langage courant, énumérations fermées, option « autre » toujours ouverte \\
+Téléphone partagé, parfois avec l'agresseur & Aucune donnée de signalement
+écrite sur l'appareil ; notifications annoncées avant d'être demandées \\
+Crainte d'être identifié ou dénoncé & Aucun compte, aucun nom réel demandé ;
+pseudonyme facultatif \\
+Danger immédiat possible & Numéro d'urgence affiché au-dessus de tout contenu
+explicatif \\
+Public plus âgé (12 ans et plus) autonome & Accès à un assistant conversationnel,
+réservé à cette tranche \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Besoins fonctionnels}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  scale=0.88,transform shape,
+  font=\sffamily\scriptsize,
+  uc/.style={ellipse,draw=emcblue,fill=emcblue!6,line width=0.7pt,
+             align=center,inner sep=2.2pt,minimum width=4.5cm,
+             minimum height=1.02cm,text width=3.5cm},
+  ucb/.style={uc,draw=emcorange,fill=emcorange!6},
+  rel/.style={draw=emcgrey,line width=0.6pt},
+  inc/.style={-{Latex[length=1.5mm]},draw=emcgrey,dashed,line width=0.6pt},
+  actor/.pic={
+    \draw[line width=0.8pt,emcslate] (0,0) circle (0.17);
+    \draw[line width=0.8pt,emcslate] (0,-0.17) -- (0,-0.70)
+      (-0.30,-0.34) -- (0.30,-0.34) (-0.26,-1.08) -- (0,-0.70) -- (0.26,-1.08);}]
+
+% --- frontière du système
+\node[draw=emcborder,line width=1pt,rounded corners=3pt,fill=emcbg,
+      minimum width=10.1cm,minimum height=8.7cm] (sys) at (0,-0.25) {};
+\node[anchor=north,font=\sffamily\bfseries\scriptsize\color{emcgrey},
+      inner sep=4pt] at (sys.north) {Système \emc};
+
+% --- cas d'utilisation du jeune public
+\node[uc] (u1) at (-2.5, 3.05) {Déposer un signalement};
+\node[uc] (u2) at (-2.5, 1.70) {Joindre des preuves};
+\node[uc] (u3) at (-2.5, 0.35) {Suivre un dossier par numéro};
+\node[uc] (u4) at (-2.5,-1.00) {Consulter les ressources};
+\node[uc] (u5) at (-2.5,-2.35) {Contacter la ligne d'assistance};
+\node[uc] (u6) at (-2.5,-3.70) {Dialoguer avec l'assistant (12 ans et plus)};
+
+% --- cas d'utilisation de l'équipe
+\node[ucb] (g1) at (2.6, 3.05) {Consulter un dossier};
+\node[ucb] (g2) at (2.6, 1.70) {Changer le statut};
+\node[ucb] (g3) at (2.6,-1.00) {Journaliser l'accès};
+
+% --- acteur principal
+\pic (a1) at (-6.9,0.6) {actor};
+\node[align=center,font=\sffamily\scriptsize\color{emcslate}]
+     at (-6.9,-0.95) {Enfant\\ ou jeune};
+\foreach \n in {u1,u3,u4,u5,u6} \draw[rel] (-6.9,0.05) -- (\n.west);
+
+% --- acteur secondaire
+\pic (a2) at (6.9,2.4) {actor};
+\node[align=center,font=\sffamily\scriptsize\color{emcslate}]
+     at (6.9,0.85) {Agent \emc};
+\draw[rel] (6.9,1.85) -- (g1.east);
+\draw[rel] (6.9,1.85) -- (g2.east);
+
+% --- relations
+\draw[inc] (u1) -- node[right=1pt,font=\sffamily\tiny\color{emcgrey}]
+      {\guillemotleft include\guillemotright} (u2);
+\draw[inc] (g1.south) -- node[right=1pt,font=\sffamily\tiny\color{emcgrey}]
+      {\guillemotleft include\guillemotright} (g2.north);
+\draw[inc] (g2.south) -- (g3.north);
+\end{tikzpicture}
+\caption[Diagramme de cas d'utilisation]{Diagramme de cas d'utilisation \gls{uml}.
+L'agent \gls{emc} n'agit pas depuis l'application mobile mais depuis la console
+web (\cref{sec:console}) ; les deux s'adossent au même back-end, ce qui justifie
+de les réunir dans une seule frontière.}
+\label{fig:usecase}
+\end{figure}
+
+Le dépôt d'un signalement se décompose en onze étapes conditionnelles :
+destinataire du signalement, tranche d'âge, genre, type d'incident, plateforme
+concernée, preuves, besoin d'accompagnement, nature de l'accompagnement,
+coordonnées, niveau d'urgence, puis récapitulatif. Trois règles de branchement
+ne se devinent pas à la lecture et méritent d'être spécifiées explicitement.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Règles de branchement du parcours de signalement}
+\label{tab:branchement}
+\begin{tabularx}{\textwidth}{@{}L{3.5cm} L{2.6cm} X@{}}
+\toprule
+\textbf{Réponse à « Veux-tu de l'aide ? »} & \textbf{Type d'aide} &
+\textbf{Coordonnées demandées} \\
+\midrule
+Oui, un accompagnement & demandée & pseudonyme et téléphone, obligatoires \\
+Je ne sais pas & étape sautée & étape sautée \\
+Non & étape sautée & étape sautée \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{vigilance}
+\small
+L'étape des preuves ne peut pas être franchie à vide : il faut au moins une
+capture, un lien, \textbf{ou} un récit d'au moins 120 caractères. Le récit tient
+lieu de preuve parce que le cas le plus grave est fréquemment celui où
+l'agresseur a effacé les traces. Rendre l'étape purement facultative aurait
+donc écarté les signalements les plus urgents.
+\end{vigilance}
+
+\section{Besoins non fonctionnels}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Exigences non fonctionnelles et moyen de vérification}
+\label{tab:nfr}
+\begin{tabularx}{\textwidth}{@{}L{0.9cm} L{3.5cm} X L{3.0cm}@{}}
+\toprule
+\textbf{Réf.} & \textbf{Exigence} & \textbf{Formulation} & \textbf{Vérification} \\
+\midrule
+NF1 & Anonymat & Aucun compte, aucun nom réel ; le pseudonyme et le téléphone
+sont les seules données de contact & Revue de code, \cref{chap:conception} \\
+NF2 & Confidentialité locale & Rien du contenu d'un signalement n'est écrit sur
+l'appareil & Test automatisé dédié \\
+NF3 & Confidentialité serveur & Le numéro de référence n'est jamais stocké en
+clair & Revue du schéma, tests back-end \\
+NF4 & Accessibilité & Contrastes conformes \gls{wcag}~2.1 niveau AA
+\cite{wcag} ; cibles tactiles d'au moins 48~dp & Suite de tests
+\texttt{accessibility\_test} \\
+NF5 & Internationalisation & Français, arabe, anglais ; mise en miroir complète
+en \gls{rtl} & Suite \texttt{rtl\_test} \\
+NF6 & Résistance à l'abus & Limitation de débit et attestation d'intégrité de
+l'application & Tests back-end \\
+NF7 & Conservation & Trente jours glissants, preuves supprimées avec le dossier
+& Déclencheur et politiques \gls{ttl} \\
+NF8 & Robustesse d'envoi & Un réessai ne crée jamais deux dossiers & Clé
+d'idempotence, tests \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Contraintes réglementaires et éthiques}
+
+Trois cadres se superposent. La Convention relative aux droits de l'enfant
+impose de protéger l'enfant contre toute forme de violence, y compris
+numérique \cite{cide}. La loi 09-08 encadre le traitement des données à
+caractère personnel au Maroc et soumet leur collecte à un principe de
+minimisation \cite{loi0908}. La loi 103-13 réprime notamment la diffusion de
+propos ou d'images d'une personne sans son consentement \cite{loi10313}, ce qui
+concerne directement la catégorie d'incident « images intimes ».
+
+\begin{decision}
+\small
+Ces trois cadres convergent vers une même conséquence technique : \textbf{ne
+collecter que ce dont le traitement du dossier a besoin}. C'est la raison pour
+laquelle le nom réel n'est demandé nulle part, et pour laquelle le caractère
+anonyme d'un signalement n'est pas une case à cocher mais une conséquence — il
+se déduit de l'absence de coordonnées.
+\end{decision}
+
+% ============================================================================
+\chapter{Conception}
+\label{chap:conception}
+% ============================================================================
+
+\section{La décision structurante : le client n'écrit pas dans la base}
+
+Le schéma Firebase usuel place le \gls{sdk} client face à la base et confie la
+sécurité aux règles Firestore, qui reposent sur une identité —
+\lstinline[language=TypeScript]|request.auth.uid|. Or cette application n'a pas de
+comptes, délibérément. Sans identité, la règle d'écriture dégénère en
+\lstinline[language=TypeScript]|if true| et la clé d'\gls{api} est lisible dans le
+paquet applicatif : n'importe qui peut écrire dans la collection, et une erreur
+symétrique en lecture exposerait des signalements d'enfants. Le suivi par numéro
+aggrave le problème — « lire un document si l'on connaît une chaîne » n'est pas
+une règle Firestore, c'est un jeton porteur sans limitation de débit.
+
+\begin{decision}
+\small
+Les règles Firestore et Cloud Storage refusent tout à tout le monde
+(\lstinline[language=TypeScript]|allow read, write: if false|) et chaque
+opération passe par une fonction \emph{cloud} appelable. Conséquence pratique :
+aucune dépendance \texttt{cloud\_firestore} côté Flutter — le client ne connaît
+que des appels de fonctions.
+\end{decision}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  scale=0.92,transform shape,
+  font=\sffamily\scriptsize,
+  layer/.style={draw=emcborder,line width=0.9pt,rounded corners=3pt,fill=white},
+  blk/.style={draw=emcblue!45,line width=0.6pt,rounded corners=2pt,
+              fill=emcblue!7,align=center,inner sep=3pt,
+              minimum height=0.78cm,text width=2.25cm},
+  fn/.style={blk,draw=emcorange!55,fill=emcorange!8},
+  db/.style={blk,draw=emcgreen!55,fill=emcgreen!7},
+  lbl/.style={font=\sffamily\bfseries\scriptsize\color{emcgrey},anchor=west},
+  flow/.style={-{Latex[length=1.6mm]},draw=emcgrey,line width=0.8pt}]
+
+% ---- couche client
+\node[layer,minimum width=12.6cm,minimum height=1.75cm] (cl) at (0,3.55) {};
+\node[lbl] at ([xshift=5pt,yshift=-7pt]cl.north west) {Application Flutter (Android / iOS)};
+\node[blk] (v) at (-4.4,3.25) {\texttt{views/}\\ 11 étapes, 4 onglets};
+\node[blk] (p) at (-1.47,3.25) {\texttt{providers/}\\ état et validation};
+\node[blk] (m) at ( 1.47,3.25) {\texttt{models/}\\ énumérations métier};
+\node[blk] (c) at ( 4.4,3.25) {\texttt{core/}\\ i18n, envoi, stockage};
+
+% ---- frontière de confiance
+\node[layer,minimum width=12.6cm,minimum height=1.30cm,fill=emcbg] (fr) at (0,1.55) {};
+\node[lbl] at ([xshift=5pt,yshift=-7pt]fr.north west) {Frontière de confiance};
+\node[blk,text width=3.1cm,draw=emcred!45,fill=emcred!6] (ac) at (-2.4,1.25)
+     {App Check\\ attestation d'intégrité};
+\node[blk,text width=3.1cm,draw=emcred!45,fill=emcred!6] (an) at ( 2.0,1.25)
+     {Auth anonyme\\ clé de comptage};
+
+% ---- couche fonctions
+\node[layer,minimum width=12.6cm,minimum height=1.75cm] (fc) at (0,-0.7) {};
+\node[lbl] at ([xshift=5pt,yshift=-7pt]fc.north west) {Cloud Functions 2\ieme{} génération (TypeScript, Node 22)};
+\node[fn] (f1) at (-4.4,-1.0) {\texttt{submitReport}};
+\node[fn] (f2) at (-1.47,-1.0) {\texttt{trackReport}};
+\node[fn] (f3) at ( 1.47,-1.0) {\texttt{requestEvidence-}\\\texttt{UploadUrl}};
+\node[fn] (f4) at ( 4.4,-1.0) {\texttt{console*}\\ \texttt{retention}};
+
+% ---- couche données
+\node[layer,minimum width=12.6cm,minimum height=1.75cm] (dl) at (0,-2.95) {};
+\node[lbl] at ([xshift=5pt,yshift=-7pt]dl.north west) {Données — accès direct refusé par les règles};
+\node[db] (d1) at (-4.4,-3.25) {\texttt{reports}\\ \texttt{referenceIndex}};
+\node[db] (d2) at (-1.47,-3.25) {\texttt{idempotency}\\ \texttt{rateLimits}};
+\node[db] (d3) at ( 1.47,-3.25) {\texttt{auditLog}};
+\node[db] (d4) at ( 4.4,-3.25) {Cloud Storage\\ \texttt{evidence/}};
+
+% ---- second client : la console de l'équipe
+\node[blk,text width=2.3cm,draw=emcslate!45,fill=emcslate!6,minimum height=1.0cm]
+     (cs) at (7.35,1.9) {Console équipe\\ (web)};
+\node[font=\sffamily\tiny\color{emcgrey},align=center,text width=2.2cm]
+     at (7.35,0.75) {Auth par courriel\\ + rôle \texttt{agent}};
+
+\draw[flow] (cl.south) -- (fr.north);
+\draw[flow] (fr.south) -- (fc.north);
+\draw[flow] (fc.south) -- (dl.north);
+\draw[flow] (cs.south) -- (7.35,-0.7) -- (fc.east);
+\end{tikzpicture}
+\caption[Architecture applicative]{Architecture en couches. Toute flèche
+entrante dans la couche de données passe obligatoirement par une fonction
+\emph{cloud} : il n'existe aucun chemin direct du client vers Firestore.}
+\label{fig:archi}
+\end{figure}
+
+\section{Modèle de données}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  scale=0.94,transform shape,
+  font=\sffamily\scriptsize,
+  boxbase/.style={rectangle split,draw,line width=0.7pt,fill=white,
+                  align=left,inner sep=3.2pt,
+                  every one node part/.style={font=\sffamily\bfseries\scriptsize,align=center},
+                  every two node part/.style={font=\ttfamily\tiny},
+                  every three node part/.style={font=\ttfamily\tiny}},
+  cls/.style={boxbase,rectangle split parts=3,draw=emcblue,
+              rectangle split part fill={emcblue!12,white,white}},
+  enum/.style={boxbase,rectangle split parts=2,draw=emcorange,
+              rectangle split part fill={emcorange!12,white},text width=3.35cm},
+  iface/.style={boxbase,rectangle split parts=2,draw=emcgreen,
+              rectangle split part fill={emcgreen!12,white},text width=3.5cm},
+  impl/.style={boxbase,rectangle split parts=3,draw=emcslate,
+              rectangle split part fill={emcslate!12,white,white},text width=3.5cm},
+  assoc/.style={draw=emcgrey,line width=0.6pt},
+  real/.style={dashed,draw=emcgrey,line width=0.6pt,-{Triangle[open,length=2.2mm,width=2.2mm]}},
+  dep/.style={draw=emcgrey,line width=0.6pt,dashed,-{Latex[length=1.5mm]}}]
+
+\node[cls,text width=3.5cm,anchor=north] (rp) at (-5.7,3.1) {%
+  ReportProvider
+  \nodepart{two}
+  -- step : int\\
+  -- report : ReportModel\\
+  -- idempotencyKey : String
+  \nodepart{three}
+  + next() / back()\\
+  + isStepValid() : bool\\
+  + submit() : SubmissionOutcome};
+
+\node[cls,text width=4.15cm,anchor=north] (rm) at (0.35,3.1) {%
+  ReportModel
+  \nodepart{two}
+  + whoFor : WhoFor\\
+  + ageGroup : AgeGroup\\
+  + gender : Gender\\
+  + incidentType : IncidentType\\
+  + platform : ReportPlatform\\
+  + description : String?\\
+  + evidencePaths : List<String>\\
+  + pseudo, contactPhone : String?\\
+  + urgencyLevel : UrgencyLevel
+  \nodepart{three}
+  + isAnonymous : bool\\
+  + toPayload() : Map};
+
+\node[enum,anchor=north] (e1) at (6.05,3.1) {%
+  \guillemotleft enumeration\guillemotright\\ IncidentType
+  \nodepart{two}
+  hateSpeech, discrimination,\\
+  defamation, identityTheft,\\
+  intimateImages, threat, other};
+
+\node[enum,anchor=north] (e2) at (6.05,0.45) {%
+  \guillemotleft enumeration\guillemotright\\ AgeGroup
+  \nodepart{two}
+  child, teen, adult, undisclosed\\
+  + isChatbotEligible : bool};
+
+\node[enum,anchor=north] (e3) at (6.05,-1.75) {%
+  \guillemotleft enumeration\guillemotright\\ AssistanceNeed
+  \nodepart{two}
+  wanted, none, unsure};
+
+\node[iface,anchor=north] (if) at (-5.7,-0.45) {%
+  \guillemotleft interface\guillemotright\\ ReportSubmitter
+  \nodepart{two}
+  + submit(payload, key)\\
+  + track(code)};
+
+\node[impl,anchor=north] (fb) at (-5.7,-2.55) {%
+  FirebaseBackend
+  \nodepart{two}
+  -- functions : CloudFunctions
+  \nodepart{three}
+  + submit(...) \quad + track(...)};
+
+\draw[assoc] (rp.east|-rm.west) ++(0,0) coordinate (tmp);
+\draw[assoc] ([yshift=-6mm]rp.north east) -- node[above,font=\sffamily\tiny\color{emcgrey}]{1}
+             ([yshift=-6mm]rm.north west);
+\draw[assoc] ([yshift=-8mm]rm.north east) -- ([yshift=-8mm]e1.north west);
+\draw[assoc] (rm.east) -- (e2.west);
+\draw[assoc] ([yshift=6mm]rm.south east) -- (e3.west);
+\draw[real] (fb.north) -- (if.south);
+\draw[dep] (rp.south) -- (if.north);
+\end{tikzpicture}
+\caption[Diagramme de classes du domaine]{Diagramme de classes \gls{uml}
+(extrait). Le provider ne connaît que l'interface \texttt{ReportSubmitter} :
+l'implémentation Firebase est injectée, ce qui permet de tester tout le parcours
+sans réseau.}
+\label{fig:classes}
+\end{figure}
+
+Côté serveur, cinq collections se répartissent les responsabilités
+(\cref{tab:collections}), la séparation du dossier et de sa clé d'accès en étant
+le point central.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Collections Firestore et rôle de chacune}
+\label{tab:collections}
+\begin{tabularx}{\textwidth}{@{}L{3.35cm} X L{2.15cm}@{}}
+\toprule
+\textbf{Collection} & \textbf{Contenu} & \textbf{Expiration} \\
+\midrule
+\texttt{reports/\{id\}} & Le signalement, son statut et les chemins des preuves &
+30 j glissants \\
+\texttt{referenceIndex/}\linebreak\texttt{\{sha256\}} & Empreinte du numéro de référence
+$\rightarrow$ identifiant du dossier & en phase \\
+\texttt{idempotency/\{clé\}} & Numéro déjà attribué, rendu tel quel si la même
+clé revient & 30 j \\
+\texttt{rateLimits/\{clé\}} & Compteurs de la limitation de débit & fenêtre
+courte \\
+\texttt{auditLog/\{id\}} & Qui a lu ou modifié quel dossier, sans aucun
+contenu & survit au dossier \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{decision}
+\small
+Le numéro de référence est un secret porteur : il ouvre le dossier. Son
+empreinte SHA-256 sert donc d'\textbf{identifiant de document} dans
+\texttt{referenceIndex}, ce qui donne trois propriétés d'un coup : une contrainte
+d'unicité réelle, une lecture par clé exacte sans index composite, et la
+séparation du dossier et de sa clé d'accès. Aucun sel n'est ajouté — la valeur
+hachée porte 60 bits d'aléa, et un sel par enregistrement rendrait la recherche
+par code impossible, ce qui est précisément son objet.
+\end{decision}
+
+\begin{vigilance}
+\small
+La contrepartie est assumée et affichée dans l'application : \textbf{un code
+perdu est un dossier perdu}. C'est le prix de l'anonymat, et il vaut mieux
+l'énoncer à l'utilisateur que le découvrir au moment du suivi.
+\end{vigilance}
+
+\section{Déroulement d'un dépôt}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  scale=0.92,transform shape,
+  font=\sffamily\scriptsize,
+  ll/.style={draw=emcborder,line width=0.7pt,dash pattern=on 2pt off 2pt},
+  head/.style={draw=emcblue,line width=0.7pt,fill=emcblue!8,rounded corners=2pt,
+               align=center,inner sep=3pt,text width=2.15cm,minimum height=0.62cm},
+  act/.style={draw=emcblue!60,fill=emcblue!18,line width=0.5pt},
+  msg/.style={-{Latex[length=1.5mm]},draw=emcslate,line width=0.65pt},
+  ret/.style={-{Latex[length=1.5mm]},draw=emcgrey,line width=0.6pt,dashed},
+  note/.style={font=\sffamily\tiny\color{emcgrey},align=left}]
+
+\def\ya{0}      % top of lifelines
+\def\yb{-6.7}   % bottom
+\foreach \x/\n [count=\i] in {-6.1/App Flutter, -2.6/App Check, 0.9/{\texttt{submitReport}},
+                              4.2/Firestore, 7.0/Cloud Storage} {
+  \node[head] (h\i) at (\x,\ya) {\n};
+  \draw[ll] (\x,\ya-0.34) -- (\x,\yb);
+}
+
+% barres d'activation
+\fill[act] (-6.22,-0.85) rectangle (-5.98,-6.35);
+\fill[act] ( 0.78,-2.8) rectangle ( 1.02,-5.55);
+
+\draw[msg] (-6.1,-1.1) -- (-6.1,-1.1);
+\node[note,anchor=west] at (-5.9,-1.0) {1.~Onze étapes remplies, validation locale à chaque écran};
+
+\draw[msg] (-6.0,-1.7) -- node[above,note]{2.~URL signée} (6.9,-1.7);
+\draw[ret] (7.0,-2.1) -- node[above,note]{3.~téléversement direct de la capture} (-6.0,-2.1);
+
+\draw[msg] (-6.0,-2.8) -- node[above,note]{4.~jeton d'intégrité} (-2.7,-2.8);
+\draw[ret] (-2.6,-3.2) -- (-6.0,-3.2);
+
+\draw[msg] (-6.0,-3.75) -- node[above,note]{5.~\texttt{submitReport(payload, clé d'idempotence)}} (0.78,-3.75);
+\node[note,anchor=west] at (1.2,-4.2)
+     {6.~revalidation du schéma, limitation de débit,\\ \phantom{6.~}génération d'un code de 60 bits};
+
+\draw[msg] (1.02,-4.9) -- node[above,note]{7.~transaction : dossier + index + idempotence} (4.1,-4.9);
+\draw[ret] (4.2,-5.3) -- (1.02,-5.3);
+
+\draw[ret] (0.78,-5.8) -- node[above,note]{8.~numéro de référence} (-6.0,-5.8);
+\node[note,anchor=west] at (-5.9,-6.25) {9.~Affichage du numéro ; rien n'est écrit sur l'appareil};
+
+\node[draw=emcorange!50,fill=emcorange!6,rounded corners=2pt,line width=0.6pt,
+      text width=3.5cm,align=left,font=\sffamily\tiny\color{emcslate},inner sep=3pt]
+     at (5.9,-6.25)
+     {Si la même clé d'idempotence revient, l'étape 7 est court-circuitée et le
+      même numéro est rendu : un réessai ne crée jamais deux dossiers.};
+\end{tikzpicture}
+\caption[Diagramme de séquence du dépôt]{Diagramme de séquence \gls{uml} du dépôt.
+Les preuves ne passent pas par la fonction : le client les téléverse directement
+vers Cloud Storage au moyen d'une URL signée, de durée de vie limitée.}
+\label{fig:sequence}
+\end{figure}
+
+\section{Conception de l'interface}
+
+Le jalon 1 a produit treize écrans sous Figma, accompagnés de leurs variantes de
+sélection — l'état d'un écran après qu'un choix a été fait —, afin que la
+maquette exprime le comportement et pas seulement la mise en page.
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.268\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/figma-01-accueil.png}{Maquette — accueil}
+  \caption{Accueil}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.268\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/figma-05-incident.png}{Maquette — type d'incident}
+  \caption{Type d'incident}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.268\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/figma-10-recap.png}{Maquette — récapitulatif}
+  \caption{Récapitulatif}
+\end{subfigure}
+\caption[Maquettes Figma du parcours]{Trois des treize écrans maquettés au jalon 1 ;
+la charte a été reprise telle quelle dans le code.}
+\label{fig:figma}
+\end{figure}
+
+L'accessibilité a corrigé la charte issue des maquettes : l'orange d'origine
+\texttt{\#EA580C} n'atteignait que 3{,}56:1 de contraste sur blanc, en deçà des
+4{,}5:1 exigés par le niveau AA pour du texte courant \cite{wcag}. Il a été
+assombri en \texttt{\#C2410C} (5{,}18:1) pour le texte et les boutons, la teinte
+vive restant réservée aux éléments décoratifs, qui n'exigent que 3:1 ; le rouge
+d'alerte a subi le même traitement.
+
+% ============================================================================
+\chapter{Réalisation}
+\label{chap:realisation}
+% ============================================================================
+
+\section{Organisation du dépôt}
+
+Le projet réunit trois parties dans un dépôt unique.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Volumétrie du code livré (hors code généré et dépendances)}
+\label{tab:volumetrie}
+\begin{tabularx}{\textwidth}{@{}L{3.1cm} L{2.55cm} L{1.7cm} X@{}}
+\toprule
+\textbf{Partie} & \textbf{Emplacement} & \textbf{Lignes} & \textbf{Technologie} \\
+\midrule
+Application mobile & \texttt{lib/} & 14 500 & Flutter 3.44.6 / Dart 3.12 \\
+Fonctions \emph{cloud} & \texttt{functions/src/} & 1 640 & TypeScript, Node 22 \\
+Tests applicatifs & \texttt{test/} & 3 390 & \texttt{flutter\_test} \\
+Console équipe & \texttt{console/} & --- & Page statique, Firebase Hosting \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+La séparation est stricte : \texttt{views/} ne porte que de la présentation,
+\texttt{providers/} l'état du parcours et sa validation, \texttt{models/} les
+énumérations métier, \texttt{core/} l'accès au back-end, la localisation et les
+préférences.
+
+\section{Le parcours de signalement}
+
+Les onze étapes partagent une ossature commune — \texttt{StepLayout} — qui fixe la
+position du titre, de la barre de progression et des boutons. Le provider expose
+une validation par étape : le bouton « continuer » reste inactif tant que la
+réponse manque, plutôt que d'afficher une erreur après coup.
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-01-accueil.png}{App — accueil}
+  \caption{Accueil}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-02-age.png}{App — tranche d'âge}
+  \caption{Tranche d'âge}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-03-preuves.png}{App — preuves}
+  \caption{Preuves}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-04-recap.png}{App — récapitulatif}
+  \caption{Récapitulatif}\end{subfigure}
+\caption[Parcours de signalement dans l'application]{Quatre écrans du parcours. Le
+récapitulatif signale qu'un récit a été écrit sans le réafficher : sur un
+téléphone partagé, le relire à l'écran est un risque.}
+\label{fig:parcours}
+\end{figure}
+
+\begin{vigilance}
+\small
+L'écran de premier lancement \textbf{ne demande aucune permission}. Android
+cesse d'afficher la boîte de dialogue des notifications après deux refus, et un
+« non » exprimé avant même de savoir à quoi sert l'application la condamne
+définitivement. Le choix retenu : annoncer d'avance, demander au moment où il y
+a enfin quelque chose à notifier. Le numéro d'urgence est placé au-dessus du
+texte de présentation — qui est en danger immédiat n'a pas à lire une
+introduction.
+\end{vigilance}
+
+\section{Trois langues et la mise en miroir}
+
+L'interface est déclinée en français, arabe et anglais au moyen de trois fichiers
+ARB et de la génération \texttt{AppLocalizations} de Flutter. En arabe, ce n'est
+pas seulement le texte qui change : toute la mise en page est mise en miroir. Les
+éléments que Flutter ne retourne pas seuls — icônes directionnelles, décalages
+calculés, barres de progression — ont demandé un traitement explicite, couvert
+par une suite de tests dédiée \cite{flutterdocs}.
+
+\begin{decision}
+\small
+Les libellés d'affichage ne vivent pas dans les énumérations. Celles-ci ne
+portent aucun texte : \texttt{IncidentType.threat} est un symbole, et son libellé
+est résolu dans \texttt{report\_enum\_labels.dart} à partir des fichiers ARB.
+Traduire une étiquette ne peut donc pas modifier le branchement du parcours — ce
+qui était le cas tant que la comparaison portait sur des chaînes françaises.
+\end{decision}
+
+\section{Le contrat de données, tenu des deux côtés}
+
+Les noms des membres d'énumération voyagent tels quels du client Dart jusqu'au
+schéma TypeScript ; une divergence casserait l'envoi silencieusement, en
+production seulement. Un test de contrat lit le fichier TypeScript depuis la
+suite Dart et échoue dès que les deux listes ne coïncident plus.
+
+\begin{lstlisting}[language=Dart,caption={Le test de contrat compare les
+énumérations Dart au schéma serveur},label={lst:contrat}]
+// test/backend_contract_test.dart
+test('les valeurs d incident correspondent au schema TypeScript', () {
+  final schema = File('functions/src/schema.ts').readAsStringSync();
+  final serveur = _extraireUnion(schema, 'incidentType');
+  final client  = IncidentType.values.map((e) => e.name).toSet();
+  expect(client, equals(serveur));   // echoue des que les listes divergent
+});
+\end{lstlisting}
+
+\section{Dépôt, idempotence et limitation de débit}
+
+La fonction \texttt{submitReport} ne fait pas confiance au client : elle revalide
+la charge utile, applique la limitation de débit, puis écrit le dossier, son
+index et la trace d'idempotence en une seule transaction.
+
+\begin{lstlisting}[language=TypeScript,caption={Ecriture transactionnelle du
+dossier et de son index (extrait simplifié)},label={lst:submit}]
+// functions/src/submitReport.ts
+const code = genererCodeReference();            // 60 bits d'aleatoire
+const empreinte = sha256(normaliser(code));     // seule valeur persistee
+
+await db.runTransaction(async (tx) => {
+  const dejaVu = await tx.get(db.doc(`idempotency/${cle}`));
+  if (dejaVu.exists) return dejaVu.data().referenceCode;   // reessai : meme code
+
+  const dossier = db.collection('reports').doc();
+  tx.set(dossier, { ...charge, status: 'received',
+                    createdAt: now, expiresAt: dans30Jours });
+  tx.set(db.doc(`referenceIndex/${empreinte}`),
+         { reportId: dossier.id, createdAt: now, expiresAt: dans30Jours });
+  tx.set(db.doc(`idempotency/${cle}`),
+         { reportId: dossier.id, referenceCode: code, expiresAt: dans30Jours });
+});
+\end{lstlisting}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-05-envoi.png}{App — envoi en cours}
+  \caption{Envoi}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-06-succes.png}{App — numéro de référence}
+  \caption{Numéro rendu}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-07-suivi.png}{App — suivi par numéro}
+  \caption{Suivi}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-08-arabe.png}{App — accueil en arabe (RTL)}
+  \caption{Arabe, \gls{rtl}}\end{subfigure}
+\caption[Envoi, suivi et version arabe]{Fin du parcours et suivi de dossier ; le
+quatrième écran montre l'interface en arabe, entièrement mise en miroir.}
+\label{fig:suivi}
+\end{figure}
+
+\section{Les preuves}
+\label{sec:preuves}
+
+Les captures ne transitent jamais par la fonction de dépôt : le client demande
+une URL de téléversement signée, envoie le fichier directement à Cloud Storage,
+puis ne transmet que le chemin obtenu. La fonction reste ainsi légère quel que
+soit le poids des pièces, et un fichier téléversé pour un signalement jamais
+envoyé finit supprimé par une règle de cycle de vie.
+
+\begin{vigilance}
+\small
+La politique \gls{ttl} de Firestore ignore Cloud Storage. Sans le déclencheur
+\texttt{onReportDeleted}, l'expiration effacerait le dossier en laissant les
+captures — des images de l'agression d'un enfant — dans le \emph{bucket}, pour
+toujours, détachées de l'enregistrement qui expliquait leur présence. Vue depuis
+Firestore, cette panne est invisible : tout y paraît conforme.
+\end{vigilance}
+
+\section{La console de l'équipe et la conservation}
+\label{sec:console}
+
+Les agents \gls{emc} travaillent depuis une application web distincte, authentifiée
+par courriel et autorisée par un \emph{custom claim}
+\lstinline[language=TypeScript]|role: agent|. Elle liste les dossiers, fait évoluer
+leur statut — \texttt{received}, \texttt{inReview}, \texttt{contacted},
+\texttt{closed} — et affiche le compte à rebours de conservation, en rouge sous
+sept jours. Chaque lecture et chaque changement d'état alimentent un journal
+d'audit, dépourvu de tout contenu de signalement et qui survit au dossier.
+
+\begin{decision}
+\small
+La conservation est de \textbf{trente jours glissants} : le dépôt la fixe, et
+chaque changement de statut la repousse. Trente jours fixes depuis la création
+supprimeraient un dossier pendant son instruction — le seul comportement qu'une
+politique de conservation ne doit jamais avoir.
+\end{decision}
+
+\noindent La console est reproduite en \cref{fig:validation}.
+
+% ============================================================================
+\chapter{Tests, intégration continue et validation}
+\label{chap:tests}
+% ============================================================================
+
+\section{Stratégie de test}
+
+L'application vise des enfants en détresse, et une régression silencieuse y coûte
+plus cher qu'ailleurs. La couverture a donc été bâtie autour des propriétés qu'il
+serait grave de perdre, plutôt que d'un pourcentage de lignes. Au total,
+\textbf{187 tests côté application et 103 côté back-end}, soit 290 tests
+automatisés ; les suites serveur s'exécutent contre les émulateurs Firebase, ce
+qui permet de vérifier transactions, règles de sécurité et idempotence sans
+compte de facturation ni donnée réelle.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Suites de tests et propriété vérifiée}
+\label{tab:tests}
+\begin{tabularx}{\textwidth}{@{}L{4.6cm} X@{}}
+\toprule
+\textbf{Suite} & \textbf{Propriété garantie} \\
+\midrule
+\texttt{report\_provider\_test} & Le branchement des onze étapes, sauts conditionnels compris \\
+\texttt{wizard\_steps\_test} & Une étape refuse d'être franchie tant que sa réponse manque \\
+\texttt{backend\_contract\_test} & Les énumérations Dart et le schéma TypeScript
+ne divergent pas (\cref{lst:contrat}) \\
+\texttt{rtl\_test} & La mise en miroir en arabe atteint ce que Flutter ne retourne pas seul \\
+\texttt{accessibility\_test} & Contrastes et tailles de cibles tactiles \\
+\texttt{settings\_store\_test} & Aucune donnée de signalement n'atteint le disque \\
+\texttt{submission\_error\_test} & Un réessai après échec ne crée pas un second
+dossier \\
+\texttt{firestore.rules.test} & Toute écriture directe depuis un client est
+refusée \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Validation de bout en bout}
+
+Le parcours complet — dépôt, téléversement d'une capture, attribution d'un numéro,
+suivi, traitement depuis la console — a été rejoué en local sur la pile
+d'émulateurs : le signalement de test apparaît dans \texttt{reports}, son empreinte
+dans \texttt{referenceIndex}, et la console le retrouve avec son compte à rebours.
+
+\begin{vigilance}
+\small
+Deux comportements ne sont pas observables en local et restent à valider après
+déploiement : la signature des URL de téléversement, que les émulateurs
+n'effectuent pas, et les notifications \gls{fcm}, dont le code est en place mais
+qui exigent un projet réel. Ces limites sont documentées plutôt que passées sous
+silence.
+\end{vigilance}
+
+\section{Intégration continue}
+
+Deux tâches indépendantes s'exécutent à chaque \emph{push} : analyse statique,
+formatage et tests Flutter d'une part ; contrôle de types TypeScript et suites
+back-end contre les émulateurs d'autre part.
+
+\begin{decision}
+\small
+La version de Flutter est \textbf{épinglée}, en intégration continue comme en
+local. Le formateur de Dart change de règles d'une version à l'autre : sans
+épingle, un fichier correct devient incorrect le jour où le canal stable avance,
+et la chaîne échoue sur un commit qui n'a rien touché. Monter de version devient
+ainsi un acte délibéré, qui reformate ce qu'il faut.
+\end{decision}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.455\textwidth}\centering
+  \wideshot{\linewidth}{figures/screens/console-dossier.png}{Console — dossier et journal d'audit}
+  \caption{Console de l'équipe}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.455\textwidth}\centering
+  \wideshot{\linewidth}{figures/screens/ci-github-actions.png}{Intégration continue — deux tâches au vert}
+  \caption{Intégration continue}\end{subfigure}
+\caption[Console de traitement et intégration continue]{La console de l'équipe
+\gls{emc} et les deux tâches d'intégration continue exécutées sur chaque \emph{push}.}
+\label{fig:validation}
+\end{figure}
+
+% ============================================================================
+\chapter{Bilan et perspectives}
+\label{chap:bilan}
+% ============================================================================
+
+\section{Ce qui était demandé, ce qui a été livré}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Objectifs du document de cadrage confrontés au livrable}
+\label{tab:ecart}
+\begin{tabularx}{\textwidth}{@{}L{4.0cm} L{4.4cm} X@{}}
+\toprule
+\textbf{Attendu (cadrage)} & \textbf{Livré} & \textbf{Écart} \\
+\midrule
+Prototype à 4 écrans & 4 onglets, 11 étapes de signalement, 7 écrans annexes &
+Parcours complet plutôt qu'ossature \\
+Français d'abord, arabe reporté & Français, arabe, anglais, \gls{rtl} complet &
+Extension traitée pendant le stage \\
+Adaptation aux tranches d'âge & 4 groupes d'âge, assistant réservé aux 12 ans et
+plus & Conforme \\
+Enregistrement dans Firebase & Fonctions \emph{cloud}, écriture directe interdite
+& Architecture durcie \\
+Documentation du prototype & README, plan back-end, 290 tests, \gls{ci} &
+Conforme et étendu \\
+Back-end \gls{emc} écarté & Écarté & Conforme \\
+Espace parents et enseignants écarté & Écarté & Conforme \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Trois éléments s'ajoutent hors cadrage : le suivi de dossier par numéro de
+référence, la console de traitement pour l'équipe, et la politique de
+conservation à trente jours glissants. Chacun répond à une question qui se pose
+dès qu'un signalement est réellement enregistré : comment l'auteur en a-t-il des
+nouvelles, qui le traite, et combien de temps le conserve-t-on.
+
+\section{Limites connues}
+
+Elles sont documentées dans le dépôt et reprises ici sans atténuation.
+
+\begin{itemize}
+\item \textbf{L'assistant conversationnel est simulé.} Les réponses sont
+scriptées et l'aiguillage se fait par mots-clés dans les trois langues ; une
+phrase qu'aucun mot-clé n'attrape tombe sur la réponse par défaut. Un badge
+\textsc{bêta} le signale à l'utilisateur.
+\item \textbf{Les traductions arabe et anglaise n'ont pas été relues par un
+locuteur natif.} Pour une ligne d'assistance destinée à des enfants en détresse,
+le ton compte autant que l'exactitude.
+\item \textbf{Les textes juridiques sont incomplets} : les passages qui exigent
+un juriste portent un marqueur explicite, et l'écran affiche un bandeau tant
+qu'il en reste.
+\item \textbf{La mise en page vise le portrait} ; le paysage reste utilisable
+sans être soigné.
+\item \textbf{Le compte de facturation doit appartenir au \gls{cmrpi}}, non à un
+développeur : celui qui le ferme emporte les signalements en cours.
+\end{itemize}
+
+\section{Perspectives}
+
+À court terme, la mise en production suppose trois actions qui ne relèvent pas
+du code : la relecture des traductions, la rédaction des textes juridiques et le
+transfert du projet Firebase au \gls{cmrpi}. Viennent ensuite les extensions
+prévues par le cadrage — l'espace destiné aux parents et aux enseignants — et
+l'intégration au back-end \gls{emc} et au portail \texttt{e-vigilance}, pour
+qu'un signalement mobile alimente directement le système national. L'assistant
+conversationnel, enfin, gagnerait à s'appuyer sur un modèle de langue plutôt que
+sur des mots-clés, à condition que le traitement reste local ou contractuellement
+encadré : les propos d'un enfant en détresse ne sont pas une charge utile
+ordinaire.
+
+% ============================================================================
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
+\markboth{Conclusion}{}
+% ============================================================================
+
+Le prototype demandé était modeste ; la question qu'il posait ne l'était pas.
+Retirer les comptes utilisateurs, geste évident du point de vue de l'enfant,
+retire du même coup le socle sur lequel repose la sécurité usuelle d'une base
+\emph{cloud}. Tout le reste — les règles fermées, les fonctions appelables,
+l'attestation d'intégrité, l'empreinte du numéro de référence, la conservation
+bornée — découle de cette contrainte initiale et non d'un goût pour la
+complexité.
+
+Sur le plan personnel, ce stage a été l'occasion de mener un projet de bout en
+bout : cadrage, maquettage, développement mobile, conception d'une \gls{api} et
+mise en place d'une chaîne d'intégration continue. La leçon la plus durable tient
+sans doute à une habitude prise en chemin — écrire, à côté de chaque choix
+technique, la raison qui l'a imposé. Un an plus tard, c'est cette trace qui
+distingue une décision d'un accident.
+
+Le prototype est fonctionnel et testé. Ce qui lui manque pour servir réellement
+ne relève plus de la technique : une relecture humaine des traductions, un
+juriste, et un compte au nom du \gls{cmrpi}.
+
+% ============================================================================
+%  BIBLIOGRAPHIE, GLOSSAIRE, ANNEXES
+% ============================================================================
+\cleardoublepage
+\printbibliography[heading=bibintoc,title={Bibliographie et références}]
+
+\appendix
+\renewcommand{\chaptertitlename}{Annexe}
+
+\chapter{Annexes}
+\section{Environnement de développement}
+\label{ann:env}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Outils et versions}
+\label{tab:outils}
+\begin{tabularx}{\textwidth}{@{}L{4.2cm} X@{}}
+\toprule
+\textbf{Outil} & \textbf{Rôle et version} \\
+\midrule
+Flutter 3.44.6 / Dart 3.12 & Application mobile, version épinglée \\
+Node 22, TypeScript & Fonctions \emph{cloud} de 2\ieme{} génération \\
+Firebase Firestore & Base de données, région \texttt{europe-west1} \\
+Cloud Storage & Preuves, écriture par URL signée uniquement \\
+Firebase App Check & Play Integrity / DeviceCheck \\
+Émulateurs Firebase & Parcours complet en local, sans facturation \\
+Figma & Maquettage des treize écrans \\
+Git, GitHub Actions & Versionnement et intégration continue \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{lstlisting}[language=bash,caption={Exécution du parcours complet en local},
+                   label={lst:local}]
+npm run backend                              # emulateurs Firestore, Functions, Storage
+flutter run --dart-define=USE_EMULATORS=true # application pointee sur les emulateurs
+npm run console                              # console equipe + compte agent local
+
+flutter analyze && flutter test              # 187 tests applicatifs
+npm run check                                # types + 103 tests back-end
+\end{lstlisting}
+
+\section{Écrans complémentaires de l'application}
+\label{ann:ecrans}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-09-ressources.png}{App — ressources}
+  \caption{Ressources}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-10-contact.png}{App — contact}
+  \caption{Contact}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-11-assistant.png}{App — assistant (bêta)}
+  \caption{Assistant}\end{subfigure}\hfill
+\begin{subfigure}[b]{0.213\textwidth}\centering
+  \phoneshot{\linewidth}{figures/screens/app-12-parametres.png}{App — paramètres}
+  \caption{Paramètres}\end{subfigure}
+\caption[Écrans complémentaires de l'application]{Les trois onglets restants et
+l'écran de paramètres, d'où se règlent la langue, les notifications et l'accès
+aux textes légaux.}
+\label{fig:annexe-ecrans}
+\end{figure}
+
+\end{document}

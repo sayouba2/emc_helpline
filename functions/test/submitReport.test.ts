@@ -11,8 +11,12 @@ import { submitReportRequest } from "../src/schema.js";
 const PROJECT_ID = "demo-emc";
 const emulated = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
-const report = (overrides: Record<string, unknown> = {}) =>
-  submitReportRequest.parse({
+/** Le même appareil, sauf mention contraire. */
+const DEVICE = "device-under-test";
+
+const report = (overrides: Record<string, unknown> = {}) => ({
+  uid: DEVICE,
+  ...submitReportRequest.parse({
     idempotencyKey: "18f2c3a4b5c6d7e8-EMC4K7PW9XM2QTR",
     report: {
       whoFor: "self",
@@ -25,7 +29,8 @@ const report = (overrides: Record<string, unknown> = {}) =>
       evidencePaths: ["evidence/abc12345/shot1.png"],
       ...overrides,
     },
-  });
+  }),
+});
 
 describe.skipIf(!emulated)("filing a report", () => {
   let app: ReturnType<typeof initializeApp>;
@@ -116,6 +121,22 @@ describe.skipIf(!emulated)("filing a report", () => {
 
     const all = await db.collection(COLLECTIONS.reports).get();
     expect(all.size).toBe(1);
+  });
+
+  it("ne rend pas le code d'un autre à qui rejoue sa clé", async () => {
+    // Le code de référence est le seul justificatif du dossier : il ouvre le
+    // suivi. La clé d'idempotence en était un second chemin, sans les mêmes
+    // garanties — elle vient du client.
+    const filed = await submitReportCore(db, report());
+
+    await expect(
+      submitReportCore(db, { ...report(), uid: "un-autre-appareil" }),
+    ).rejects.toThrow(/permission-denied|not your submission/);
+
+    // Et le dossier d'origine est intact.
+    const all = await db.collection(COLLECTIONS.reports).get();
+    expect(all.size).toBe(1);
+    expect(filed.deduplicated).toBe(false);
   });
 
   it("gives a different report a different key and a different code", async () => {
