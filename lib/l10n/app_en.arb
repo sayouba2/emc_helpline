@@ -310,5 +310,7 @@
   "onboardingNotifyTitle": "Be told, if you want",
   "onboardingNotifyBody": "The app can let you know when your case moves, and will offer that at the end. If your phone is shared, know that the message will be visible to whoever uses it.",
   "onboardingEmergency": "If you are in danger right now, call the Police (19).",
-  "onboardingStart": "Start"
+  "onboardingStart": "Start",
+  "evidenceMaxReached": "{count} screenshots is the maximum. Remove one to add another.",
+  "submissionErrorEvidenceTooLarge": "One of your screenshots is too heavy to send. Remove it, or replace it with a smaller one."
 }

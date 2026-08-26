@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../core/backend/evidence_uploader.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/localization/report_enum_labels.dart';
@@ -49,8 +50,25 @@ class _Step3EvidenceScreenState extends State<StepEvidenceScreen> {
     ReportProvider provider,
     AppLocalizations l10n,
   ) async {
+    final remaining =
+        EvidenceUploader.maxFiles -
+        provider.currentReport.evidenceFilePaths.length;
+    if (remaining <= 0) return;
+
     try {
-      final images = await ImagePicker().pickMultiImage();
+      final images = await ImagePicker().pickMultiImage(
+        // Le serveur refuse au-delà de dix. Sans plafond ici, quinze captures
+        // partaient — en consommant le quota horaire de téléversement — pour
+        // que le signalement soit ensuite rejeté par un « erreur serveur » que
+        // personne ne peut interpréter.
+        limit: remaining,
+        // Une capture d'un téléphone récent dépasse régulièrement les 8 Mo que
+        // le serveur accepte. Réduite ainsi elle reste parfaitement lisible et
+        // passe largement en dessous — c'est le chemin d'échec le plus probable
+        // de toute l'application sur un réseau mobile.
+        imageQuality: 85,
+        maxWidth: 2000,
+      );
       if (images.isEmpty) return; // Selection cancelled.
       provider.addEvidenceFiles(images.map((image) => image.path));
     } catch (e) {
@@ -319,6 +337,11 @@ class _Step3EvidenceScreenState extends State<StepEvidenceScreen> {
               borderRadius: BorderRadius.circular(14),
               child: Image.file(
                 File(path),
+                // Sans cacheWidth, Flutter décode chaque image à sa taille
+                // native : dix captures de 12 Mpx pour afficher des carrés de
+                // 92 px, c'est plusieurs centaines de mégaoctets, et un
+                // plantage sur les entrées de gamme.
+                cacheWidth: 184,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: AppColors.bg,
@@ -368,39 +391,50 @@ class _Step3EvidenceScreenState extends State<StepEvidenceScreen> {
     int count,
   ) {
     final hasAny = count > 0;
+    // Le serveur refuse au-delà de dix : la carte s'éteint plutôt que de
+    // laisser en choisir d'autres pour rien.
+    final isFull = count >= EvidenceUploader.maxFiles;
+    final accent = isFull ? AppColors.textSecondary : AppColors.primaryBlue;
 
-    return InkWell(
-      onTap: () => _pickImages(provider, l10n),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: hasAny ? 18 : 32,
-          horizontal: 20,
-        ),
-        decoration: BoxDecoration(
-          color: hasAny ? AppColors.cardBg : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: hasAny ? AppColors.primaryBlue : AppColors.border,
-            width: 2,
+    return Opacity(
+      opacity: isFull ? 0.55 : 1,
+      child: InkWell(
+        onTap: isFull ? null : () => _pickImages(provider, l10n),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            vertical: hasAny ? 18 : 32,
+            horizontal: 20,
           ),
-        ),
-        child: Column(
-          children: [
-            FaIcon(
-              hasAny
-                  ? FontAwesomeIcons.circlePlus
-                  : FontAwesomeIcons.cloudArrowUp,
-              color: AppColors.primaryBlue,
-              size: hasAny ? 22 : 28,
+          decoration: BoxDecoration(
+            color: hasAny ? AppColors.cardBg : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: hasAny ? accent : AppColors.border,
+              width: 2,
             ),
-            const SizedBox(height: 10),
-            Text(
-              hasAny ? l10n.evidenceAddMore : l10n.evidenceAddScreenshots,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
-            ),
-          ],
+          ),
+          child: Column(
+            children: [
+              FaIcon(
+                hasAny
+                    ? FontAwesomeIcons.circlePlus
+                    : FontAwesomeIcons.cloudArrowUp,
+                color: accent,
+                size: hasAny ? 22 : 28,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                isFull
+                    ? l10n.evidenceMaxReached(EvidenceUploader.maxFiles)
+                    : (hasAny
+                          ? l10n.evidenceAddMore
+                          : l10n.evidenceAddScreenshots),
+                textAlign: TextAlign.center,
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 15),
+              ),
+            ],
+          ),
         ),
       ),
     );

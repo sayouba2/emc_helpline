@@ -55,6 +55,11 @@ class EvidenceUploader {
   /// `MAX_EVIDENCE_BYTES` in `functions/src/config.ts`.
   static const int maxBytes = 8 * 1024 * 1024;
 
+  /// Combien de captures un signalement peut porter. Mirroir de
+  /// `MAX_EVIDENCE_FILES` dans `functions/src/config.ts` : le sélecteur s'y
+  /// arrête, faute de quoi le serveur refuserait le lot entier après coup.
+  static const int maxFiles = 10;
+
   static const Duration _perFileTimeout = Duration(seconds: 60);
 
   static const Map<String, String> _contentTypes = {
@@ -108,10 +113,16 @@ class EvidenceUploader {
     final bytes = await file.readAsBytes();
     final contentType = _contentTypeOf(localPath);
 
-    if (contentType == null || bytes.length > maxBytes) {
+    if (contentType == null) {
       // The server would refuse it anyway. Failing here spends no upload and
       // no rate-limit budget on something that cannot be accepted.
       throw const SubmissionException(SubmissionFailure.server);
+    }
+    if (bytes.length > maxBytes) {
+      // Its own failure, not a server error: this one the user can fix by
+      // removing the screenshot, and telling them our servers broke would
+      // leave them stuck on a problem that was theirs to solve.
+      throw const SubmissionException(SubmissionFailure.evidenceTooLarge);
     }
 
     final signed = await _requestUploadUrl(

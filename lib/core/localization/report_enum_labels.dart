@@ -109,6 +109,7 @@ extension SubmissionFailureLabel on SubmissionFailure {
     SubmissionFailure.network => l10n.submissionErrorNetwork,
     SubmissionFailure.server => l10n.submissionErrorServer,
     SubmissionFailure.timeout => l10n.submissionErrorTimeout,
+    SubmissionFailure.evidenceTooLarge => l10n.submissionErrorEvidenceTooLarge,
     SubmissionFailure.unknown => l10n.submissionErrorUnknown,
   };
 }

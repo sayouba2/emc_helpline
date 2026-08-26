@@ -310,5 +310,7 @@
   "onboardingNotifyTitle": "أن تُخطَر، إن أردت",
   "onboardingNotifyBody": "يمكن للتطبيق إخطارك عند تقدم ملفك، وسيعرض عليك ذلك في النهاية. وإذا كان هاتفك مشتركاً، فاعلم أن الرسالة ستكون ظاهرة لمن يستعمله.",
   "onboardingEmergency": "إذا كنت في خطر الآن، اتصل بالشرطة (19).",
-  "onboardingStart": "البدء"
+  "onboardingStart": "البدء",
+  "evidenceMaxReached": "{count} صور هي الحد الأقصى. احذف واحدة لإضافة أخرى.",
+  "submissionErrorEvidenceTooLarge": "إحدى صورك أثقل من أن تُرسَل. احذفها أو استبدلها بصورة أصغر."
 }

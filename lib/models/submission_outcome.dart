@@ -20,6 +20,12 @@ enum SubmissionFailure {
   /// [SubmissionAttempt.idempotencyKey].
   timeout,
 
+  /// A screenshot the server will not take. Told apart from [server] because
+  /// this one the user can actually fix — and being handed "our servers
+  /// failed" for a file they could simply remove leaves them stuck on a
+  /// problem that was theirs to solve.
+  evidenceTooLarge,
+
   /// Anything else. Reaching this in production means the transport threw
   /// something the mapping does not cover yet.
   unknown,

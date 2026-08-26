@@ -265,13 +265,27 @@ void main() {
       );
     });
 
-    test('a file over the size limit is never uploaded', () async {
-      expect(
-        await failureFor(
-          _writeFile('huge.png', bytes: EvidenceUploader.maxBytes + 1),
-        ),
-        SubmissionFailure.server,
-      );
+    test(
+      'un fichier trop lourd a son propre message, pas « erreur serveur »',
+      () async {
+        // Celui-là, l'utilisateur peut le régler : retirer la capture. Lui dire
+        // que nos serveurs ont échoué le laisse bloqué sur un problème qui était
+        // le sien à résoudre.
+        expect(
+          await failureFor(
+            _writeFile('huge.png', bytes: EvidenceUploader.maxBytes + 1),
+          ),
+          SubmissionFailure.evidenceTooLarge,
+        );
+      },
+    );
+
+    test('le plafond du client est celui du serveur', () {
+      final config = File('functions/src/config.ts').readAsStringSync();
+      final declared = RegExp(r'MAX_EVIDENCE_FILES = (\d+)').firstMatch(config);
+
+      expect(declared, isNotNull);
+      expect(int.parse(declared!.group(1)!), EvidenceUploader.maxFiles);
     });
   });
 }

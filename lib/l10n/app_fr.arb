@@ -485,5 +485,11 @@
     "description": "Says what will be asked later and what it would look like on a shared phone. Requests nothing here."
   },
   "onboardingEmergency": "Si tu es en danger maintenant, appelle la Police (19).",
-  "onboardingStart": "Commencer"
+  "onboardingStart": "Commencer",
+  "evidenceMaxReached": "{count} captures, c'est le maximum. Retire-en une pour en ajouter une autre.",
+  "@evidenceMaxReached": {
+    "description": "Shown on the picker card once the server's limit is reached",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "submissionErrorEvidenceTooLarge": "Une de tes captures est trop lourde pour être envoyée. Retire-la, ou remplace-la par une capture plus petite."
 }
