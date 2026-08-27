@@ -34,6 +34,15 @@ change de règles d'une version à l'autre, et sans épingle un fichier correct
 devient incorrect le jour où le canal stable avance. Monter de version est un
 commit délibéré, qui reformate ce qu'il faut.
 
+L'épingle sert une seconde fois. Le build affiche un avertissement : plusieurs
+greffons Firebase appliquent encore le greffon Gradle Kotlin, ce que Flutter
+retirera un jour. C'est une dépréciation, pas une erreur — le build passe, en
+debug comme en release. La correction appartient aux auteurs des greffons ;
+`package_info_plus` l'a faite, `cloud_functions`, `firebase_app_check`,
+`firebase_core` et `firebase_auth` pas encore. **Ne pas monter de version de
+Flutter sans vérifier que ces greffons ont suivi** : c'est le jour où
+l'avertissement deviendra un échec.
+
 ```bash
 flutter pub get
 npm install && npm install --prefix functions
